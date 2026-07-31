@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidZania Yönetim & Vardiya Paneli</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 0; color: #333; }
+        
+        header { background: #d9534f; color: white; padding: 15px 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        header h1 { margin: 0; font-size: 22px; }
+
+        .app-layout { display: flex; min-height: calc(100vh - 60px); }
+
+        .sidebar { width: 250px; background: #2c3e50; color: white; display: flex; flex-direction: column; }
+        .tab-btn { background: none; border: none; color: #ecf0f1; padding: 15px 20px; text-align: left; font-size: 15px; cursor: pointer; border-bottom: 1px solid #34495e; transition: 0.2s; }
+        .tab-btn:hover, .tab-btn.active { background: #34495e; color: #3498db; font-weight: bold; border-left: 4px solid #3498db; }
+
+        .content { flex: 1; padding: 20px; overflow-y: auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px 12px; font-size: 13px; text-align: left; }
+        th { background: #f8fafc; color: #475569; }
+        
+        select, input[type="text"], input[type="date"] { padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; }
+        
+        .btn-main { background: #22c55e; color: white; border: none; padding: 12px; width: 100%; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 15px; }
+        .btn-main:hover { background: #16a34a; }
+        .btn-blue { background: #3b82f6; color: white; border: none; padding: 8px 12px; font-size: 13px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-blue:hover { background: #2563eb; }
+        .btn-green { background: #10b981; color: white; border: none; padding: 8px 12px; font-size: 13px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-green:hover { background: #059669; }
+        .btn-orange { background: #f97316; color: white; border: none; padding: 10px 15px; font-size: 13px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-orange:hover { background: #ea580c; }
+        .btn-danger { background: #ef4444; color: white; border: none; padding: 8px 12px; font-size: 12px; border-radius: 4px; cursor: pointer; }
+
+        .form-inline { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
+
+        .mola-box { background: #fefce8; border: 1px solid #fef08a; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        .mola-title { font-weight: bold; color: #854d0e; margin-bottom: 8px; font-size: 14px; }
+        
+        .badge-sabah { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge-aksam { background: #ffedd5; color: #c2410c; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
+        /* ONAY EKRANI (MODAL) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-card { background: white; padding: 25px; border-radius: 10px; width: 420px; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+        @media (max-width: 768px) {
+            .app-layout { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
+            .tab-btn { flex: 1; text-align: center; padding: 12px; border-bottom: none; border-right: 1px solid #34495e; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>KidZania İstanbul - Yönetim & Vardiya Paneli</h1>
+    </header>
+
+    <div class="app-layout">
+        <!-- SOL MENÜ -->
+        <div class="sidebar">
+            <button class="tab-btn active" id="btn-otomasyon" onclick="sekmeDegistir('otomasyon')">⚡ Vardiya & Aktivite</button>
+            <button class="tab-btn" id="btn-personel" onclick="sekmeDegistir('personel')">👥 Personel Listesi</button>
+            <button class="tab-btn" id="btn-takvim" onclick="sekmeDegistir('takvim')">📅 İzin & Vardiya Planı</button>
+            <button class="tab-btn" id="btn-yaptigimisler" onclick="sekmeDegistir('yaptigimisler')">📂 Yaptığım İşler</button>
+        </div>
+
+        <!-- SAĞ İÇERİK -->
+        <div class="content">
+            
+            <!-- 1. SEKME: VARDİYA & AKTİVİTE OTOMASYONU -->
+            <div id="otomasyon" class="tab-content active">
+                <div class="grid-2">
+                    <div class="card">
+                        <h3>Bugünün Aktif Çalışanları</h3>
+                        <p style="font-size: 12px; color: #64748b;">(İzinli/OFF personeller buraya gelmez)</p>
+                        <table id="gunlukVardiyaTable">
+                            <thead>
+                                <tr>
+                                    <th>Ad Soyad</th>
+                                    <th>Vardiya</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <button class="btn-main" onclick="dagitimiYap()">VARDİYAYI OTOMATİK DAĞIT</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>Günlük Dağıtım & Mola Planı</h3>
+                        <div id="sonuclar">
+                            <p style="color: #94a3b8;">Lütfen "Vardiyayı Otomatik Dağıt" butonuna basın.</p>
+                        </div>
+                        
+                        <!-- Dağıtım Yapıldıktan Sonra Çıkan Kaydet Butonu -->
+                        <div id="dagitimKaydetBox" style="display: none; margin-top: 15px; border-top: 2px dashed #e2e8f0; padding-top: 15px;">
+                            <button class="btn-main" style="background: #059669;" onclick="dagitimiKaydetModalAc()">💾 Bu Dağıtımı Beğendim, Kaydet</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. SEKME: PERSONEL LİSTESİ -->
+            <div id="personel" class="tab-content">
+                <div class="card">
+                    <h3>Yeni Personel Ekle</h3>
+                    <div class="form-inline">
+                        <input type="text" id="yeniAd" placeholder="Ad Soyad Giriniz" style="flex: 1; min-width: 180px;">
+                        
+                        <label><b>Pozisyon:</b></label>
+                        <select id="yeniPozisyon">
+                            <option value="Full time">Full time</option>
+                            <option value="Part time">Part time</option>
+                            <option value="Stajyer">Stajyer</option>
+                            <option value="Dönemsel">Dönemsel</option>
+                        </select>
+
+                        <label><input type="checkbox" id="yeniHijyen"> Hijyen Sertifikası</label>
+                        <label><input type="checkbox" id="yeniMola"> Mola Çevirebilir</label>
+                        <button class="btn-blue" onclick="yeniPersonelEkle()">+ Yeni Personel Ekle</button>
+                    </div>
+
+                    <h3>Bölge Personel Listesi</h3>
+                    <table id="personelYonetimTable">
+                        <thead>
+                            <tr>
+                                <th>Ad Soyad</th>
+                                <th>Pozisyon</th>
+                                <th>Hijyen Sertifikası</th>
+                                <th>Mola Çevirebilir mi?</th>
+                                <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. SEKME: İZİN VE ÇALIŞMA SAATLERİ -->
+            <div id="takvim" class="tab-content">
+                <div class="card">
+                    <h3>Tarih Bazlı İzin & Vardiya Planlama</h3>
+                    <div class="form-inline">
+                        <label><b>Tarih Seçiniz:</b></label>
+                        <input type="date" id="seciliTarih" onchange="tarihDegisti()">
+                        
+                        <!-- Kaydet Seçeneği -->
+                        <button class="btn-orange" onclick="vardiyaPlaniKaydetModalAc()">💾 Kaydet</button>
+                        
+                        <!-- Kaydedildikten Sonra Çıkan Aktar Butonu -->
+                        <button id="btnAktar" class="btn-blue" style="display: none;" onclick="vardiyayiAktar()">Bu Tarihteki Otomasyonu Aktar ➔</button>
+                    </div>
+                    
+                    <table id="tarihliVardiyaTable">
+                        <thead>
+                            <tr>
+                                <th>Ad Soyad</th>
+                                <th>Durum / Vardiya</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. SEKME: YAPTIĞIM İŞLER -->
+            <div id="yaptigimisler" class="tab-content">
+                <div class="card">
+                    <h2>📂 Yaptığım İşler</h2>
+                    <p style="color: #64748b; font-size: 13px;">Kaydettiğiniz tüm planlar seçtiğiniz tarihlerle burada saklanır ve Excel olarak indirilebilir.</p>
+
+                    <!-- Yer 1: İzin & Vardiya Planı -->
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 25px;">
+                        <h3 style="margin-top:0; color:#1e293b;">1. İzin & Vardiya Planı Kayıtları</h3>
+                        <table id="yaptigimVardiyaTable">
+                            <thead>
+                                <tr>
+                                    <th>Seçili Tarih</th>
+                                    <th>Kayıt Adı</th>
+                                    <th>Kayıt Zamanı</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Yer 2: Vardiya & Aktivite -->
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <h3 style="margin-top:0; color:#1e293b;">2. Vardiya & Aktivite Kayıtları</h3>
+                        <table id="yaptigimDagitimTable">
+                            <thead>
+                                <tr>
+                                    <th>Seçili Tarih</th>
+                                    <th>Kayıt Adı</th>
+                                    <th>Kayıt Zamanı</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ONAY MODAL EKRANI -->
+    <div id="kayitModal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 id="modalTitle" style="margin-top:0;">Kayıt Onayı</h3>
+            <p id="modalDesc"></p>
+            <div style="margin-bottom: 15px;">
+                <label><b>Kayıt İsmini Düzenle:</b></label><br>
+                <input type="text" id="modalKayitAdi" style="width:100%; margin-top:5px;">
+            </div>
+            <p style="font-weight: bold; font-size:14px; text-align:center;">Bu kaydı onaylıyor musunuz?</p>
+            <div class="modal-actions">
+                <button class="btn-main" style="width:auto; margin:0;" onclick="kaydiOnayla()">Evet, Kaydet</button>
+                <button class="btn-danger" style="padding: 10px 15px; font-size:14px;" onclick="modalKapat()">Hayır / İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Personel Listesi
+        let personeller = [
+            { id: 1, ad: "Düşra Sarvaç", hijyen: true, mola: true, pozisyon: "Full time" },
+            { id: 2, ad: "Elif Demirhan", hijyen: true, mola: true, pozisyon: "Full time" },
+            { id: 3, ad: "Hatice Kübra Özbek", hijyen: true, mola: true, pozisyon: "Full time" },
+            { id: 4, ad: "Mustafa Kutil", hijyen: false, mola: false, pozisyon: "Part time" },
+            { id: 5, ad: "Büşra Çırak", hijyen: true, mola: false, pozisyon: "Full time" },
+            { id: 6, ad: "İrem Aktaş", hijyen: false, mola: false, pozisyon: "Stajyer" },
+            { id: 7, ad: "Elif Burak", hijyen: true, mola: false, pozisyon: "Part time" },
+            { id: 8, ad: "Mustafa Murat Doğan", hijyen: true, mola: false, pozisyon: "Full time" },
+            { id: 9, ad: "Leyla Demirci", hijyen: true, mola: false, pozisyon: "Dönemsel" },
+            { id: 10, ad: "Betül Kara Aykru", hijyen: true, mola: false, pozisyon: "Full time" },
+            { id: 11, ad: "Rabia Kılıç", hijyen: true, mola: false, pozisyon: "Part time" },
+            { id: 12, ad: "Ece Defne İlhan", hijyen: true, mola: false, pozisyon: "Full time" },
+            { id: 13, ad: "Dilara Özaltın", hijyen: true, mola: false, pozisyon: "Part time" },
+            { id: 14, ad: "Efe Berk Eşigül", hijyen: false, mola: false, pozisyon: "Stajyer" },
+            { id: 15, ad: "Zeynep Yazıcılar", hijyen: false, mola: false, pozisyon: "Part time" },
+            { id: 16, ad: "Ela Elir", hijyen: false, mola: false, pozisyon: "Dönemsel" },
+            { id: 17, ad: "Sadiye Öznur Çetin", hijyen: false, mola: false, pozisyon: "Full time" },
+            { id: 18, ad: "Yiğit Yaz Yılmaz", hijyen: false, mola: false, pozisyon: "Part time" },
+            { id: 19, ad: "Esra Aydın", hijyen: false, mola: false, pozisyon: "Part time" },
+            { id: 20, ad: "Beransü Biten", hijyen: false, mola: false, pozisyon: "Stajyer" },
+            { id: 21, ad: "Nazar Kahraman", hijyen: false, mola: false, pozisyon: "Dönemsel" },
+            { id: 22, ad: "Dilara Ecan Karahisar", hijyen: false, mola: false, pozisyon: "Part time" },
+            { id: 23, ad: "Defne Zeynep Şimşek", hijyen: false, mola: false, pozisyon: "Full time" },
+            { id: 24, ad: "Berk Mehmet Utuş", hijyen: false, mola: false, pozisyon: "Part time" }
+        ];
+
+        let tarihliKayıtlar = {};
+        let sonHesaplananPlan = null;
+        let aktifModalTip = "";
+
+        function sekmeDegistir(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
+
+            if(tabId === 'yaptigimisler') yaptigimIslerTablolariniGuncelle();
+        }
+
+        window.onload = function() {
+            let bugün = new Date().toISOString().split('T')[0];
+            document.getElementById('seciliTarih').value = bugün;
+
+            initPersonelYonetimTable();
+            tarihDegisti();
+        };
+
+        function yeniPersonelEkle() {
+            let adInput = document.getElementById("yeniAd");
+            let ad = adInput.value.trim();
+            let pozisyon = document.getElementById("yeniPozisyon").value;
+            let hijyen = document.getElementById("yeniHijyen").checked;
+            let mola = document.getElementById("yeniMola").checked;
+
+            if (ad === "") {
+                alert("Lütfen personel adını giriniz!");
+                return;
+            }
+
+            let yeniId = personeller.length > 0 ? Math.max(...personeller.map(p => p.id)) + 1 : 1;
+            personeller.push({ id: yeniId, ad: ad, pozisyon: pozisyon, hijyen: hijyen, mola: mola });
+
+            adInput.value = "";
+            document.getElementById("yeniHijyen").checked = false;
+            document.getElementById("yeniMola").checked = false;
+
+            initPersonelYonetimTable();
+            tarihDegisti();
+            alert(`${ad} (${pozisyon}) sisteme eklendi.`);
+        }
+
+        function personelSil(id) {
+            if (confirm("Bu personeli silmek istediğinize emin misiniz?")) {
+                personeller = personeller.filter(p => p.id !== id);
+                initPersonelYonetimTable();
+                tarihDegisti();
+            }
+        }
+
+        function initPersonelYonetimTable() {
+            const tbody = document.querySelector("#personelYonetimTable tbody");
+            tbody.innerHTML = "";
+            personeller.forEach((p, idx) => {
+                let row = `<tr>
+                    <td><b>${p.ad}</b></td>
+                    <td>
+                        <select onchange="personeller[${idx}].pozisyon = this.value">
+                            <option value="Full time" ${p.pozisyon === 'Full time' ? 'selected' : ''}>Full time</option>
+                            <option value="Part time" ${p.pozisyon === 'Part time' ? 'selected' : ''}>Part time</option>
+                            <option value="Stajyer" ${p.pozisyon === 'Stajyer' ? 'selected' : ''}>Stajyer</option>
+                            <option value="Dönemsel" ${p.pozisyon === 'Dönemsel' ? 'selected' : ''}>Dönemsel</option>
+                        </select>
+                    </td>
+                    <td><input type="checkbox" ${p.hijyen ? 'checked' : ''} onchange="personeller[${idx}].hijyen = this.checked"> VAR</td>
+                    <td><input type="checkbox" ${p.mola ? 'checked' : ''} onchange="personeller[${idx}].mola = this.checked"> EVET</td>
+                    <td><button style="color:red; cursor:pointer;" onclick="personelSil(${p.id})">Sil</button></td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function tarihDegisti() {
+            let secilenTarih = document.getElementById('seciliTarih').value;
+            if (!tarihliKayıtlar[secilenTarih]) {
+                tarihliKayıtlar[secilenTarih] = {};
+                personeller.forEach(p => tarihliKayıtlar[secilenTarih][p.id] = "SABAH");
+            }
+
+            const tbody = document.querySelector("#tarihliVardiyaTable tbody");
+            tbody.innerHTML = "";
+
+            personeller.forEach(p => {
+                let mevcutMevki = tarihliKayıtlar[secilenTarih][p.id] || "SABAH";
+                let row = `<tr>
+                    <td><b>${p.ad}</b> <small style="color:#64748b;">(${p.pozisyon || 'Full time'})</small> ${p.hijyen ? '🧼' : ''}</td>
+                    <td>
+                        <select onchange="tarihliVardiyaGuncelle('${secilenTarih}', ${p.id}, this.value)">
+                            <option value="SABAH" ${mevcutMevki === "SABAH" ? "selected" : ""}>🌅 SABAHÇI</option>
+                            <option value="AKSAM" ${mevcutMevki === "AKSAM" ? "selected" : ""}>🌆 AKŞAMCI</option>
+                            <option value="OFF" ${mevcutMevki === "OFF" ? "selected" : ""}>⛔ OFF (İZİNLİ)</option>
+                        </select>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+
+            document.getElementById("btnAktar").style.display = "none";
+        }
+
+        function tarihliVardiyaGuncelle(tarih, persId, deger) {
+            if (!tarihliKayıtlar[tarih]) tarihliKayıtlar[tarih] = {};
+            tarihliKayıtlar[tarih][persId] = deger;
+            document.getElementById("btnAktar").style.display = "none";
+        }
+
+        function vardiyayiAktar() {
+            let secilenTarih = document.getElementById('seciliTarih').value;
+            let gunlukKayıt = tarihliKayıtlar[secilenTarih] || {};
+
+            const tbody = document.querySelector("#gunlukVardiyaTable tbody");
+            tbody.innerHTML = "";
+
+            let aktifCalisanSayisi = 0;
+
+            personeller.forEach(p => {
+                let durum = gunlukKayıt[p.id] || "SABAH";
+                if (durum !== "OFF") {
+                    aktifCalisanSayisi++;
+                    let badgeClass = durum === "SABAH" ? "badge-sabah" : "badge-aksam";
+                    let row = `<tr data-id="${p.id}" data-vardiya="${durum}">
+                        <td><b>${p.ad}</b> <small style="color:#64748b;">(${p.pozisyon || 'Full time'})</small> ${p.hijyen ? '🧼' : ''}</td>
+                        <td><span class="${badgeClass}">${durum}</span></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                }
+            });
+
+            if(aktifCalisanSayisi === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" style="color:red; text-align:center;">Seçilen tarihte çalışan personel yok (Herkes İzinli).</td></tr>`;
+            }
+
+            sekmeDegistir('otomasyon');
+        }
+
+        function dagitimiYap() {
+            let tumCalisanlar = [];
+            let rows = document.querySelector("#gunlukVardiyaTable tbody").querySelectorAll("tr");
+
+            rows.forEach(r => {
+                let id = parseInt(r.getAttribute("data-id"));
+                let vardiya = r.getAttribute("data-vardiya");
+                let p = personeller.find(x => x.id === id);
+                if (p && vardiya) {
+                    tumCalisanlar.push({ ...p, vardiya: vardiya });
+                }
+            });
+
+            if (tumCalisanlar.length === 0) {
+                document.getElementById("sonuclar").innerHTML = "<p style='color:red;'>Aktif çalışan personel bulunamadı. Lütfen önce İzin & Vardiya Planı sekmesinden aktarım yapın.</p>";
+                document.getElementById("dagitimKaydetBox").style.display = "none";
+                return;
+            }
+
+            sonHesaplananPlan = hesaplaVeDagit(tumCalisanlar);
+            ekranaYazdir(sonHesaplananPlan);
+            
+            document.getElementById("dagitimKaydetBox").style.display = "block";
+        }
+
+        function hesaplaVeDagit(calisanlar) {
+            let havuz = [...calisanlar];
+            let molacilar = [];
+            let atamalar = {};
+
+            let molaciAdaylari = havuz.filter(p => p.mola && p.vardiya === "AKSAM");
+
+            for (let i = 0; i < 3; i++) {
+                if (molaciAdaylari[i]) {
+                    molacilar.push(molaciAdaylari[i]);
+                    havuz = havuz.filter(p => p.id !== molaciAdaylari[i].id);
+                }
+            }
+
+            let hijyenliler = havuz.filter(p => p.hijyen);
+            if (hijyenliler.length > 0) {
+                let secilen = hijyenliler[Math.floor(Math.random() * hijyenliler.length)];
+                atamalar["Donut"] = secilen;
+                havuz = havuz.filter(p => p.id !== secilen.id);
+            } else {
+                atamalar["Donut"] = { ad: "⚠️ HİJYENLİ ELEMAN YOK", vardiya: "-", pozisyon: "-" };
+            }
+
+            let zorunluAktiviteler = [
+                "Elektrik Merkezi", "Süpermarket", "Otel", "Astronot Eğitim Merkezi",
+                "Stadyum", "Kimya Laboratuvarı", "Veteriner", "Diş Kliniği",
+                "Geri Dönüşüm Merkezi", "Takı Tasarım", "Parfümeri"
+            ];
+
+            let esnekAktiviteler = [
+                "Kariyer Bulma Merkezi", "Fotoğraf Stüdyosu", "Sosyal Ben"
+            ];
+
+            havuz.sort(() => Math.random() - 0.5);
+
+            zorunluAktiviteler.forEach(akt => {
+                if (havuz.length > 0) {
+                    atamalar[akt] = havuz.shift();
+                } else {
+                    atamalar[akt] = { ad: "- Boş -", vardiya: "-", pozisyon: "-" };
+                }
+            });
+
+            esnekAktiviteler.forEach(akt => {
+                if (havuz.length > 0) {
+                    atamalar[akt] = havuz.shift();
+                } else {
+                    atamalar[akt] = { ad: "- Boş -", vardiya: "-", pozisyon: "-" };
+                }
+            });
+
+            let molaSirasiListesi = [];
+            for (let [akt, kisi] of Object.entries(atamalar)) {
+                if (kisi && kisi.ad !== "- Boş -" && !kisi.ad.includes("⚠️")) {
+                    molaSirasiListesi.push({ ad: kisi.ad, aktivite: akt, vardiya: kisi.vardiya, pozisyon: kisi.pozisyon });
+                }
+            }
+
+            molaSirasiListesi.sort((a, b) => (b.vardiya === "SABAH") - (a.vardiya === "SABAH"));
+
+            return { atamalar, molacilar, molaSirasiListesi };
+        }
+
+        function ekranaYazdir(plan) {
+            let html = `<div class="mola-box">`;
+            html += `<div class="mola-title">☕ BUGÜNÜN MOLA ÇEVİRENLERİ (Akşamcılar)</div>`;
+            
+            if (plan.molacilar.length > 0) {
+                html += `<ul>`;
+                plan.molacilar.forEach(m => {
+                    html += `<li><b>${m.ad}</b> <small>(${m.pozisyon})</small> <span class="badge-aksam">AKŞAMCI</span></li>`;
+                });
+                html += `</ul>`;
+            } else {
+                html += `<p style="color:red; font-size:12px;">Mola çevirecek personel seçilemedi.</p>`;
+            }
+            html += `</div>`;
+
+            html += `<h4>📋 MOLA VERİLİŞ SIRASI (Önce Sabahçılar)</h4>`;
+            html += `<table><thead><tr><th>Sıra</th><th>Personel</th><th>Pozisyon</th><th>Aktivite</th><th>Vardiya</th></tr></thead><tbody>`;
+            
+            plan.molaSirasiListesi.forEach((item, idx) => {
+                let badge = item.vardiya === "SABAH" ? '<span class="badge-sabah">SABAH</span>' : '<span class="badge-aksam">AKŞAM</span>';
+                html += `<tr><td><b>${idx + 1}</b></td><td><b>${item.ad}</b></td><td>${item.pozisyon}</td><td><i>${item.aktivite}</i></td><td>${badge}</td></tr>`;
+            });
+            html += `</tbody></table><br>`;
+
+            html += `<h4>📋 TÜM AKTİVİTE DAĞITIM LİSTESİ</h4>`;
+            html += `<table><thead><tr><th>Aktivite</th><th>Personel</th><th>Pozisyon</th><th>Vardiya</th></tr></thead><tbody>`;
+
+            for (let [akt, kisi] of Object.entries(plan.atamalar)) {
+                let badge = kisi.vardiya === "SABAH" ? '<span class="badge-sabah">SABAH</span>' : (kisi.vardiya === "AKSAM" ? '<span class="badge-aksam">AKŞAM</span>' : '-');
+                let stil = kisi.ad === "- Boş -" ? 'style="color:#a0aec0; font-style:italic;"' : '';
+                html += `<tr ${stil}><td><b>${akt}</b></td><td>${kisi.ad}</td><td>${kisi.pozisyon || '-'}</td><td>${badge}</td></tr>`;
+            }
+            html += `</tbody></table>`;
+
+            document.getElementById("sonuclar").innerHTML = html;
+        }
+
+        // ==================== ONAY & KAYIT İŞLEMLERİ ====================
+
+        function vardiyaPlaniKaydetModalAc() {
+            let tarih = document.getElementById('seciliTarih').value;
+            aktifModalTip = "VARDİYA_PLAN";
+            document.getElementById("modalTitle").innerText = "İzin & Vardiya Planı Kaydı";
+            document.getElementById("modalDesc").innerHTML = `Seçilen Tarih: <b>${tarih}</b><br>Bu plan 'Yaptığım İşler -> İzin & Vardiya Planı' bölümüne kaydedilecek.`;
+            document.getElementById("modalKayitAdi").value = `${tarih} Tarihli Vardiya Planı`;
+            document.getElementById("kayitModal").style.display = "flex";
+        }
+
+        function dagitimiKaydetModalAc() {
+            let tarih = document.getElementById('seciliTarih').value;
+            if(!sonHesaplananPlan) return;
+            aktifModalTip = "DAGİTİM_PLAN";
+            document.getElementById("modalTitle").innerText = "Vardiya & Aktivite Kaydı";
+            document.getElementById("modalDesc").innerHTML = `Seçilen Tarih: <b>${tarih}</b><br>Bu dağıtım tablosu 'Yaptığım İşler -> Vardiya & Aktivite' bölümüne kaydedilecek.`;
+            document.getElementById("modalKayitAdi").value = `${tarih} Aktivite Dağıtım Tablosu`;
+            document.getElementById("kayitModal").style.display = "flex";
+        }
+
+        function modalKapat() {
+            document.getElementById("kayitModal").style.display = "none";
+        }
+
+        function kaydiOnayla() {
+            let kayitAdi = document.getElementById("modalKayitAdi").value.trim();
+            let tarih = document.getElementById('seciliTarih').value;
+            let zaman = new Date().toLocaleString('tr-TR');
+
+            if (kayitAdi === "") {
+                alert("Lütfen bir kayıt ismi giriniz!");
+                return;
+            }
+
+            if (aktifModalTip === "VARDİYA_PLAN") {
+                let mevcutPlan = tarihliKayıtlar[tarih] || {};
+                let liste = JSON.parse(localStorage.getItem("isler_vardiya") || "[]");
+                liste.push({
+                    id: Date.now(),
+                    baslik: kayitAdi,
+                    tarih: tarih,
+                    zaman: zaman,
+                    veri: mevcutPlan
+                });
+                localStorage.setItem("isler_vardiya", JSON.stringify(liste));
+
+                document.getElementById("btnAktar").style.display = "inline-block";
+                alert("Plan kaydedildi! Şimdi 'Bu Tarihteki Otomasyonu Aktar' butonuna tıklayabilirsiniz.");
+            } 
+            else if (aktifModalTip === "DAGİTİM_PLAN") {
+                let liste = JSON.parse(localStorage.getItem("isler_dagitim") || "[]");
+                liste.push({
+                    id: Date.now(),
+                    baslik: kayitAdi,
+                    tarih: tarih,
+                    zaman: zaman,
+                    veri: sonHesaplananPlan
+                });
+                localStorage.setItem("isler_dagitim", JSON.stringify(liste));
+                alert("Aktivite Dağıtım Tablosu 'Yaptığım İşler' sekmesine kaydedildi!");
+            }
+
+            modalKapat();
+        }
+
+        function yaptigimIslerTablolariniGuncelle() {
+            // 1. İzin & Vardiya Planı Kayıtları
+            let vList = JSON.parse(localStorage.getItem("isler_vardiya") || "[]");
+            let vTbody = document.querySelector("#yaptigimVardiyaTable tbody");
+            vTbody.innerHTML = "";
+            
+            if(vList.length === 0) {
+                vTbody.innerHTML = `<tr><td colspan="4" style="color:#94a3b8; text-align:center;">Henüz kaydedilmiş İzin & Vardiya Planı yok.</td></tr>`;
+            } else {
+                vList.forEach(item => {
+                    vTbody.innerHTML += `<tr>
+                        <td><b>${item.tarih}</b></td>
+                        <td>${item.baslik}</td>
+                        <td><small>${item.zaman}</small></td>
+                        <td>
+                            <button class="btn-blue" onclick="vardiyaIsDetay(${item.id})">Detay Gör</button>
+                            <button class="btn-green" onclick="excelVardiyaPlaniIndir(${item.id})">📊 Excel'e Aktar</button>
+                            <button class="btn-danger" onclick="isSil('isler_vardiya', ${item.id})">Sil</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            // 2. Vardiya & Aktivite Kayıtları
+            let dList = JSON.parse(localStorage.getItem("isler_dagitim") || "[]");
+            let dTbody = document.querySelector("#yaptigimDagitimTable tbody");
+            dTbody.innerHTML = "";
+
+            if(dList.length === 0) {
+                dTbody.innerHTML = `<tr><td colspan="4" style="color:#94a3b8; text-align:center;">Henüz kaydedilmiş Vardiya & Aktivite Dağıtımı yok.</td></tr>`;
+            } else {
+                dList.forEach(item => {
+                    dTbody.innerHTML += `<tr>
+                        <td><b>${item.tarih}</b></td>
+                        <td>${item.baslik}</td>
+                        <td><small>${item.zaman}</small></td>
+                        <td>
+                            <button class="btn-blue" onclick="dagitimIsDetay(${item.id})">Tabloyu Yükle</button>
+                            <button class="btn-green" onclick="excelDagitimPlaniIndir(${item.id})">📊 Excel'e Aktar</button>
+                            <button class="btn-danger" onclick="isSil('isler_dagitim', ${item.id})">Sil</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+        }
+
+        function isSil(key, id) {
+            if(confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
+                let list = JSON.parse(localStorage.getItem(key) || "[]");
+                list = list.filter(x => x.id !== id);
+                localStorage.setItem(key, JSON.stringify(list));
+                yaptigimIslerTablolariniGuncelle();
+            }
+        }
+
+        function vardiyaIsDetay(id) {
+            let list = JSON.parse(localStorage.getItem("isler_vardiya") || "[]");
+            let item = list.find(x => x.id === id);
+            if(!item) return;
+
+            let özet = `📅 TARİH: ${item.tarih}\n📋 KAYIT ADI: ${item.baslik}\n------------------------------\n`;
+            personeller.forEach(p => {
+                let st = item.veri[p.id] || "SABAH";
+                özet += `${p.ad} (${p.pozisyon}) : ${st}\n`;
+            });
+            alert(özet);
+        }
+
+        function dagitimIsDetay(id) {
+            let list = JSON.parse(localStorage.getItem("isler_dagitim") || "[]");
+            let item = list.find(x => x.id === id);
+            if(!item) return;
+
+            ekranaYazdir(item.veri);
+            sekmeDegistir('otomasyon');
+            alert(`"${item.baslik}" kaydı başarıyla ekrana yüklendi.`);
+        }
+
+        // ==================== EXCEL AKTARMA FONKSİYONLARI ====================
+
+        function csvIndir(csvContent, dosyaAdi) {
+            // Türkçe karakterlerin Excel'de düzgün gözükmesi için UTF-8 BOM ekliyoruz
+            let blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+            let link = document.createElement("a");
+            let url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", dosyaAdi);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function excelVardiyaPlaniIndir(id) {
+            let list = JSON.parse(localStorage.getItem("isler_vardiya") || "[]");
+            let item = list.find(x => x.id === id);
+            if (!item) return;
+
+            let csv = "Personel Ad Soyad;Pozisyon;Vardiya Durumu;Seçili Tarih\n";
+
+            personeller.forEach(p => {
+                let durum = item.veri[p.id] || "SABAH";
+                let durumStr = durum === "SABAH" ? "SABAHÇI" : (durum === "AKSAM" ? "AKŞAMCI" : "OFF (İZİNLİ)");
+                csv += `"${p.ad}";"${p.pozisyon}";"${durumStr}";"${item.tarih}"\n`;
+            });
+
+            csvIndir(csv, `Vardiya_Plani_${item.tarih}.csv`);
+        }
+
+        function excelDagitimPlaniIndir(id) {
+            let list = JSON.parse(localStorage.getItem("isler_dagitim") || "[]");
+            let item = list.find(x => x.id === id);
+            if (!item || !item.veri) return;
+
+            let data = item.veri;
+            let csv = `KAYIT ADI: ${item.baslik}\n`;
+            csv += `TARİH: ${item.tarih}\n\n`;
+
+            // 1. MOLA ÇEVİRENLER
+            csv += "--- BUGÜNÜN MOLA ÇEVİRENLERİ ---\n";
+            csv += "Personel Adı;Pozisyon;Vardiya\n";
+            if (data.molacilar && data.molacilar.length > 0) {
+                data.molacilar.forEach(m => {
+                    csv += `"${m.ad}";"${m.pozisyon}";"${m.vardiya}"\n`;
+                });
+            } else {
+                csv += "Mola çeviren yok;;\n";
+            }
+            csv += "\n";
+
+            // 2. MOLA SIRA LİSTESİ
+            csv += "--- MOLA VERİLİŞ SIRASI ---\n";
+            csv += "Sıra;Personel Adı;Pozisyon;Aktivite;Vardiya\n";
+            if (data.molaSirasiListesi) {
+                data.molaSirasiListesi.forEach((m, idx) => {
+                    csv += `"${idx + 1}";"${m.ad}";"${m.pozisyon}";"${m.aktivite}";"${m.vardiya}"\n`;
+                });
+            }
+            csv += "\n";
+
+            // 3. TÜM AKTİVİTE DAĞITIMI
+            csv += "--- TÜM AKTİVİTE DAĞITIM LİSTESİ ---\n";
+            csv += "Aktivite;Personel Adı;Pozisyon;Vardiya\n";
+            if (data.atamalar) {
+                for (let [akt, kisi] of Object.entries(data.atamalar)) {
+                    csv += `"${akt}";"${kisi.ad}";"${kisi.pozisyon || '-'}";"${kisi.vardiya || '-'}"\n`;
+                }
+            }
+
+            csvIndir(csv, `Aktivite_Dagitimi_${item.tarih}.csv`);
+        }
+    </script>
+</body>
+</html>

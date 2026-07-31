@@ -8,6 +8,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- FIREBASE SDK (Modüler Sürüm) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwoHZb5AHLNOYoNcZm1ODc81yyOlxyR3A",
+            authDomain: "kidzaniaaktivitepanel.firebaseapp.com",
+            projectId: "kidzaniaaktivitepanel",
+            storageBucket: "kidzaniaaktivitepanel.firebasestorage.app",
+            messagingSenderId: "271569501452",
+            appId: "1:271569501452:web:d54cff310ffe5a77791d29",
+            measurementId: "G-VHY6JYD13L"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Global alana taşıyoruz ki diğer script fonksiyonları erişebilsin
+        window.db = db;
+        window.colDocs = { collection, getDocs, setDoc, doc, deleteDoc };
+        
+        // Sayfa açıldığında verileri Firebase'den çek
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+
     <style>
         #splash-screen { transition: opacity 0.5s ease, visibility 0.5s ease; }
         .fade-out { opacity: 0; visibility: hidden; }
@@ -31,13 +58,12 @@
 
     <!-- 1. AÇILIŞ EKRANI -->
     <div id="splash-screen" class="fixed inset-0 bg-red-600 z-50 flex flex-col items-center justify-center text-white p-4">
-        <!-- Güncellenen Görsel Alanı -->
         <div class="bg-white p-3 rounded-2xl shadow-2xl mb-6 flex items-center justify-center max-w-md w-full">
             <img src="https://cdn.kplus.com.tr/?url=cGFuZWwucGFya2JpbGV0aS5jb20vL0FsYnVtTWVkaWEvRmFjaWxpdHkvMTEvNjdlYWIwMjAtMmQ3NS00YmYyLTg2NjctZTM3ZWQ1MjVjMmJjLmpwZw==" alt="KidZania İstanbul" class="w-full h-auto object-cover rounded-xl">
         </div>
         
         <h1 class="text-2xl md:text-3xl font-bold tracking-wide mb-2 text-center">İstanbul Yönetim Paneli</h1>
-        <p class="text-red-100 text-sm mb-6">Yükleniyor, lütfen bekleyin...</p>
+        <p class="text-red-100 text-sm mb-6">Bulut Veritabanına Bağlanılıyor...</p>
         <div class="spinner"></div>
     </div>
 
@@ -319,27 +345,13 @@
         </main>
     </div>
 
-    <!-- JAVASCRIPT KODLARI -->
+    <!-- JAVASCRIPT KODLARI (FIREBASE SENKROGNİZASYONLU) -->
     <script>
-        let systemUsers = JSON.parse(localStorage.getItem('kz_users')) || [{ username: 'admin', password: '1234', role: 'Admin' }];
-        
-        let personeller = JSON.parse(localStorage.getItem('kz_personnel')) || [
-            { id: 1, name: 'Ahmet Yılmaz', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: true, certHeight: false },
-            { id: 2, name: 'Ayşe Kaya', title: 'Zupervisor', shift: 'Akşamcı', certHygiene: true, certHeight: true },
-            { id: 3, name: 'Mehmet Demir', title: 'Zupervisor', shift: 'İzinli', certHygiene: false, certHeight: false },
-            { id: 4, name: 'Canan Şahin', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: false, certHeight: true }
-        ];
-
-        let activities = JSON.parse(localStorage.getItem('kz_activities')) || [
-            { id: 101, name: 'Fırın & Pasta Atölyesi', type: 'Hygiene' },
-            { id: 102, name: 'Tırmanma Duvarı', type: 'Height' },
-            { id: 103, name: 'İtfaiye İstasyonu', type: 'Standard' },
-            { id: 104, name: 'Gizli Ajan Eğitimi', type: 'Both' }
-        ];
-
-        let assignments = JSON.parse(localStorage.getItem('kz_assignments')) || {};
-
-        let tasks = JSON.parse(localStorage.getItem('kz_tasks')) || [];
+        let systemUsers = [];
+        let personeller = [];
+        let activities = [];
+        let assignments = {};
+        let tasks = [];
         let currentUser = null;
 
         function showAlert(msg) {
@@ -349,11 +361,78 @@
             setTimeout(() => box.classList.add('hidden'), 4000);
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        // Firebase'den Verileri Çekme Fonksiyonu
+        async function loadFromFirebase() {
+            try {
+                const db = window.db;
+                const { collection, getDocs } = window.colDocs;
+
+                // Users
+                const userSnapshot = await getDocs(collection(db, "users"));
+                if (!userSnapshot.empty) {
+                    systemUsers = userSnapshot.docs.map(doc => doc.data());
+                } else {
+                    systemUsers = [{ username: 'admin', password: '1234', role: 'Admin' }];
+                    await window.colDocs.setDoc(window.colDocs.doc(db, "users", "admin"), systemUsers[0]);
+                }
+
+                // Personnel
+                const personnelSnapshot = await getDocs(collection(db, "personnel"));
+                if (!personnelSnapshot.empty) {
+                    personeller = personnelSnapshot.docs.map(doc => doc.data());
+                } else {
+                    personeller = [
+                        { id: 1, name: 'Ahmet Yılmaz', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: true, certHeight: false },
+                        { id: 2, name: 'Ayşe Kaya', title: 'Zupervisor', shift: 'Akşamcı', certHygiene: true, certHeight: true },
+                        { id: 3, name: 'Mehmet Demir', title: 'Zupervisor', shift: 'İzinli', certHygiene: false, certHeight: false },
+                        { id: 4, name: 'Canan Şahin', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: false, certHeight: true }
+                    ];
+                    for(let p of personeller) {
+                        await window.colDocs.setDoc(window.colDocs.doc(db, "personnel", String(p.id)), p);
+                    }
+                }
+
+                // Activities
+                const actSnapshot = await getDocs(collection(db, "activities"));
+                if (!actSnapshot.empty) {
+                    activities = actSnapshot.docs.map(doc => doc.data());
+                } else {
+                    activities = [
+                        { id: 101, name: 'Fırın & Pasta Atölyesi', type: 'Hygiene' },
+                        { id: 102, name: 'Tırmanma Duvarı', type: 'Height' },
+                        { id: 103, name: 'İtfaiye İstasyonu', type: 'Standard' },
+                        { id: 104, name: 'Gizli Ajan Eğitimi', type: 'Both' }
+                    ];
+                    for(let a of activities) {
+                        await window.colDocs.setDoc(window.colDocs.doc(db, "activities", String(a.id)), a);
+                    }
+                }
+
+                // Assignments
+                const assignSnapshot = await getDocs(collection(db, "assignments"));
+                assignments = {};
+                assignSnapshot.forEach(doc => {
+                    assignments[doc.id] = doc.data().list;
+                });
+
+                // Tasks
+                const taskSnapshot = await getDocs(collection(db, "tasks"));
+                if (!taskSnapshot.empty) {
+                    tasks = taskSnapshot.docs.map(doc => doc.data()).sort((a,b) => b.id - a.id);
+                }
+
+            } catch (error) {
+                console.error("Firebase veri çekme hatası:", error);
+                showAlert("Veriler buluttan yüklenirken hata oluştu.");
+            }
+        }
+
+        window.addEventListener('firebase-ready', async () => {
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('schedule-date-filter').value = todayStr;
 
-            saveAll();
+            await loadFromFirebase();
+
             setTimeout(() => {
                 document.getElementById('splash-screen').classList.add('fade-out');
                 const savedUser = sessionStorage.getItem('kz_logged_user');
@@ -363,7 +442,7 @@
                 } else {
                     document.getElementById('login-screen').classList.remove('hidden');
                 }
-            }, 1800);
+            }, 1500);
         });
 
         function handleLogin(e) {
@@ -387,7 +466,6 @@
             sessionStorage.removeItem('kz_logged_user');
             currentUser = null;
             document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
         }
 
@@ -406,7 +484,7 @@
             if(targetBtn) targetBtn.classList.add('bg-slate-700');
         }
 
-        function assignPersonnelToActivity(pId, actId) {
+        async function assignPersonnelToActivity(pId, actId) {
             if(!actId) return;
             pId = Number(pId);
             actId = Number(actId);
@@ -417,72 +495,79 @@
             if(!person || !activity) return;
 
             if((activity.type === 'Hygiene' || activity.type === 'Both') && !person.certHygiene) {
-                showAlert(`HATA: ${person.name} isimli personelin Hijyen Sertifikası yok! "${activity.name}" (Gıda) alanına atanamaz.`);
+                showAlert(`HATA: ${person.name} isimli personelin Hijyen Sertifikası yok!`);
                 renderAll();
                 return;
             }
 
             if((activity.type === 'Height' || activity.type === 'Both') && !person.certHeight) {
-                showAlert(`HATA: ${person.name} isimli personelin Yükseklik Sertifikası yok! "${activity.name}" alanına atanamaz.`);
+                showAlert(`HATA: ${person.name} isimli personelin Yükseklik Sertifikası yok!`);
                 renderAll();
                 return;
             }
 
-            removePersonnelAssignment(pId);
+            await removePersonnelAssignment(pId, false);
 
             if(!assignments[actId]) assignments[actId] = [];
             assignments[actId].push(pId);
 
-            saveAll();
+            await saveAssignmentsToFirebase();
             renderAll();
         }
 
-        function removePersonnelAssignment(pId) {
+        async function removePersonnelAssignment(pId, doRender = true) {
             pId = Number(pId);
             Object.keys(assignments).forEach(actId => {
                 assignments[actId] = assignments[actId].filter(id => id !== pId);
             });
-            saveAll();
-            renderAll();
+            await saveAssignmentsToFirebase();
+            if(doRender) renderAll();
         }
 
-        function clearAllAssignments() {
+        async function clearAllAssignments() {
             if(confirm("Tüm aktivite atamalarını sıfırlamak istediğinize emin misiniz?")) {
                 assignments = {};
-                saveAll();
+                const db = window.db;
+                const { getDocs, collection, deleteDoc, doc } = window.colDocs;
+                const snap = await getDocs(collection(db, "assignments"));
+                for(let d of snap.docs) {
+                    await deleteDoc(doc(db, "assignments", d.id));
+                }
                 renderAll();
             }
         }
 
-        function handleAddActivity(e) {
+        async function handleAddActivity(e) {
             e.preventDefault();
             const name = document.getElementById('act-name').value.trim();
             const type = document.getElementById('act-type').value;
+            const newAct = { id: Date.now(), name, type };
 
-            activities.push({ id: Date.now(), name, type });
-            saveAll();
+            activities.push(newAct);
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "activities", String(newAct.id)), newAct);
             renderAll();
             e.target.reset();
         }
 
-        function deleteActivity(actId) {
+        async function deleteActivity(actId) {
             activities = activities.filter(a => a.id !== actId);
             delete assignments[actId];
-            saveAll();
+            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "activities", String(actId)));
+            await saveAssignmentsToFirebase();
             renderAll();
         }
 
-        function toggleCertificate(pId, certType) {
+        async function toggleCertificate(pId, certType) {
             const p = personeller.find(x => x.id === pId);
             if(p) {
                 if(certType === 'hygiene') p.certHygiene = !p.certHygiene;
                 if(certType === 'height') p.certHeight = !p.certHeight;
-                saveAll();
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
                 renderAll();
             }
         }
 
-        function saveScheduleAndRegisterTask(redirectToDistribution = false) {
+        async function saveScheduleAndRegisterTask(redirectToDistribution = false) {
             const selectedDate = document.getElementById('schedule-date-filter').value;
             const formattedDate = selectedDate ? selectedDate.split('-').reverse().join('/') : new Date().toLocaleDateString('tr-TR');
 
@@ -492,84 +577,93 @@
 
             const desc = `Vardiya Planı Kaydedildi [Tarih: ${formattedDate}]\n- Sabahçı (${sabahci.length}): ${sabahci.join(', ') || 'Yok'}\n- Akşamcı (${aksamci.length}): ${aksamci.join(', ') || 'Yok'}\n- İzinli/OFF (${izinli.length}): ${izinli.join(', ') || 'Yok'}`;
 
-            tasks.unshift({
+            const newTask = {
                 id: Date.now(),
                 title: `Vardiya Planlaması Yapıldı (${formattedDate})`,
                 desc: desc,
                 date: formattedDate,
                 user: currentUser.username
-            });
+            };
 
-            saveAll();
+            tasks.unshift(newTask);
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "tasks", String(newTask.id)), newTask);
             renderAll();
 
             if(redirectToDistribution) {
                 switchTab('dashboard');
             } else {
-                alert(`Vardiya planı başarıyla kaydedildi ve "Yapılan İşler" sekmesine düşürüldü.`);
+                alert(`Vardiya planı başarıyla kaydedildi.`);
             }
         }
 
-        function updateShift(pId, newShift) {
+        async function updateShift(pId, newShift) {
             const p = personeller.find(x => x.id === pId);
             if(p) { 
                 p.shift = newShift; 
-                if(newShift === 'İzinli' || newShift === 'OFF') removePersonnelAssignment(pId);
-                saveAll(); 
+                if(newShift === 'İzinli' || newShift === 'OFF') await removePersonnelAssignment(pId, false);
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
                 renderAll(); 
             }
         }
 
-        function handleAddPersonnel(e) {
+        async function handleAddPersonnel(e) {
             e.preventDefault();
             const name = document.getElementById('p-name').value;
             const title = document.getElementById('p-title').value;
             const certHygiene = document.getElementById('p-cert-hygiene').checked;
             const certHeight = document.getElementById('p-cert-height').checked;
 
-            personeller.push({ id: Date.now(), name, title, shift: 'Sabahçı', certHygiene, certHeight });
-            saveAll(); renderAll();
+            const newP = { id: Date.now(), name, title, shift: 'Sabahçı', certHygiene, certHeight };
+            personeller.push(newP);
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(newP.id)), newP);
+            renderAll();
             e.target.reset();
         }
 
-        function deletePersonnel(id) {
+        async function deletePersonnel(id) {
             personeller = personeller.filter(p => p.id !== id);
-            removePersonnelAssignment(id);
-            saveAll(); renderAll();
+            await removePersonnelAssignment(id, false);
+            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "personnel", String(id)));
+            renderAll();
         }
 
-        function handleAddTask(e) {
+        async function handleAddTask(e) {
             e.preventDefault();
             const title = document.getElementById('task-title').value;
             const desc = document.getElementById('task-desc').value;
-            tasks.unshift({ id: Date.now(), title, desc, date: new Date().toLocaleDateString('tr-TR'), user: currentUser.username });
-            saveAll(); renderAll();
+            const newTask = { id: Date.now(), title, desc, date: new Date().toLocaleDateString('tr-TR'), user: currentUser.username };
+            tasks.unshift(newTask);
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "tasks", String(newTask.id)), newTask);
+            renderAll();
             e.target.reset();
         }
 
-        function handleAddUser(e) {
+        async function handleAddUser(e) {
             e.preventDefault();
             const u = document.getElementById('new-username').value.trim();
             const p = document.getElementById('new-password').value.trim();
             const r = document.getElementById('new-role').value;
             if (systemUsers.some(x => x.username.toLowerCase() === u.toLowerCase())) { alert('Bu kullanıcı zaten var!'); return; }
-            systemUsers.push({ username: u, password: p, role: r });
-            saveAll(); renderAll();
+            
+            const newUser = { username: u, password: p, role: r };
+            systemUsers.push(newUser);
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", u), newUser);
+            renderAll();
             e.target.reset();
         }
 
-        function deleteUser(u) {
+        async function deleteUser(u) {
             if(u === 'admin') return alert('Admin silinemez!');
             systemUsers = systemUsers.filter(x => x.username !== u);
-            saveAll(); renderAll();
+            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "users", u));
+            renderAll();
         }
 
-        function saveAll() {
-            localStorage.setItem('kz_users', JSON.stringify(systemUsers));
-            localStorage.setItem('kz_personnel', JSON.stringify(personeller));
-            localStorage.setItem('kz_activities', JSON.stringify(activities));
-            localStorage.setItem('kz_assignments', JSON.stringify(assignments));
-            localStorage.setItem('kz_tasks', JSON.stringify(tasks));
+        async function saveAssignmentsToFirebase() {
+            const db = window.db;
+            for (let actId of Object.keys(assignments)) {
+                await window.colDocs.setDoc(window.colDocs.doc(db, "assignments", String(actId)), { list: assignments[actId] });
+            }
         }
 
         function renderAll() {
@@ -579,7 +673,7 @@
             document.getElementById('today-active-list').innerHTML = activePersonnel.map(p => {
                 let assignedActId = null;
                 Object.keys(assignments).forEach(actId => {
-                    if(assignments[actId].includes(p.id)) assignedActId = actId;
+                    if(assignments[actId] && assignments[actId].includes(p.id)) assignedActId = actId;
                 });
 
                 let certs = '';
@@ -637,7 +731,7 @@
                         </div>
                     </div>
                 `;
-            }).join('') || '<div class="text-xs text-gray-400">Henüz aktivite tanımlanmadı. Aktivite Yönetimi sekmesinden ekleyebilirsiniz.</div>';
+            }).join('') || '<div class="text-xs text-gray-400">Henüz aktivite tanımlanmadı.</div>';
 
             document.getElementById('activities-table-body').innerHTML = activities.map(a => {
                 let typeTxt = 'Normal';

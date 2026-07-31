@@ -31,9 +31,11 @@
 
     <!-- 1. AÇILIŞ EKRANI -->
     <div id="splash-screen" class="fixed inset-0 bg-red-600 z-50 flex flex-col items-center justify-center text-white p-4">
-        <div class="bg-white p-6 rounded-2xl shadow-2xl mb-6 flex items-center justify-center max-w-[220px]">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/KidZania_logo.svg/1200px-KidZania_logo.svg.png" alt="KidZania Logo" class="w-full h-auto object-contain">
+        <!-- Güncellenen Görsel Alanı -->
+        <div class="bg-white p-3 rounded-2xl shadow-2xl mb-6 flex items-center justify-center max-w-md w-full">
+            <img src="https://cdn.kplus.com.tr/?url=cGFuZWwucGFya2JpbGV0aS5jb20vL0FsYnVtTWVkaWEvRmFjaWxpdHkvMTEvNjdlYWIwMjAtMmQ3NS00YmYyLTg2NjctZTM3ZWQ1MjVjMmJjLmpwZw==" alt="KidZania İstanbul" class="w-full h-auto object-cover rounded-xl">
         </div>
+        
         <h1 class="text-2xl md:text-3xl font-bold tracking-wide mb-2 text-center">İstanbul Yönetim Paneli</h1>
         <p class="text-red-100 text-sm mb-6">Yükleniyor, lütfen bekleyin...</p>
         <div class="spinner"></div>
@@ -109,7 +111,7 @@
         <!-- İçerik Alanı -->
         <main class="flex-1 p-6">
             
-            <!-- SEKMELER 1: VARDİYA DAĞITIMI (MANUEL ATAMA VE SERTİFİKA KONTROLÜ) -->
+            <!-- SEKMELER 1: VARDİYA DAĞITIMI -->
             <div id="tab-dashboard" class="tab-content">
                 <div class="flex items-center justify-between mb-4">
                     <div>
@@ -121,7 +123,6 @@
                     </button>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Aktif Personel Havuzu -->
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                         <h3 class="font-bold text-gray-800 mb-3 border-b pb-2 flex items-center justify-between">
                             <span>Çalışanlar (Bugün Aktif)</span>
@@ -129,7 +130,6 @@
                         </h3>
                         <div id="today-active-list" class="space-y-2 text-sm max-h-[600px] overflow-y-auto pr-1"></div>
                     </div>
-                    <!-- Aktivite Alanları -->
                     <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                         <h3 class="font-bold text-gray-800 mb-3 border-b pb-2">Aktivite Pozisyonları</h3>
                         <div id="activities-assignment-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
@@ -137,11 +137,10 @@
                 </div>
             </div>
 
-            <!-- SEKMELER 2: AKTİVİTE YÖNETİMİ (YENİ SEKMEMİZ) -->
+            <!-- SEKMELER 2: AKTİVİTE YÖNETİMİ -->
             <div id="tab-activities" class="tab-content hidden">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Aktivite Yönetimi & Tanımlama</h2>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Yeni Aktivite Ekleme Formu -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border">
                         <h3 class="font-bold mb-4 text-gray-800">Yeni Aktivite Ekle</h3>
                         <form onsubmit="handleAddActivity(event)" class="space-y-4">
@@ -163,7 +162,6 @@
                             </button>
                         </form>
                     </div>
-                    <!-- Kayıtlı Aktiviteler -->
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border">
                         <h3 class="font-bold mb-4 text-gray-800">Tüm Aktiviteler</h3>
                         <div class="overflow-x-auto">
@@ -323,7 +321,6 @@
 
     <!-- JAVASCRIPT KODLARI -->
     <script>
-        // VERİ KÜMELERİ
         let systemUsers = JSON.parse(localStorage.getItem('kz_users')) || [{ username: 'admin', password: '1234', role: 'Admin' }];
         
         let personeller = JSON.parse(localStorage.getItem('kz_personnel')) || [
@@ -340,12 +337,11 @@
             { id: 104, name: 'Gizli Ajan Eğitimi', type: 'Both' }
         ];
 
-        let assignments = JSON.parse(localStorage.getItem('kz_assignments')) || {}; // { activityId: [personnelId1, personnelId2] }
+        let assignments = JSON.parse(localStorage.getItem('kz_assignments')) || {};
 
         let tasks = JSON.parse(localStorage.getItem('kz_tasks')) || [];
         let currentUser = null;
 
-        // BİLDİRİM/UYARI MESAJI
         function showAlert(msg) {
             const box = document.getElementById('alert-box');
             document.getElementById('alert-message').innerText = msg;
@@ -353,7 +349,6 @@
             setTimeout(() => box.classList.add('hidden'), 4000);
         }
 
-        // SAYFA YÜKLENME
         window.addEventListener('DOMContentLoaded', () => {
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('schedule-date-filter').value = todayStr;
@@ -371,7 +366,6 @@
             }, 1800);
         });
 
-        // GİRİŞ / ÇIKIŞ
         function handleLogin(e) {
             e.preventDefault();
             const u = document.getElementById('login-username').value.trim();
@@ -412,9 +406,8 @@
             if(targetBtn) targetBtn.classList.add('bg-slate-700');
         }
 
-        // --- SERTİFİKA VE ATAMA KONTROLÜ (MANUEL) ---
         function assignPersonnelToActivity(pId, actId) {
-            if(!actId) return; // Seçim temizlendi veya boşsa
+            if(!actId) return;
             pId = Number(pId);
             actId = Number(actId);
 
@@ -423,24 +416,20 @@
 
             if(!person || !activity) return;
 
-            // KONTROL 1: HİJYEN SERTİFİKASI KONTROLÜ
             if((activity.type === 'Hygiene' || activity.type === 'Both') && !person.certHygiene) {
                 showAlert(`HATA: ${person.name} isimli personelin Hijyen Sertifikası yok! "${activity.name}" (Gıda) alanına atanamaz.`);
                 renderAll();
                 return;
             }
 
-            // KONTROL 2: YÜKSEKLİK SERTİFİKASI KONTROLÜ
             if((activity.type === 'Height' || activity.type === 'Both') && !person.certHeight) {
                 showAlert(`HATA: ${person.name} isimli personelin Yükseklik Sertifikası yok! "${activity.name}" alanına atanamaz.`);
                 renderAll();
                 return;
             }
 
-            // Önceki atamasını kaldır (Varsa)
             removePersonnelAssignment(pId);
 
-            // Yeni atamayı ekle
             if(!assignments[actId]) assignments[actId] = [];
             assignments[actId].push(pId);
 
@@ -465,7 +454,6 @@
             }
         }
 
-        // --- AKTİVİTE EKLE / SİL ---
         function handleAddActivity(e) {
             e.preventDefault();
             const name = document.getElementById('act-name').value.trim();
@@ -484,7 +472,6 @@
             renderAll();
         }
 
-        // --- SERTİFİKA DEĞİŞTİRME ---
         function toggleCertificate(pId, certType) {
             const p = personeller.find(x => x.id === pId);
             if(p) {
@@ -495,7 +482,6 @@
             }
         }
 
-        // --- VARDİYA KAYDET VE YAPILAN İŞLERE AKTAR ---
         function saveScheduleAndRegisterTask(redirectToDistribution = false) {
             const selectedDate = document.getElementById('schedule-date-filter').value;
             const formattedDate = selectedDate ? selectedDate.split('-').reverse().join('/') : new Date().toLocaleDateString('tr-TR');
@@ -586,14 +572,11 @@
             localStorage.setItem('kz_tasks', JSON.stringify(tasks));
         }
 
-        // --- EKRANLARI DOLDURMA (RENDER) ---
         function renderAll() {
             const activePersonnel = personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'OFF');
 
-            // 1. DASHBOARD: Aktif Personel Listesi
             document.getElementById('active-count-badge').innerText = activePersonnel.length;
             document.getElementById('today-active-list').innerHTML = activePersonnel.map(p => {
-                // Hangi aktivitede atanmış?
                 let assignedActId = null;
                 Object.keys(assignments).forEach(actId => {
                     if(assignments[actId].includes(p.id)) assignedActId = actId;
@@ -625,7 +608,6 @@
                 `;
             }).join('') || '<div class="text-xs text-gray-400">Bugün çalışan aktif personel yok.</div>';
 
-            // 2. DASHBOARD: Aktivite Kartları & Atananlar
             document.getElementById('activities-assignment-grid').innerHTML = activities.map(act => {
                 const assignedIds = assignments[act.id] || [];
                 const assignedPeople = personeller.filter(p => assignedIds.includes(p.id));
@@ -657,7 +639,6 @@
                 `;
             }).join('') || '<div class="text-xs text-gray-400">Henüz aktivite tanımlanmadı. Aktivite Yönetimi sekmesinden ekleyebilirsiniz.</div>';
 
-            // 3. AKTİVİTE TABLOSU (Aktivite Yönetimi Sekmesi)
             document.getElementById('activities-table-body').innerHTML = activities.map(a => {
                 let typeTxt = 'Normal';
                 if(a.type === 'Hygiene') typeTxt = '<span class="text-emerald-700 font-semibold">Gıda Aktivitesi (Hijyen)</span>';
@@ -674,7 +655,6 @@
                 `;
             }).join('');
 
-            // 4. İZİN VARDİYA TABLOSU
             document.getElementById('schedule-table-body').innerHTML = personeller.map(p => {
                 let certs = [];
                 if(p.certHygiene) certs.push('<span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">Hijyen</span>');
@@ -694,7 +674,6 @@
                 </tr>
             `}).join('');
 
-            // 5. PERSONEL LİSTESİ
             document.getElementById('personnel-table-body').innerHTML = personeller.map(p => `
                 <tr class="hover:bg-gray-50">
                     <td class="p-3">
@@ -719,7 +698,6 @@
                 </tr>
             `).join('');
 
-            // 6. YAPILAN İŞLER LİSTESİ
             document.getElementById('tasks-list').innerHTML = tasks.length ? tasks.map(t => `
                 <div class="p-4 border rounded-xl bg-slate-50 shadow-sm">
                     <div class="flex justify-between items-center font-bold text-slate-800 border-b pb-2 mb-2">
@@ -730,7 +708,6 @@
                 </div>
             `).join('') : '<span class="text-gray-400">Henüz kaydedilmiş bir iş yok.</span>';
 
-            // 7. KULLANICI TABLOSU
             document.getElementById('users-table-body').innerHTML = systemUsers.map(u => `
                 <tr class="hover:bg-gray-50">
                     <td class="p-3 font-medium">${u.username}</td>

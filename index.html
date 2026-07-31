@@ -27,11 +27,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Global alana taşıyoruz ki diğer script fonksiyonları erişebilsin
         window.db = db;
         window.colDocs = { collection, getDocs, setDoc, doc, deleteDoc };
         
-        // Sayfa açıldığında verileri Firebase'den çek
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
 
@@ -92,7 +90,6 @@
                     <i class="fa-solid fa-right-to-bracket"></i> Giriş Yap
                 </button>
             </form>
-            <div class="mt-4 text-center text-xs text-gray-400">Varsayılan Giriş: <b>admin</b> / <b>1234</b></div>
         </div>
     </div>
 
@@ -345,7 +342,7 @@
         </main>
     </div>
 
-    <!-- JAVASCRIPT KODLARI (FIREBASE SENKROGNİZASYONLU) -->
+    <!-- JAVASCRIPT KODLARI -->
     <script>
         let systemUsers = [];
         let personeller = [];
@@ -361,13 +358,11 @@
             setTimeout(() => box.classList.add('hidden'), 4000);
         }
 
-        // Firebase'den Verileri Çekme Fonksiyonu
         async function loadFromFirebase() {
             try {
                 const db = window.db;
                 const { collection, getDocs } = window.colDocs;
 
-                // Users
                 const userSnapshot = await getDocs(collection(db, "users"));
                 if (!userSnapshot.empty) {
                     systemUsers = userSnapshot.docs.map(doc => doc.data());
@@ -376,7 +371,6 @@
                     await window.colDocs.setDoc(window.colDocs.doc(db, "users", "admin"), systemUsers[0]);
                 }
 
-                // Personnel
                 const personnelSnapshot = await getDocs(collection(db, "personnel"));
                 if (!personnelSnapshot.empty) {
                     personeller = personnelSnapshot.docs.map(doc => doc.data());
@@ -392,7 +386,6 @@
                     }
                 }
 
-                // Activities
                 const actSnapshot = await getDocs(collection(db, "activities"));
                 if (!actSnapshot.empty) {
                     activities = actSnapshot.docs.map(doc => doc.data());
@@ -408,14 +401,12 @@
                     }
                 }
 
-                // Assignments
                 const assignSnapshot = await getDocs(collection(db, "assignments"));
                 assignments = {};
                 assignSnapshot.forEach(doc => {
                     assignments[doc.id] = doc.data().list;
                 });
 
-                // Tasks
                 const taskSnapshot = await getDocs(collection(db, "tasks"));
                 if (!taskSnapshot.empty) {
                     tasks = taskSnapshot.docs.map(doc => doc.data()).sort((a,b) => b.id - a.id);

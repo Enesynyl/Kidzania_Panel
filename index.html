@@ -593,22 +593,44 @@ reportsSnapshot.forEach(doc => {
 
         function showMainApp() {
 
+console.log("ROL =", currentUser.role);
+
     document.getElementById('main-app').classList.remove('hidden');
 
     document.getElementById('current-user-display').innerHTML =
     `<i class="fa-solid fa-circle-user"></i>
     ${currentUser.username} (${currentUser.role})`;
 
-    if(currentUser.role === "Personel"){
+ if(currentUser.role === "Personel"){
 
-        document.getElementById('btn-tab-dashboard').style.display = "none";
-        document.getElementById('btn-tab-schedule').style.display = "none";
-        document.getElementById('btn-tab-activities').style.display = "none";
-        document.getElementById('btn-tab-personnel').style.display = "none";
-        document.getElementById('btn-tab-tasks').style.display = "none";
-        document.getElementById('btn-tab-users').style.display = "none";
+    // Menüleri gizle
+    document.getElementById('btn-tab-dashboard').style.display = "none";
+    document.getElementById('btn-tab-schedule').style.display = "none";
+    document.getElementById('btn-tab-activities').style.display = "none";
+    document.getElementById('btn-tab-personnel').style.display = "none";
+    document.getElementById('btn-tab-tasks').style.display = "none";
+    document.getElementById('btn-tab-users').style.display = "none";
 
-        switchTab('report');
+    const notifBtn = document.getElementById('btn-tab-notifications');
+    if(notifBtn) notifBtn.style.display = "none";
+
+    // Sayfaları gizle
+    document.getElementById('tab-dashboard').style.display = "none";
+    document.getElementById('tab-schedule').style.display = "none";
+    document.getElementById('tab-activities').style.display = "none";
+    document.getElementById('tab-personnel').style.display = "none";
+    document.getElementById('tab-tasks').style.display = "none";
+    document.getElementById('tab-users').style.display = "none";
+
+    const notifTab = document.getElementById('tab-notifications');
+    if(notifTab) notifTab.style.display = "none";
+const reportBtn = document.getElementById('btn-tab-report');
+
+if(reportBtn){
+    reportBtn.style.display = "block";
+}
+    switchTab('report');
+}
 
     } else {
 
@@ -620,12 +642,6 @@ reportsSnapshot.forEach(doc => {
 
     }
 
-    renderAll();
-}
-    document.getElementById('main-app').classList.remove('hidden');
-    document.getElementById('current-user-display').innerHTML =
-    `<i class="fa-solid fa-circle-user"></i>
-    ${currentUser.username} (${currentUser.role})`;
     renderAll();
 }
 

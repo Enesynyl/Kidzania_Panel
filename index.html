@@ -129,6 +129,15 @@ class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hov
     Bildirim Merkezi
 
 </button>
+<button id="btn-tab-reports"
+onclick="switchTab('reports')"
+class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+
+    <i class="fa-solid fa-file-lines w-5"></i>
+
+    Raporlar
+
+</button>
 <button id="btn-tab-report"
 onclick="switchTab('report')"
 class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
@@ -156,6 +165,15 @@ class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hov
                         <h2 class="text-2xl font-bold text-gray-800">Aktivite Dağıtımı & Vardiya Masası</h2>
                         <p class="text-xs text-gray-500">Personelleri sertifika şartlarına göre aktivitelere atayın.</p>
                     </div>
+<button
+onclick="saveDistributionReport()"
+class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
+
+    <i class="fa-solid fa-floppy-disk"></i>
+
+    Kaydet
+
+</button>
                     <button onclick="clearAllAssignments()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg transition">
                         <i class="fa-solid fa-rotate-left"></i> Dağıtımı Sıfırla
                     </button>
@@ -481,6 +499,25 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
     </div>
 
 </div>
+<div id="tab-reports" class="tab-content hidden">
+
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+
+        Raporlar
+
+    </h2>
+
+    <div id="reports-list" class="space-y-4">
+
+        <div class="text-gray-400">
+
+            Henüz rapor bulunmuyor.
+
+        </div>
+
+    </div>
+
+</div>
         </main>
     </div>
 
@@ -492,6 +529,7 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
         let assignments = {};
         let tasks = [];
 let reports = [];
+let savedReports = [];
 let currentUser = null;
 
         function showAlert(msg) {
@@ -553,7 +591,16 @@ let currentUser = null;
                 const taskSnapshot = await getDocs(collection(db, "tasks"));
 const reportsSnapshot =
 await getDocs(collection(db, "reports"));
+const reportsArchiveSnapshot =
+await getDocs(collection(db, "savedReports"));
 
+savedReports = [];
+
+reportsArchiveSnapshot.forEach(doc => {
+
+    savedReports.push(doc.data());
+
+});
 reports = [];
 
 reportsSnapshot.forEach(doc => {
@@ -952,7 +999,68 @@ showAlert("Bildirim gönderildi.");
 renderAll();
 
 }
+async function saveReport(title, content){
 
+    const report = {
+
+        id: Date.now(),
+
+        title,
+
+        content,
+
+        createdBy: currentUser.username,
+
+        date: new Date().toLocaleString('tr-TR')
+
+    };
+
+    savedReports.unshift(report);
+
+    await window.colDocs.setDoc(
+        window.colDocs.doc(
+            window.db,
+            "savedReports",
+            String(report.id)
+        ),
+        report
+    );
+
+    showAlert("Rapor kaydedildi");
+
+    renderAll();
+}
+
+async function saveDistributionReport(){
+
+    const data = [];
+
+    activities.forEach(act => {
+
+        const assignedIds =
+        assignments[act.id] || [];
+
+        const assignedNames =
+        personeller
+        .filter(p => assignedIds.includes(p.id))
+        .map(p => p.name);
+
+        data.push({
+
+            activity: act.name,
+
+            personnel: assignedNames
+
+        });
+
+    });
+
+    await saveReport(
+        "Vardiya & Dağıtım",
+        data
+    );
+
+}
 function renderAll() {
 
     const activePersonnel =

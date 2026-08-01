@@ -120,6 +120,12 @@
                 <button id="btn-tab-users" onclick="switchTab('users')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
                     <i class="fa-solid fa-user-shield w-5"></i> Kullanıcı Yönetimi
                 </button>
+<button id="btn-tab-report"
+onclick="switchTab('report')"
+class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+    <i class="fa-solid fa-triangle-exclamation w-5"></i>
+    Personel Bildirim
+</button>
             </nav>
             <div class="p-4 border-t border-slate-700 mt-auto">
                 <div class="flex items-center justify-between mb-3">
@@ -248,6 +254,13 @@
                         <form onsubmit="handleAddPersonnel(event)" class="space-y-3">
                             <input type="text" id="p-name" placeholder="Ad Soyad" required class="w-full p-2 border rounded">
                             <input type="text" id="p-title" placeholder="Unvan / Rol" required class="w-full p-2 border rounded">
+<select id="p-region" class="w-full p-2 border rounded" required>
+    <option value="">Bölge Seçiniz</option>
+    <option value="1. Bölge">1. Bölge</option>
+    <option value="2. Bölge">2. Bölge</option>
+    <option value="3. Bölge">3. Bölge</option>
+    <option value="4. Bölge">4. Bölge</option>
+</select>
                             <div class="space-y-2 pt-1 border-t">
                                 <span class="text-xs font-semibold text-gray-500 block">Başlangıç Sertifikaları:</span>
                                 <label class="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
@@ -315,10 +328,55 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium mb-1">Rol</label>
-                                <select id="new-role" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
-                                    <option value="Admin">Yönetici (Admin)</option>
-                                    <option value="Personel">Personel</option>
-                                </select>
+    <select
+id="new-role"
+onchange="toggleRegionSelection()"
+class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
+
+    <option value="Admin">Ana Yönetici</option>
+    <option value="Manager">Bölge Yöneticisi</option>
+    <option value="Personel">Personel</option>
+
+</select>
+<div id="manager-region-box" class="hidden">
+
+    <label class="block text-sm font-medium mb-2">
+        Sorumlu Bölgeler
+    </label>
+
+    <div class="space-y-2">
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox"
+                   class="manager-region"
+                   value="1. Bölge">
+            1. Bölge
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox"
+                   class="manager-region"
+                   value="2. Bölge">
+            2. Bölge
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox"
+                   class="manager-region"
+                   value="3. Bölge">
+            3. Bölge
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox"
+                   class="manager-region"
+                   value="4. Bölge">
+            4. Bölge
+        </label>
+
+    </div>
+
+</div>
                             </div>
                             <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 rounded transition">Kullanıcıyı Kaydet</button>
                         </form>
@@ -338,7 +396,46 @@
                     </div>
                 </div>
             </div>
+<!-- PERSONEL BİLDİRİM PANELİ -->
+<div id="tab-report" class="tab-content hidden">
 
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+        Hızlı Sorun ve Arıza Bildirimi
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <button onclick="sendQuickReport('Sistem / Cihaz Arızası')"
+        class="bg-red-600 hover:bg-red-700 text-white p-8 rounded-xl">
+
+            Sistem / Cihaz Arızası
+
+        </button>
+
+        <button onclick="sendQuickReport('Malzeme / Ürün Eksikliği')"
+        class="bg-orange-500 hover:bg-orange-600 text-white p-8 rounded-xl">
+
+            Malzeme / Ürün Eksikliği
+
+        </button>
+
+        <button onclick="sendQuickReport('Temizlik / Hijyen Problemi')"
+        class="bg-blue-600 hover:bg-blue-700 text-white p-8 rounded-xl">
+
+            Temizlik / Hijyen Problemi
+
+        </button>
+
+        <button onclick="sendQuickReport('Ziyaretçi / Müşteri Sorunu')"
+        class="bg-purple-600 hover:bg-purple-700 text-white p-8 rounded-xl">
+
+            Ziyaretçi / Müşteri Sorunu
+
+        </button>
+
+    </div>
+
+</div>
         </main>
     </div>
 
@@ -461,10 +558,12 @@
         }
 
         function showMainApp() {
-            document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('current-user-display').innerHTML = `<i class="fa-solid fa-circle-user"></i> ${currentUser.username} (${currentUser.role})`;
-            renderAll();
-        }
+    document.getElementById('main-app').classList.remove('hidden');
+    document.getElementById('current-user-display').innerHTML =
+    `<i class="fa-solid fa-circle-user"></i>
+    ${currentUser.username} (${currentUser.role})`;
+    renderAll();
+}
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -601,10 +700,21 @@
             e.preventDefault();
             const name = document.getElementById('p-name').value;
             const title = document.getElementById('p-title').value;
+const region = document.getElementById('p-region').value;
             const certHygiene = document.getElementById('p-cert-hygiene').checked;
             const certHeight = document.getElementById('p-cert-height').checked;
 
-            const newP = { id: Date.now(), name, title, shift: 'Sabahçı', certHygiene, certHeight };
+            const region = document.getElementById('p-region').value;
+
+const newP = {
+    id: Date.now(),
+    name,
+    title,
+    region,
+    shift: 'Sabahçı',
+    certHygiene,
+    certHeight
+};
             personeller.push(newP);
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(newP.id)), newP);
             renderAll();
@@ -628,7 +738,25 @@
             renderAll();
             e.target.reset();
         }
+function toggleRegionSelection(){
 
+    const role =
+    document.getElementById('new-role').value;
+
+    const box =
+    document.getElementById('manager-region-box');
+
+    if(role === "Manager"){
+
+        box.classList.remove('hidden');
+
+    } else {
+
+        box.classList.add('hidden');
+
+    }
+
+}
         async function handleAddUser(e) {
             e.preventDefault();
             const u = document.getElementById('new-username').value.trim();
@@ -636,7 +764,20 @@
             const r = document.getElementById('new-role').value;
             if (systemUsers.some(x => x.username.toLowerCase() === u.toLowerCase())) { alert('Bu kullanıcı zaten var!'); return; }
             
-            const newUser = { username: u, password: p, role: r };
+            let responsibleRegions = [];
+
+document
+.querySelectorAll('.manager-region:checked')
+.forEach(x => {
+    responsibleRegions.push(x.value);
+});
+
+const newUser = {
+    username: u,
+    password: p,
+    role: r,
+    regions: responsibleRegions
+};
             systemUsers.push(newUser);
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", u), newUser);
             renderAll();
@@ -656,7 +797,27 @@
                 await window.colDocs.setDoc(window.colDocs.doc(db, "assignments", String(actId)), { list: assignments[actId] });
             }
         }
+async function sendQuickReport(type){
 
+    const report = {
+        id: Date.now(),
+        type: type,
+        user: currentUser.username,
+        date: new Date().toLocaleString('tr-TR'),
+        status: "Yeni"
+    };
+
+    await window.colDocs.setDoc(
+        window.colDocs.doc(
+            window.db,
+            "reports",
+            String(report.id)
+        ),
+        report
+    );
+
+    showAlert("Bildirim gönderildi.");
+}
         function renderAll() {
             const activePersonnel = personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'OFF');
 
@@ -763,7 +924,9 @@
                 <tr class="hover:bg-gray-50">
                     <td class="p-3">
                         <div class="font-medium text-gray-800">${p.name}</div>
-                        <div class="text-xs text-gray-400">${p.title}</div>
+                        <div class="text-xs text-gray-400">
+    ${p.title} | ${p.region || '-'}
+</div>
                     </td>
                     <td class="p-3">
                         <label class="inline-flex items-center cursor-pointer">

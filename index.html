@@ -336,7 +336,6 @@ class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hov
                                 <input type="password" id="new-password" required class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="••••••••">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium mb-1">Rol</label>
     <select
 id="new-role"
 onchange="toggleRegionSelection()"
@@ -347,6 +346,28 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
     <option value="Personel">Personel</option>
 
 </select>
+
+</div>
+
+<div id="personnel-region-box" class="hidden">
+
+    <label class="block text-sm font-medium mb-2">
+        Personel Bölgesi
+    </label>
+
+    <select id="personnel-region"
+    class="w-full p-2 border rounded">
+
+        <option value="">Bölge Seçiniz</option>
+        <option value="1. Bölge">1. Bölge</option>
+        <option value="2. Bölge">2. Bölge</option>
+        <option value="3. Bölge">3. Bölge</option>
+        <option value="4. Bölge">4. Bölge</option>
+
+    </select>
+
+</div>
+
 <div id="manager-region-box" class="hidden">
 
     <label class="block text-sm font-medium mb-2">
@@ -385,8 +406,7 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
 
     </div>
 
-</div>
-                            </div>
+</div>                           
                             <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 rounded transition">Kullanıcıyı Kaydet</button>
                         </form>
                     </div>
@@ -630,13 +650,28 @@ reportsSnapshot.forEach(doc => {
 
 else {
 
-        const reportBtn = document.getElementById('btn-tab-report');
 
-        if(reportBtn){
-            reportBtn.style.display = "none";
-        }
 
+    const notifBtn =
+    document.getElementById('btn-tab-notifications');
+
+    if(notifBtn){
+        notifBtn.style.display = "block";
     }
+
+
+
+
+    const reportBtn =
+    document.getElementById('btn-tab-report');
+
+    if(reportBtn){
+        reportBtn.style.display = "none";
+    }
+
+    switchTab('dashboard');
+
+}
 
     renderAll();
 }
@@ -819,16 +854,24 @@ function toggleRegionSelection(){
     const role =
     document.getElementById('new-role').value;
 
-    const box =
+    const managerBox =
     document.getElementById('manager-region-box');
+
+    const personnelBox =
+    document.getElementById('personnel-region-box');
+
+    managerBox.classList.add('hidden');
+    personnelBox.classList.add('hidden');
 
     if(role === "Manager"){
 
-        box.classList.remove('hidden');
+        managerBox.classList.remove('hidden');
 
-    } else {
+    }
 
-        box.classList.add('hidden');
+    if(role === "Personel"){
+
+        personnelBox.classList.remove('hidden');
 
     }
 
@@ -848,11 +891,21 @@ document
     responsibleRegions.push(x.value);
 });
 
+let personnelRegion = "";
+
+if(r === "Personel"){
+
+    personnelRegion =
+    document.getElementById('personnel-region').value;
+
+}
+
 const newUser = {
     username: u,
     password: p,
     role: r,
-    regions: responsibleRegions
+    regions: responsibleRegions,
+    region: personnelRegion
 };
             systemUsers.push(newUser);
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", u), newUser);

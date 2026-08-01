@@ -44,6 +44,13 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased text-gray-800">
@@ -96,12 +103,12 @@
     <!-- 3. ANA UYGULAMA PANELİ -->
     <div id="main-app" class="hidden min-h-screen flex flex-col md:flex-row">
         <!-- Sidebar -->
-        <aside class="w-full md:w-64 bg-slate-800 text-white flex-shrink-0">
+        <aside class="w-full md:w-64 bg-slate-800 text-white flex-shrink-0 flex flex-col">
             <div class="p-4 bg-red-600 flex items-center gap-3">
                 <i class="fa-solid fa-child-reaching text-2xl"></i>
                 <span class="font-bold text-lg">KidZania Yönetim</span>
             </div>
-            <nav class="p-4 space-y-1">
+            <nav class="p-4 space-y-1 flex-1 overflow-y-auto">
                 <button id="btn-tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 bg-slate-700 hover:bg-slate-700 transition">
                     <i class="fa-solid fa-calendar-days w-5"></i> Vardiya & Dağıtım
                 </button>
@@ -120,30 +127,15 @@
                 <button id="btn-tab-users" onclick="switchTab('users')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
                     <i class="fa-solid fa-user-shield w-5"></i> Kullanıcı Yönetimi
                 </button>
-<button id="btn-tab-notifications"
-onclick="switchTab('notifications')"
-class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
-
-    <i class="fa-solid fa-bell w-5"></i>
-
-    Bildirim Merkezi
-
-</button>
-<button id="btn-tab-reports"
-onclick="switchTab('reports')"
-class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
-
-    <i class="fa-solid fa-file-lines w-5"></i>
-
-    Raporlar
-
-</button>
-<button id="btn-tab-report"
-onclick="switchTab('report')"
-class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
-    <i class="fa-solid fa-triangle-exclamation w-5"></i>
-    Personel Bildirim
-</button>
+                <button id="btn-tab-reports" onclick="switchTab('reports')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-file-lines w-5"></i> Raporlar
+                </button>
+                <button id="btn-tab-notifications" onclick="switchTab('notifications')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-bell w-5"></i> Bildirim Merkezi
+                </button>
+                <button id="btn-tab-report" onclick="switchTab('report')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-triangle-exclamation w-5"></i> Personel Bildirim
+                </button>
             </nav>
             <div class="p-4 border-t border-slate-700 mt-auto">
                 <div class="flex items-center justify-between mb-3">
@@ -156,27 +148,23 @@ class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hov
         </aside>
 
         <!-- İçerik Alanı -->
-        <main class="flex-1 p-6">
+        <main class="flex-1 p-6 overflow-y-auto">
             
             <!-- SEKMELER 1: VARDİYA DAĞITIMI -->
             <div id="tab-dashboard" class="tab-content">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4">
                     <div>
                         <h2 class="text-2xl font-bold text-gray-800">Aktivite Dağıtımı & Vardiya Masası</h2>
                         <p class="text-xs text-gray-500">Personelleri sertifika şartlarına göre aktivitelere atayın.</p>
                     </div>
-<button
-onclick="saveDistributionReport()"
-class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
-
-    <i class="fa-solid fa-floppy-disk"></i>
-
-    Kaydet
-
-</button>
-                    <button onclick="clearAllAssignments()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg transition">
-                        <i class="fa-solid fa-rotate-left"></i> Dağıtımı Sıfırla
-                    </button>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="clearAllAssignments()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg transition">
+                            <i class="fa-solid fa-rotate-left"></i> Dağıtımı Sıfırla
+                        </button>
+                        <button onclick="saveDistributionReport()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow">
+                            <i class="fa-solid fa-floppy-disk"></i> Rapor Olarak Kaydet
+                        </button>
+                    </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
@@ -281,13 +269,13 @@ class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 ro
                         <form onsubmit="handleAddPersonnel(event)" class="space-y-3">
                             <input type="text" id="p-name" placeholder="Ad Soyad" required class="w-full p-2 border rounded">
                             <input type="text" id="p-title" placeholder="Unvan / Rol" required class="w-full p-2 border rounded">
-<select id="p-region" class="w-full p-2 border rounded" required>
-    <option value="">Bölge Seçiniz</option>
-    <option value="1. Bölge">1. Bölge</option>
-    <option value="2. Bölge">2. Bölge</option>
-    <option value="3. Bölge">3. Bölge</option>
-    <option value="4. Bölge">4. Bölge</option>
-</select>
+                            <select id="p-region" class="w-full p-2 border rounded" required>
+                                <option value="">Bölge Seçiniz</option>
+                                <option value="1. Bölge">1. Bölge</option>
+                                <option value="2. Bölge">2. Bölge</option>
+                                <option value="3. Bölge">3. Bölge</option>
+                                <option value="4. Bölge">4. Bölge</option>
+                            </select>
                             <div class="space-y-2 pt-1 border-t">
                                 <span class="text-xs font-semibold text-gray-500 block">Başlangıç Sertifikaları:</span>
                                 <label class="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
@@ -354,77 +342,31 @@ class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 ro
                                 <input type="password" id="new-password" required class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="••••••••">
                             </div>
                             <div>
-    <select
-id="new-role"
-onchange="toggleRegionSelection()"
-class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
-
-    <option value="Admin">Ana Yönetici</option>
-    <option value="Manager">Bölge Yöneticisi</option>
-    <option value="Personel">Personel</option>
-
-</select>
-
-</div>
-
-<div id="personnel-region-box" class="hidden">
-
-    <label class="block text-sm font-medium mb-2">
-        Personel Bölgesi
-    </label>
-
-    <select id="personnel-region"
-    class="w-full p-2 border rounded">
-
-        <option value="">Bölge Seçiniz</option>
-        <option value="1. Bölge">1. Bölge</option>
-        <option value="2. Bölge">2. Bölge</option>
-        <option value="3. Bölge">3. Bölge</option>
-        <option value="4. Bölge">4. Bölge</option>
-
-    </select>
-
-</div>
-
-<div id="manager-region-box" class="hidden">
-
-    <label class="block text-sm font-medium mb-2">
-        Sorumlu Bölgeler
-    </label>
-
-    <div class="space-y-2">
-
-        <label class="flex items-center gap-2">
-            <input type="checkbox"
-                   class="manager-region"
-                   value="1. Bölge">
-            1. Bölge
-        </label>
-
-        <label class="flex items-center gap-2">
-            <input type="checkbox"
-                   class="manager-region"
-                   value="2. Bölge">
-            2. Bölge
-        </label>
-
-        <label class="flex items-center gap-2">
-            <input type="checkbox"
-                   class="manager-region"
-                   value="3. Bölge">
-            3. Bölge
-        </label>
-
-        <label class="flex items-center gap-2">
-            <input type="checkbox"
-                   class="manager-region"
-                   value="4. Bölge">
-            4. Bölge
-        </label>
-
-    </div>
-
-</div>                           
+                                <select id="new-role" onchange="toggleRegionSelection()" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
+                                    <option value="Admin">Ana Yönetici</option>
+                                    <option value="Manager">Bölge Yöneticisi</option>
+                                    <option value="Personel">Personel</option>
+                                </select>
+                            </div>
+                            <div id="personnel-region-box" class="hidden">
+                                <label class="block text-sm font-medium mb-2">Personel Bölgesi</label>
+                                <select id="personnel-region" class="w-full p-2 border rounded">
+                                    <option value="">Bölge Seçiniz</option>
+                                    <option value="1. Bölge">1. Bölge</option>
+                                    <option value="2. Bölge">2. Bölge</option>
+                                    <option value="3. Bölge">3. Bölge</option>
+                                    <option value="4. Bölge">4. Bölge</option>
+                                </select>
+                            </div>
+                            <div id="manager-region-box" class="hidden">
+                                <label class="block text-sm font-medium mb-2">Sorumlu Bölgeler</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="1. Bölge"> 1. Bölge</label>
+                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="2. Bölge"> 2. Bölge</label>
+                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="3. Bölge"> 3. Bölge</label>
+                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="4. Bölge"> 4. Bölge</label>
+                                </div>
+                            </div>                           
                             <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 rounded transition">Kullanıcıyı Kaydet</button>
                         </form>
                     </div>
@@ -443,81 +385,34 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
                     </div>
                 </div>
             </div>
-<!-- PERSONEL BİLDİRİM PANELİ -->
-<div id="tab-report" class="tab-content hidden">
 
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">
-        Hızlı Sorun ve Arıza Bildirimi
-    </h2>
+            <!-- SEKMELER 7: RAPORLAR -->
+            <div id="tab-reports" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Kaydedilen Vardiya ve Dağıtım Raporları</h2>
+                <div class="space-y-6" id="reports-list">
+                    <div class="text-gray-400">Henüz kaydedilmiş bir rapor yok.</div>
+                </div>
+            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- SEKMELER 8: BİLDİRİM MERKEZİ -->
+            <div id="tab-notifications" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Bildirim Merkezi</h2>
+                <div id="notification-list" class="space-y-3">
+                    <div class="text-gray-400">Henüz bildirim bulunmuyor.</div>
+                </div>
+            </div>
 
-        <button onclick="sendQuickReport('Sistem / Cihaz Arızası')"
-        class="bg-red-600 hover:bg-red-700 text-white p-8 rounded-xl">
+            <!-- SEKMELER 9: PERSONEL BİLDİRİM -->
+            <div id="tab-report" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Hızlı Sorun ve Arıza Bildirimi</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <button onclick="sendQuickReport('Sistem / Cihaz Arızası')" class="bg-red-600 hover:bg-red-700 text-white p-8 rounded-xl font-bold text-lg shadow">Sistem / Cihaz Arızası</button>
+                    <button onclick="sendQuickReport('Malzeme / Ürün Eksikliği')" class="bg-orange-500 hover:bg-orange-600 text-white p-8 rounded-xl font-bold text-lg shadow">Malzeme / Ürün Eksikliği</button>
+                    <button onclick="sendQuickReport('Temizlik / Hijyen Problemi')" class="bg-blue-600 hover:bg-blue-700 text-white p-8 rounded-xl font-bold text-lg shadow">Temizlik / Hijyen Problemi</button>
+                    <button onclick="sendQuickReport('Ziyaretçi / Müşteri Sorunu')" class="bg-purple-600 hover:bg-purple-700 text-white p-8 rounded-xl font-bold text-lg shadow">Ziyaretçi / Müşteri Sorunu</button>
+                </div>
+            </div>
 
-            Sistem / Cihaz Arızası
-
-        </button>
-
-        <button onclick="sendQuickReport('Malzeme / Ürün Eksikliği')"
-        class="bg-orange-500 hover:bg-orange-600 text-white p-8 rounded-xl">
-
-            Malzeme / Ürün Eksikliği
-
-        </button>
-
-        <button onclick="sendQuickReport('Temizlik / Hijyen Problemi')"
-        class="bg-blue-600 hover:bg-blue-700 text-white p-8 rounded-xl">
-
-            Temizlik / Hijyen Problemi
-
-        </button>
-
-        <button onclick="sendQuickReport('Ziyaretçi / Müşteri Sorunu')"
-        class="bg-purple-600 hover:bg-purple-700 text-white p-8 rounded-xl">
-
-            Ziyaretçi / Müşteri Sorunu
-
-        </button>
-
-    </div>
-
-</div>
-<!-- BİLDİRİM MERKEZİ -->
-<div id="tab-notifications" class="tab-content hidden">
-
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">
-        Bildirim Merkezi
-    </h2>
-
-    <div id="notification-list" class="space-y-3">
-
-        <div class="text-gray-400">
-            Henüz bildirim bulunmuyor.
-        </div>
-
-    </div>
-
-</div>
-<div id="tab-reports" class="tab-content hidden">
-
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">
-
-        Raporlar
-
-    </h2>
-
-    <div id="reports-list" class="space-y-4">
-
-        <div class="text-gray-400">
-
-            Henüz rapor bulunmuyor.
-
-        </div>
-
-    </div>
-
-</div>
         </main>
     </div>
 
@@ -528,9 +423,9 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
         let activities = [];
         let assignments = {};
         let tasks = [];
-let reports = [];
-let savedReports = [];
-let currentUser = null;
+        let reports = [];
+        let distributionReports = [];
+        let currentUser = null;
 
         function showAlert(msg) {
             const box = document.getElementById('alert-box');
@@ -557,10 +452,10 @@ let currentUser = null;
                     personeller = personnelSnapshot.docs.map(doc => doc.data());
                 } else {
                     personeller = [
-                        { id: 1, name: 'Ahmet Yılmaz', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: true, certHeight: false },
-                        { id: 2, name: 'Ayşe Kaya', title: 'Zupervisor', shift: 'Akşamcı', certHygiene: true, certHeight: true },
-                        { id: 3, name: 'Mehmet Demir', title: 'Zupervisor', shift: 'İzinli', certHygiene: false, certHeight: false },
-                        { id: 4, name: 'Canan Şahin', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: false, certHeight: true }
+                        { id: 1, name: 'Ahmet Yılmaz', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: true, certHeight: false, region: '1. Bölge' },
+                        { id: 2, name: 'Ayşe Kaya', title: 'Zupervisor', shift: 'Akşamcı', certHygiene: true, certHeight: true, region: '2. Bölge' },
+                        { id: 3, name: 'Mehmet Demir', title: 'Zupervisor', shift: 'İzinli', certHygiene: false, certHeight: false, region: '3. Bölge' },
+                        { id: 4, name: 'Canan Şahin', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: false, certHeight: true, region: '4. Bölge' }
                     ];
                     for(let p of personeller) {
                         await window.colDocs.setDoc(window.colDocs.doc(db, "personnel", String(p.id)), p);
@@ -589,26 +484,22 @@ let currentUser = null;
                 });
 
                 const taskSnapshot = await getDocs(collection(db, "tasks"));
-const reportsSnapshot =
-await getDocs(collection(db, "reports"));
-const reportsArchiveSnapshot =
-await getDocs(collection(db, "savedReports"));
-
-savedReports = [];
-
-reportsArchiveSnapshot.forEach(doc => {
-
-    savedReports.push(doc.data());
-
-});
-reports = [];
-
-reportsSnapshot.forEach(doc => {
-    reports.push(doc.data());
-});
                 if (!taskSnapshot.empty) {
                     tasks = taskSnapshot.docs.map(doc => doc.data()).sort((a,b) => b.id - a.id);
                 }
+
+                const reportsSnapshot = await getDocs(collection(db, "reports"));
+                reports = [];
+                reportsSnapshot.forEach(doc => {
+                    reports.push(doc.data());
+                });
+
+                const distSnapshot = await getDocs(collection(db, "distributionReports"));
+                distributionReports = [];
+                distSnapshot.forEach(doc => {
+                    distributionReports.push(doc.data());
+                });
+                distributionReports.sort((a, b) => b.id - a.id);
 
             } catch (error) {
                 console.error("Firebase veri çekme hatası:", error);
@@ -659,69 +550,29 @@ reportsSnapshot.forEach(doc => {
         }
 
         function showMainApp() {
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('current-user-display').innerHTML = `<i class="fa-solid fa-circle-user"></i> ${currentUser.username} (${currentUser.role})`;
 
-    document.getElementById('main-app').classList.remove('hidden');
+            if(currentUser.role === "Personel") {
+                document.getElementById('btn-tab-dashboard').style.display = "none";
+                document.getElementById('btn-tab-schedule').style.display = "none";
+                document.getElementById('btn-tab-activities').style.display = "none";
+                document.getElementById('btn-tab-personnel').style.display = "none";
+                document.getElementById('btn-tab-tasks').style.display = "none";
+                document.getElementById('btn-tab-users').style.display = "none";
+                document.getElementById('btn-tab-reports').style.display = "none";
+                document.getElementById('btn-tab-notifications').style.display = "none";
 
-    document.getElementById('current-user-display').innerHTML =
-    `<i class="fa-solid fa-circle-user"></i>
-    ${currentUser.username} (${currentUser.role})`;
-
-    if(currentUser.role === "Personel"){
-
-        document.getElementById('btn-tab-dashboard').style.display = "none";
-        document.getElementById('btn-tab-schedule').style.display = "none";
-        document.getElementById('btn-tab-activities').style.display = "none";
-        document.getElementById('btn-tab-personnel').style.display = "none";
-        document.getElementById('btn-tab-tasks').style.display = "none";
-        document.getElementById('btn-tab-users').style.display = "none";
-
-        const notifBtn = document.getElementById('btn-tab-notifications');
-        if(notifBtn) notifBtn.style.display = "none";
-
-        document.getElementById('tab-dashboard').style.display = "none";
-        document.getElementById('tab-schedule').style.display = "none";
-        document.getElementById('tab-activities').style.display = "none";
-        document.getElementById('tab-personnel').style.display = "none";
-        document.getElementById('tab-tasks').style.display = "none";
-        document.getElementById('tab-users').style.display = "none";
-
-        const notifTab = document.getElementById('tab-notifications');
-        if(notifTab) notifTab.style.display = "none";
-
-        const reportBtn = document.getElementById('btn-tab-report');
-        if(reportBtn) reportBtn.style.display = "block";
-
-        switchTab('report');
-
-}
-
-else {
-
-
-
-    const notifBtn =
-    document.getElementById('btn-tab-notifications');
-
-    if(notifBtn){
-        notifBtn.style.display = "block";
-    }
-
-
-
-
-    const reportBtn =
-    document.getElementById('btn-tab-report');
-
-    if(reportBtn){
-        reportBtn.style.display = "none";
-    }
-
-    switchTab('dashboard');
-
-}
-
-    renderAll();
-}
+                document.getElementById('btn-tab-report').style.display = "block";
+                switchTab('report');
+            } else {
+                document.getElementById('btn-tab-notifications').style.display = "block";
+                document.getElementById('btn-tab-reports').style.display = "block";
+                document.getElementById('btn-tab-report').style.display = "none";
+                switchTab('dashboard');
+            }
+            renderAll();
+        }
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -783,6 +634,56 @@ else {
                 }
                 renderAll();
             }
+        }
+
+        async function saveDistributionReport() {
+            // Anlık atama kopyasını rapora kaydedelim ki sonradan değişse bile rapor eskisi gibi kalsın
+            let currentSnapshotAssignments = JSON.parse(JSON.stringify(assignments));
+
+            const newReport = {
+                id: Date.now(),
+                createdAt: new Date().toLocaleString('tr-TR'),
+                user: currentUser.username,
+                assignmentsData: currentSnapshotAssignments
+            };
+
+            distributionReports.unshift(newReport);
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "distributionReports", String(newReport.id)), newReport);
+            showAlert("Vardiya ve dağıtım raporu belge olarak kaydedildi.");
+            renderAll();
+        }
+
+        function downloadReportAsPDF(reportId) {
+            const reportElement = document.getElementById(`report-card-${reportId}`);
+            if(!reportElement) return;
+
+            // Yazdırma pencerisini tetikle (Tarayıcılarda "PDF olarak kaydet" seçeneğiyle doğrudan PDF oluşur)
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="tr">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>KidZania Dağıtım Raporu</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <style>
+                        body { font-family: sans-serif; padding: 20px; background: white; }
+                    </style>
+                </head>
+                <body>
+                    <div style="max-width: 800px; margin: 0 auto;">
+                        ${reportElement.innerHTML}
+                    </div>
+                    <script>
+                        setTimeout(() => {
+                            window.print();
+                            window.close();
+                        }, 500);
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
 
         async function handleAddActivity(e) {
@@ -858,21 +759,19 @@ else {
             e.preventDefault();
             const name = document.getElementById('p-name').value;
             const title = document.getElementById('p-title').value;
-const region = document.getElementById('p-region').value;
+            const region = document.getElementById('p-region').value;
             const certHygiene = document.getElementById('p-cert-hygiene').checked;
             const certHeight = document.getElementById('p-cert-height').checked;
 
-           
-
-const newP = {
-    id: Date.now(),
-    name,
-    title,
-    region,
-    shift: 'Sabahçı',
-    certHygiene,
-    certHeight
-};
+            const newP = {
+                id: Date.now(),
+                name,
+                title,
+                region,
+                shift: 'Sabahçı',
+                certHygiene,
+                certHeight
+            };
             personeller.push(newP);
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(newP.id)), newP);
             renderAll();
@@ -896,33 +795,19 @@ const newP = {
             renderAll();
             e.target.reset();
         }
-function toggleRegionSelection(){
 
-    const role =
-    document.getElementById('new-role').value;
+        function toggleRegionSelection() {
+            const role = document.getElementById('new-role').value;
+            const managerBox = document.getElementById('manager-region-box');
+            const personnelBox = document.getElementById('personnel-region-box');
 
-    const managerBox =
-    document.getElementById('manager-region-box');
+            managerBox.classList.add('hidden');
+            personnelBox.classList.add('hidden');
 
-    const personnelBox =
-    document.getElementById('personnel-region-box');
+            if(role === "Manager") managerBox.classList.remove('hidden');
+            if(role === "Personel") personnelBox.classList.remove('hidden');
+        }
 
-    managerBox.classList.add('hidden');
-    personnelBox.classList.add('hidden');
-
-    if(role === "Manager"){
-
-        managerBox.classList.remove('hidden');
-
-    }
-
-    if(role === "Personel"){
-
-        personnelBox.classList.remove('hidden');
-
-    }
-
-}
         async function handleAddUser(e) {
             e.preventDefault();
             const u = document.getElementById('new-username').value.trim();
@@ -931,29 +816,22 @@ function toggleRegionSelection(){
             if (systemUsers.some(x => x.username.toLowerCase() === u.toLowerCase())) { alert('Bu kullanıcı zaten var!'); return; }
             
             let responsibleRegions = [];
+            document.querySelectorAll('.manager-region:checked').forEach(x => {
+                responsibleRegions.push(x.value);
+            });
 
-document
-.querySelectorAll('.manager-region:checked')
-.forEach(x => {
-    responsibleRegions.push(x.value);
-});
+            let personnelRegion = "";
+            if(r === "Personel") {
+                personnelRegion = document.getElementById('personnel-region').value;
+            }
 
-let personnelRegion = "";
-
-if(r === "Personel"){
-
-    personnelRegion =
-    document.getElementById('personnel-region').value;
-
-}
-
-const newUser = {
-    username: u,
-    password: p,
-    role: r,
-    regions: responsibleRegions,
-    region: personnelRegion
-};
+            const newUser = {
+                username: u,
+                password: p,
+                role: r,
+                regions: responsibleRegions,
+                region: personnelRegion
+            };
             systemUsers.push(newUser);
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", u), newUser);
             renderAll();
@@ -973,101 +851,25 @@ const newUser = {
                 await window.colDocs.setDoc(window.colDocs.doc(db, "assignments", String(actId)), { list: assignments[actId] });
             }
         }
-async function sendQuickReport(type){
 
-    const report = {
-        id: Date.now(),
-        type: type,
-        user: currentUser.username,
-        date: new Date().toLocaleString('tr-TR'),
-        status: "Yeni"
-    };
+        async function sendQuickReport(type) {
+            const report = {
+                id: Date.now(),
+                type: type,
+                user: currentUser.username,
+                date: new Date().toLocaleString('tr-TR'),
+                status: "Yeni"
+            };
 
-    await window.colDocs.setDoc(
-        window.colDocs.doc(
-            window.db,
-            "reports",
-            String(report.id)
-        ),
-        report
-    );
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "reports", String(report.id)), report);
+            reports.unshift(report);
+            showAlert("Bildirim gönderildi.");
+            renderAll();
+        }
 
-reports.unshift(report);
-
-showAlert("Bildirim gönderildi.");
-
-renderAll();
-
-}
-async function saveReport(title, content){
-
-    const report = {
-
-        id: Date.now(),
-
-        title,
-
-        content,
-
-        createdBy: currentUser.username,
-
-        date: new Date().toLocaleString('tr-TR')
-
-    };
-
-    savedReports.unshift(report);
-
-    await window.colDocs.setDoc(
-        window.colDocs.doc(
-            window.db,
-            "savedReports",
-            String(report.id)
-        ),
-        report
-    );
-
-    showAlert("Rapor kaydedildi");
-
-    renderAll();
-}
-
-async function saveDistributionReport(){
-
-    const data = [];
-
-    activities.forEach(act => {
-
-        const assignedIds =
-        assignments[act.id] || [];
-
-        const assignedNames =
-        personeller
-        .filter(p => assignedIds.includes(p.id))
-        .map(p => p.name);
-
-        data.push({
-
-            activity: act.name,
-
-            personnel: assignedNames
-
-        });
-
-    });
-
-    await saveReport(
-        "Vardiya & Dağıtım",
-        data
-    );
-
-}
-function renderAll() {
-
-    const activePersonnel =
-    personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'OFF');
-
-    document.getElementById('active-count-badge').innerText =
-    activePersonnel.length;
+        function renderAll() {
+            const activePersonnel = personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'OFF');
+            document.getElementById('active-count-badge').innerText = activePersonnel.length;
 
             document.getElementById('today-active-list').innerHTML = activePersonnel.map(p => {
                 let assignedActId = null;
@@ -1171,9 +973,7 @@ function renderAll() {
                 <tr class="hover:bg-gray-50">
                     <td class="p-3">
                         <div class="font-medium text-gray-800">${p.name}</div>
-                        <div class="text-xs text-gray-400">
-    ${p.title} | ${p.region || '-'}
-</div>
+                        <div class="text-xs text-gray-400">${p.title} | ${p.region || '-'}</div>
                     </td>
                     <td class="p-3">
                         <label class="inline-flex items-center cursor-pointer">
@@ -1212,43 +1012,79 @@ function renderAll() {
                     </td>
                 </tr>
             `).join('');
-const notificationList =
-document.getElementById('notification-list');
 
-if(notificationList){
+            const notificationList = document.getElementById('notification-list');
+            if(notificationList) {
+                notificationList.innerHTML = reports.length ? reports.map(r => `
+                    <div class="bg-white border rounded-xl p-4 shadow-sm">
+                        <div class="font-bold text-red-600">${r.type}</div>
+                        <div class="text-sm text-gray-500 mt-2">Gönderen: ${r.user}</div>
+                        <div class="text-xs text-gray-400 mt-2">${r.date}</div>
+                    </div>
+                `).join('') : '<div class="text-gray-400">Bildirim bulunmuyor.</div>';
+            }
 
-    notificationList.innerHTML = reports.length ?
+            const reportsList = document.getElementById('reports-list');
+            if(reportsList) {
+                reportsList.innerHTML = distributionReports.length ? distributionReports.map(r => {
+                    const repAssignments = r.assignmentsData || {};
+                    
+                    let gridHtml = activities.map(act => {
+                        const assignedIds = repAssignments[act.id] || [];
+                        const assignedPeople = personeller.filter(p => assignedIds.includes(p.id));
 
-    reports.map(r => `
+                        let badge = '<span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded">Standard</span>';
+                        if(act.type === 'Hygiene') badge = '<span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded">Gıda (Hijyen Şart)</span>';
+                        if(act.type === 'Height') badge = '<span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded">Yükseklik Şart</span>';
+                        if(act.type === 'Both') badge = '<span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded">Gıda + Yükseklik</span>';
 
-        <div class="bg-white border rounded-xl p-4 shadow-sm">
+                        return `
+                            <div class="p-3 bg-white border rounded-xl flex flex-col justify-between shadow-sm">
+                                <div>
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h4 class="font-bold text-gray-800 text-xs">${act.name}</h4>
+                                        ${badge}
+                                    </div>
+                                    <div class="space-y-1 mt-2">
+                                        ${assignedPeople.length ? assignedPeople.map(p => `
+                                            <div class="bg-slate-50 p-1.5 border rounded text-xs font-semibold text-gray-700">
+                                                ${p.name}
+                                            </div>
+                                        `).join('') : '<span class="text-[11px] text-gray-400 italic block">Atanan personel yok</span>'}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
 
-            <div class="font-bold text-red-600">
-                ${r.type}
-            </div>
-
-            <div class="text-sm text-gray-500 mt-2">
-                Gönderen: ${r.user}
-            </div>
-
-            <div class="text-sm text-gray-500">
-                Bölge: ${r.region || '-'}
-            </div>
-
-            <div class="text-xs text-gray-400 mt-2">
-                ${r.date}
-            </div>
-
-        </div>
-
-    `).join('')
-
-    :
-
-    `<div class="text-gray-400">
-        Bildirim bulunmuyor.
-    </div>`;
-}
+                    return `
+                        <div class="bg-white border rounded-xl shadow-md p-6 mb-6">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b pb-4 mb-4 gap-3">
+                                <div>
+                                    <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                        <i class="fa-solid fa-file-shield text-red-600"></i> KidZania İstanbul - Dağıtım Raporu Belgesi
+                                    </h3>
+                                    <p class="text-xs text-gray-500 mt-1">Kayıt Tarihi: ${r.createdAt} | Oluşturan: ${r.user}</p>
+                                </div>
+                                <button onclick="downloadReportAsPDF(${r.id})" class="bg-red-600 hover:bg-red-700 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow flex items-center gap-2 transition">
+                                    <i class="fa-solid fa-file-pdf text-sm"></i> PDF Olarak İndir
+                                </button>
+                            </div>
+                            
+                            <!-- PDF DÖNÜŞTÜRÜLECEK BELGE ALANI -->
+                            <div id="report-card-${r.id}" class="p-4 bg-slate-50 border rounded-xl">
+                                <div class="mb-4 pb-2 border-b flex justify-between items-center">
+                                    <span class="font-bold text-xs text-gray-600 uppercase tracking-wider">Aktivite Pozisyonları Dağılım Listesi</span>
+                                    <span class="text-xs text-gray-400">${r.createdAt}</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    ${gridHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('') : '<div class="text-gray-400">Henüz kaydedilmiş rapor belgesi yok.</div>';
+            }
         }
     </script>
 </body>

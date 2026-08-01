@@ -120,6 +120,15 @@
                 <button id="btn-tab-users" onclick="switchTab('users')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
                     <i class="fa-solid fa-user-shield w-5"></i> Kullanıcı Yönetimi
                 </button>
+<button id="btn-tab-notifications"
+onclick="switchTab('notifications')"
+class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+
+    <i class="fa-solid fa-bell w-5"></i>
+
+    Bildirim Merkezi
+
+</button>
 <button id="btn-tab-report"
 onclick="switchTab('report')"
 class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
@@ -436,6 +445,22 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
     </div>
 
 </div>
+<!-- BİLDİRİM MERKEZİ -->
+<div id="tab-notifications" class="tab-content hidden">
+
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+        Bildirim Merkezi
+    </h2>
+
+    <div id="notification-list" class="space-y-3">
+
+        <div class="text-gray-400">
+            Henüz bildirim bulunmuyor.
+        </div>
+
+    </div>
+
+</div>
         </main>
     </div>
 
@@ -446,7 +471,8 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
         let activities = [];
         let assignments = {};
         let tasks = [];
-        let currentUser = null;
+let reports = [];
+let currentUser = null;
 
         function showAlert(msg) {
             const box = document.getElementById('alert-box');
@@ -505,6 +531,14 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
                 });
 
                 const taskSnapshot = await getDocs(collection(db, "tasks"));
+const reportsSnapshot =
+await getDocs(collection(db, "reports"));
+
+reports = [];
+
+reportsSnapshot.forEach(doc => {
+    reports.push(doc.data());
+});
                 if (!taskSnapshot.empty) {
                     tasks = taskSnapshot.docs.map(doc => doc.data()).sort((a,b) => b.id - a.id);
                 }
@@ -558,6 +592,36 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
         }
 
         function showMainApp() {
+
+    document.getElementById('main-app').classList.remove('hidden');
+
+    document.getElementById('current-user-display').innerHTML =
+    `<i class="fa-solid fa-circle-user"></i>
+    ${currentUser.username} (${currentUser.role})`;
+
+    if(currentUser.role === "Personel"){
+
+        document.getElementById('btn-tab-dashboard').style.display = "none";
+        document.getElementById('btn-tab-schedule').style.display = "none";
+        document.getElementById('btn-tab-activities').style.display = "none";
+        document.getElementById('btn-tab-personnel').style.display = "none";
+        document.getElementById('btn-tab-tasks').style.display = "none";
+        document.getElementById('btn-tab-users').style.display = "none";
+
+        switchTab('report');
+
+    } else {
+
+        const reportBtn = document.getElementById('btn-tab-report');
+
+        if(reportBtn){
+            reportBtn.style.display = "none";
+        }
+
+    }
+
+    renderAll();
+}
     document.getElementById('main-app').classList.remove('hidden');
     document.getElementById('current-user-display').innerHTML =
     `<i class="fa-solid fa-circle-user"></i>
@@ -816,12 +880,22 @@ async function sendQuickReport(type){
         report
     );
 
-    showAlert("Bildirim gönderildi.");
-}
-        function renderAll() {
-            const activePersonnel = personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'OFF');
+reports.unshift(report);
 
-            document.getElementById('active-count-badge').innerText = activePersonnel.length;
+showAlert("Bildirim gönderildi.");
+
+renderAll();
+
+}
+
+function renderAll() {
+
+    const activePersonnel =
+    personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'OFF');
+
+    document.getElementById('active-count-badge').innerText =
+    activePersonnel.length;
+
             document.getElementById('today-active-list').innerHTML = activePersonnel.map(p => {
                 let assignedActId = null;
                 Object.keys(assignments).forEach(actId => {
@@ -965,6 +1039,43 @@ async function sendQuickReport(type){
                     </td>
                 </tr>
             `).join('');
+const notificationList =
+document.getElementById('notification-list');
+
+if(notificationList){
+
+    notificationList.innerHTML = reports.length ?
+
+    reports.map(r => `
+
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+
+            <div class="font-bold text-red-600">
+                ${r.type}
+            </div>
+
+            <div class="text-sm text-gray-500 mt-2">
+                Gönderen: ${r.user}
+            </div>
+
+            <div class="text-sm text-gray-500">
+                Bölge: ${r.region || '-'}
+            </div>
+
+            <div class="text-xs text-gray-400 mt-2">
+                ${r.date}
+            </div>
+
+        </div>
+
+    `).join('')
+
+    :
+
+    `<div class="text-gray-400">
+        Bildirim bulunmuyor.
+    </div>`;
+}
         }
     </script>
 </body>

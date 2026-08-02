@@ -1513,9 +1513,20 @@
                     p.shift = dailyShifts[p.id] || 'Seçilmedi';
                 }
 
+                // Vardiya raporu kaydedildikten sonra yerel vardiya verisini ve tarih seçimini sıfırla
+                dailyShifts = {};
+                document.getElementById('schedule-date-filter').value = '';
+                // Personellerin shift durumunu da sıfırla (YEREL + FIREBASE)
+                for (let p of personeller) {
+                    p.shift = 'Seçilmedi';
+                    // Firebase'de de güncelle ki yeni girişte eski shift gelmesin
+                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
+                }
+
                 renderDashboard();
                 renderReports();
-                showAlert(`${date} tarihli vardiya planı kaydedildi ve raporlara eklendi.`);
+                renderScheduleTable();
+                showAlert(`${date} tarihli vardiya planı kaydedildi, raporlara eklendi ve sayfa sıfırlandı.`);
 
                 if(goToDashboard) {
                     switchTab('dashboard');
@@ -1811,9 +1822,17 @@
             savedReports.unshift(newReport);
             
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(id)), newReport);
-            
+
+            // Rapor kaydedildikten sonra dağıtım atamalarını sıfırla (Firebase + local)
+            assignments = {};
+            const assignSnapshotAfterSave = await window.colDocs.getDocs(window.colDocs.collection(window.db, "assignments"));
+            for (let assignDoc of assignSnapshotAfterSave.docs) {
+                await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "assignments", assignDoc.id));
+            }
+
+            renderDashboard();
             renderReports();
-            showAlert("Dağıtım raporu kaydedildi!");
+            showAlert("Dağıtım raporu kaydedildi ve dağıtım sıfırlandı!");
         }
 
         // Alt sekme geçişi

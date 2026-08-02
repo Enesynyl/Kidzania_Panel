@@ -9,6 +9,30 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- FIREBASE SDK (Modüler Sürüm) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwoHZb5AHLNOYoNcZm1ODc81yyOlxyR3A",
+            authDomain: "kidzaniaaktivitepanel.firebaseapp.com",
+            projectId: "kidzaniaaktivitepanel",
+            storageBucket: "kidzaniaaktivitepanel.firebasestorage.app",
+            messagingSenderId: "271569501452",
+            appId: "1:271569501452:web:d54cff310ffe5a77791d29",
+            measurementId: "G-VHY6JYD13L"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.colDocs = { collection, getDocs, setDoc, doc, deleteDoc };
+        
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+
     <style>
         #splash-screen { transition: opacity 0.5s ease, visibility 0.5s ease; }
         .fade-out { opacity: 0; visibility: hidden; }
@@ -20,38 +44,6 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* YAZDIRMA / TEK SAYFA YATAY PDF OPTİMİZASYONU */
-        @media print {
-            @page {
-                size: A4 landscape;
-                margin: 5mm;
-            }
-            body, html {
-                height: 100% !important;
-                background: white !important;
-                overflow: hidden !important;
-            }
-            body * {
-                visibility: hidden !important;
-            }
-            #print-container, #print-container * {
-                visibility: visible !important;
-            }
-            #print-container {
-                display: block !important;
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                background: white !important;
-                z-index: 999999 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .no-print { display: none !important; }
-        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased text-gray-800">
@@ -62,34 +54,14 @@
         <span id="alert-message" class="font-semibold text-sm"></span>
     </div>
 
-    <!-- RAPOR DETAY MODALI (GÖRÜNTÜLE İÇİN) -->
-    <div id="report-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h3 class="font-bold text-lg text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-file-shield text-red-600"></i> Dağıtım Raporu İçeriği
-                </h3>
-                <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold px-2">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <div id="modal-report-content" class="space-y-4"></div>
-            <div class="mt-6 flex justify-end gap-3 pt-3 border-t">
-                <button onclick="closeReportModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-4 py-2 rounded-lg text-sm transition">Kapat</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- YAZDIRMA / PDF İÇİN GİZLİ YATAY ŞABLON ALANI -->
-    <div id="print-container" style="display: none;"></div>
-
     <!-- 1. AÇILIŞ EKRANI -->
     <div id="splash-screen" class="fixed inset-0 bg-red-600 z-50 flex flex-col items-center justify-center text-white p-4">
         <div class="bg-white p-3 rounded-2xl shadow-2xl mb-6 flex items-center justify-center max-w-md w-full">
-            <img src="https://cdn.kplus.com.tr/?url=cGFuZWwucGFya2JpbGV0aS5jb20vL0FsYnVtTWVkaWEvRmFjaWxpdHkvMTEvNjdlYWIwMjAyMmJkNz00YmYyLTg2NjctZTM3ZWQ1MjVjMmJjLmpwZw==" alt="KidZania İstanbul" class="w-full h-auto object-cover rounded-xl">
+            <img src="https://cdn.kplus.com.tr/?url=cGFuZWwucGFya2JpbGV0aS5jb20vL0FsYnVtTWVkaWEvRmFjaWxpdHkvMTEvNjdlYWIwMjAtMmQ3NS00YmYyLTg2NjctZTM3ZWQ1MjVjMmJjLmpwZw==" alt="KidZania İstanbul" class="w-full h-auto object-cover rounded-xl">
         </div>
+        
         <h1 class="text-2xl md:text-3xl font-bold tracking-wide mb-2 text-center">İstanbul Yönetim Paneli</h1>
-        <p class="text-red-100 text-sm mb-6">Sistem Hazırlanıyor...</p>
+        <p class="text-red-100 text-sm mb-6">Bulut Veritabanına Bağlanılıyor...</p>
         <div class="spinner"></div>
     </div>
 
@@ -97,8 +69,8 @@
     <div id="login-screen" class="hidden min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border border-gray-200">
             <div class="text-center mb-6">
-                <div class="bg-white p-2 rounded-xl shadow-sm mb-4 inline-block max-w-[200px] w-full border border-gray-100">
-                    <img src="https://cdn.kplus.com.tr/?url=cGFuZWwucGFya2JpbGV0aS5jb20vL0FsYnVtTWVkaWEvRmFjaWxpdHkvMTEvNjdlYWIwMjAyMmJkNz00YmYyLTg2NjctZTM3ZWQ1MjVjMmJjLmpwZw==" alt="KidZania İstanbul" class="w-full h-auto object-cover rounded-lg">
+                <div class="inline-block p-3 bg-red-100 text-red-600 rounded-full mb-3">
+                    <i class="fa-solid fa-lock text-3xl"></i>
                 </div>
                 <h2 class="text-2xl font-bold text-gray-800">Sisteme Giriş Yapın</h2>
                 <p class="text-gray-500 text-sm mt-1">Devam etmek için bilgilerinizi giriniz</p>
@@ -124,12 +96,12 @@
     <!-- 3. ANA UYGULAMA PANELİ -->
     <div id="main-app" class="hidden min-h-screen flex flex-col md:flex-row">
         <!-- Sidebar -->
-        <aside class="w-full md:w-64 bg-slate-800 text-white flex-shrink-0 flex flex-col">
+        <aside class="w-full md:w-64 bg-slate-800 text-white flex-shrink-0">
             <div class="p-4 bg-red-600 flex items-center gap-3">
                 <i class="fa-solid fa-child-reaching text-2xl"></i>
                 <span class="font-bold text-lg">KidZania Yönetim</span>
             </div>
-            <nav class="p-4 space-y-1 flex-1 overflow-y-auto">
+            <nav class="p-4 space-y-1">
                 <button id="btn-tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 bg-slate-700 hover:bg-slate-700 transition">
                     <i class="fa-solid fa-calendar-days w-5"></i> Vardiya & Dağıtım
                 </button>
@@ -148,15 +120,30 @@
                 <button id="btn-tab-users" onclick="switchTab('users')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
                     <i class="fa-solid fa-user-shield w-5"></i> Kullanıcı Yönetimi
                 </button>
-                <button id="btn-tab-reports" onclick="switchTab('reports')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
-                    <i class="fa-solid fa-file-lines w-5"></i> Raporlar
-                </button>
-                <button id="btn-tab-notifications" onclick="switchTab('notifications')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
-                    <i class="fa-solid fa-bell w-5"></i> Bildirim Merkezi
-                </button>
-                <button id="btn-tab-report" onclick="switchTab('report')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
-                    <i class="fa-solid fa-triangle-exclamation w-5"></i> Personel Bildirim
-                </button>
+<button id="btn-tab-notifications"
+onclick="switchTab('notifications')"
+class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+
+    <i class="fa-solid fa-bell w-5"></i>
+
+    Bildirim Merkezi
+
+</button>
+<button id="btn-tab-reports"
+onclick="switchTab('reports')"
+class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+
+    <i class="fa-solid fa-file-lines w-5"></i>
+
+    Raporlar
+
+</button>
+<button id="btn-tab-report"
+onclick="switchTab('report')"
+class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+    <i class="fa-solid fa-triangle-exclamation w-5"></i>
+    Personel Bildirim
+</button>
             </nav>
             <div class="p-4 border-t border-slate-700 mt-auto">
                 <div class="flex items-center justify-between mb-3">
@@ -169,23 +156,27 @@
         </aside>
 
         <!-- İçerik Alanı -->
-        <main class="flex-1 p-6 overflow-y-auto">
+        <main class="flex-1 p-6">
             
             <!-- SEKMELER 1: VARDİYA DAĞITIMI -->
             <div id="tab-dashboard" class="tab-content">
-                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4">
+                <div class="flex items-center justify-between mb-4">
                     <div>
                         <h2 class="text-2xl font-bold text-gray-800">Aktivite Dağıtımı & Vardiya Masası</h2>
                         <p class="text-xs text-gray-500">Personelleri sertifika şartlarına göre aktivitelere atayın.</p>
                     </div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="clearAllAssignments()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg transition">
-                            <i class="fa-solid fa-rotate-left"></i> Dağıtımı Sıfırla
-                        </button>
-                        <button onclick="saveDistributionReport()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition shadow">
-                            <i class="fa-solid fa-floppy-disk"></i> Rapor Olarak Kaydet
-                        </button>
-                    </div>
+<button
+onclick="saveDistributionReport()"
+class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
+
+    <i class="fa-solid fa-floppy-disk"></i>
+
+    Kaydet
+
+</button>
+                    <button onclick="clearAllAssignments()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg transition">
+                        <i class="fa-solid fa-rotate-left"></i> Dağıtımı Sıfırla
+                    </button>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
@@ -214,7 +205,7 @@
                                 <input type="text" id="act-name" placeholder="Örn: Fırın, Tırmanma Duvarı" required class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-red-500 outline-none">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Aktivite Türı & Gereksinimler</label>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Aktivite Türü & Gereksinimler</label>
                                 <select id="act-type" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-red-500 outline-none">
                                     <option value="Standard">Normal Aktivite (Özel Sertifika Yok)</option>
                                     <option value="Hygiene">Gıda Aktivitesi (Hijyen Sertifikası Zorunlu)</option>
@@ -290,13 +281,13 @@
                         <form onsubmit="handleAddPersonnel(event)" class="space-y-3">
                             <input type="text" id="p-name" placeholder="Ad Soyad" required class="w-full p-2 border rounded">
                             <input type="text" id="p-title" placeholder="Unvan / Rol" required class="w-full p-2 border rounded">
-                            <select id="p-region" class="w-full p-2 border rounded" required>
-                                <option value="">Bölge Seçiniz</option>
-                                <option value="1. Bölge">1. Bölge</option>
-                                <option value="2. Bölge">2. Bölge</option>
-                                <option value="3. Bölge">3. Bölge</option>
-                                <option value="4. Bölge">4. Bölge</option>
-                            </select>
+<select id="p-region" class="w-full p-2 border rounded" required>
+    <option value="">Bölge Seçiniz</option>
+    <option value="1. Bölge">1. Bölge</option>
+    <option value="2. Bölge">2. Bölge</option>
+    <option value="3. Bölge">3. Bölge</option>
+    <option value="4. Bölge">4. Bölge</option>
+</select>
                             <div class="space-y-2 pt-1 border-t">
                                 <span class="text-xs font-semibold text-gray-500 block">Başlangıç Sertifikaları:</span>
                                 <label class="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
@@ -363,31 +354,77 @@
                                 <input type="password" id="new-password" required class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="••••••••">
                             </div>
                             <div>
-                                <select id="new-role" onchange="toggleRegionSelection()" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
-                                    <option value="Admin">Ana Yönetici</option>
-                                    <option value="Manager">Bölge Yöneticisi</option>
-                                    <option value="Personel">Personel</option>
-                                </select>
-                            </div>
-                            <div id="personnel-region-box" class="hidden">
-                                <label class="block text-sm font-medium mb-2">Personel Bölgesi</label>
-                                <select id="personnel-region" class="w-full p-2 border rounded">
-                                    <option value="">Bölge Seçiniz</option>
-                                    <option value="1. Bölge">1. Bölge</option>
-                                    <option value="2. Bölge">2. Bölge</option>
-                                    <option value="3. Bölge">3. Bölge</option>
-                                    <option value="4. Bölge">4. Bölge</option>
-                                </select>
-                            </div>
-                            <div id="manager-region-box" class="hidden">
-                                <label class="block text-sm font-medium mb-2">Sorumlu Bölgeler</label>
-                                <div class="space-y-2">
-                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="1. Bölge"> 1. Bölge</label>
-                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="2. Bölge"> 2. Bölge</label>
-                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="3. Bölge"> 3. Bölge</label>
-                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="4. Bölge"> 4. Bölge</label>
-                                </div>
-                            </div>                           
+    <select
+id="new-role"
+onchange="toggleRegionSelection()"
+class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
+
+    <option value="Admin">Ana Yönetici</option>
+    <option value="Manager">Bölge Yöneticisi</option>
+    <option value="Personel">Personel</option>
+
+</select>
+
+</div>
+
+<div id="personnel-region-box" class="hidden">
+
+    <label class="block text-sm font-medium mb-2">
+        Personel Bölgesi
+    </label>
+
+    <select id="personnel-region"
+    class="w-full p-2 border rounded">
+
+        <option value="">Bölge Seçiniz</option>
+        <option value="1. Bölge">1. Bölge</option>
+        <option value="2. Bölge">2. Bölge</option>
+        <option value="3. Bölge">3. Bölge</option>
+        <option value="4. Bölge">4. Bölge</option>
+
+    </select>
+
+</div>
+
+<div id="manager-region-box" class="hidden">
+
+    <label class="block text-sm font-medium mb-2">
+        Sorumlu Bölgeler
+    </label>
+
+    <div class="space-y-2">
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox"
+                   class="manager-region"
+                   value="1. Bölge">
+            1. Bölge
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox"
+                   class="manager-region"
+                   value="2. Bölge">
+            2. Bölge
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox"
+                   class="manager-region"
+                   value="3. Bölge">
+            3. Bölge
+        </label>
+
+        <label class="flex items-center gap-2">
+            <input type="checkbox"
+                   class="manager-region"
+                   value="4. Bölge">
+            4. Bölge
+        </label>
+
+    </div>
+
+</div>                           
                             <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 rounded transition">Kullanıcıyı Kaydet</button>
                         </form>
                     </div>
@@ -406,50 +443,94 @@
                     </div>
                 </div>
             </div>
+<!-- PERSONEL BİLDİRİM PANELİ -->
+<div id="tab-report" class="tab-content hidden">
 
-            <!-- SEKMELER 7: RAPORLAR -->
-            <div id="tab-reports" class="tab-content hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-800">Kaydedilen Dağıtım Raporları</h2>
-                    <span class="text-xs text-gray-500">Raporlar dosya halinde saklanır</span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="reports-list">
-                    <div class="text-gray-400">Henüz kaydedilmiş bir rapor yok.</div>
-                </div>
-            </div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+        Hızlı Sorun ve Arıza Bildirimi
+    </h2>
 
-            <!-- SEKMELER 8: BİLDİRİM MERKEZİ -->
-            <div id="tab-notifications" class="tab-content hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Bildirim Merkezi</h2>
-                <div id="notification-list" class="space-y-3">
-                    <div class="text-gray-400">Henüz bildirim bulunmuyor.</div>
-                </div>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-            <!-- SEKMELER 9: PERSONEL BİLDİRİM -->
-            <div id="tab-report" class="tab-content hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Hızlı Sorun ve Arıza Bildirimi</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <button onclick="sendQuickReport('Sistem / Cihaz Arızası')" class="bg-red-600 hover:bg-red-700 text-white p-8 rounded-xl font-bold text-lg shadow">Sistem / Cihaz Arızası</button>
-                    <button onclick="sendQuickReport('Malzeme / Ürün Eksikliği')" class="bg-orange-500 hover:bg-orange-600 text-white p-8 rounded-xl font-bold text-lg shadow">Malzeme / Ürün Eksikliği</button>
-                    <button onclick="sendQuickReport('Temizlik / Hijyen Problemi')" class="bg-blue-600 hover:bg-blue-700 text-white p-8 rounded-xl font-bold text-lg shadow">Temizlik / Hijyen Problemi</button>
-                    <button onclick="sendQuickReport('Ziyaretçi / Müşteri Sorunu')" class="bg-purple-600 hover:bg-purple-700 text-white p-8 rounded-xl font-bold text-lg shadow">Ziyaretçi / Müşteri Sorunu</button>
-                </div>
-            </div>
+        <button onclick="sendQuickReport('Sistem / Cihaz Arızası')"
+        class="bg-red-600 hover:bg-red-700 text-white p-8 rounded-xl">
 
+            Sistem / Cihaz Arızası
+
+        </button>
+
+        <button onclick="sendQuickReport('Malzeme / Ürün Eksikliği')"
+        class="bg-orange-500 hover:bg-orange-600 text-white p-8 rounded-xl">
+
+            Malzeme / Ürün Eksikliği
+
+        </button>
+
+        <button onclick="sendQuickReport('Temizlik / Hijyen Problemi')"
+        class="bg-blue-600 hover:bg-blue-700 text-white p-8 rounded-xl">
+
+            Temizlik / Hijyen Problemi
+
+        </button>
+
+        <button onclick="sendQuickReport('Ziyaretçi / Müşteri Sorunu')"
+        class="bg-purple-600 hover:bg-purple-700 text-white p-8 rounded-xl">
+
+            Ziyaretçi / Müşteri Sorunu
+
+        </button>
+
+    </div>
+
+</div>
+<!-- BİLDİRİM MERKEZİ -->
+<div id="tab-notifications" class="tab-content hidden">
+
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+        Bildirim Merkezi
+    </h2>
+
+    <div id="notification-list" class="space-y-3">
+
+        <div class="text-gray-400">
+            Henüz bildirim bulunmuyor.
+        </div>
+
+    </div>
+
+</div>
+<div id="tab-reports" class="tab-content hidden">
+
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+
+        Raporlar
+
+    </h2>
+
+    <div id="reports-list" class="space-y-4">
+
+        <div class="text-gray-400">
+
+            Henüz rapor bulunmuyor.
+
+        </div>
+
+    </div>
+
+</div>
         </main>
     </div>
 
-    <!-- JAVASCRIPT KODLARI (LocalStorage Tabanlı) -->
+    <!-- JAVASCRIPT KODLARI -->
     <script>
         let systemUsers = [];
         let personeller = [];
         let activities = [];
         let assignments = {};
         let tasks = [];
-        let reports = [];
-        let distributionReports = [];
-        let currentUser = null;
+let reports = [];
+let savedReports = [];
+let currentUser = null;
 
         function showAlert(msg) {
             const box = document.getElementById('alert-box');
@@ -458,76 +539,99 @@
             setTimeout(() => box.classList.add('hidden'), 4000);
         }
 
-        function loadFromLocalStorage() {
+        async function loadFromFirebase() {
             try {
-                const storedUsers = localStorage.getItem('kz_systemUsers');
-                systemUsers = storedUsers ? JSON.parse(storedUsers) : [
-                    { username: 'admin', password: '1234', role: 'Admin' }
-                ];
+                const db = window.db;
+                const { collection, getDocs } = window.colDocs;
 
-                const storedPersonnel = localStorage.getItem('kz_personeller');
-                personeller = storedPersonnel ? JSON.parse(storedPersonnel) : [
-                    { id: 1, name: 'Ahmet Yılmaz', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: true, certHeight: false, region: '1. Bölge' },
-                    { id: 2, name: 'Ayşe Kaya', title: 'Zupervisor', shift: 'Akşamcı', certHygiene: true, certHeight: true, region: '2. Bölge' },
-                    { id: 3, name: 'Mehmet Demir', title: 'Zupervisor', shift: 'İzinli', certHygiene: false, certHeight: false, region: '3. Bölge' },
-                    { id: 4, name: 'Canan Şahin', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: false, certHeight: true, region: '4. Bölge' }
-                ];
+                const userSnapshot = await getDocs(collection(db, "users"));
+                if (!userSnapshot.empty) {
+                    systemUsers = userSnapshot.docs.map(doc => doc.data());
+                } else {
+                    systemUsers = [{ username: 'admin', password: '1234', role: 'Admin' }];
+                    await window.colDocs.setDoc(window.colDocs.doc(db, "users", "admin"), systemUsers[0]);
+                }
 
-                const storedActivities = localStorage.getItem('kz_activities');
-                activities = storedActivities ? JSON.parse(storedActivities) : [
-                    { id: 101, name: 'Fırın & Pasta Atölyesi', type: 'Hygiene' },
-                    { id: 102, name: 'Tırmanma Duvarı', type: 'Height' },
-                    { id: 103, name: 'İtfaiye İstasyonu', type: 'Standard' },
-                    { id: 104, name: 'Gizli Ajan Eğitimi', type: 'Both' }
-                ];
+                const personnelSnapshot = await getDocs(collection(db, "personnel"));
+                if (!personnelSnapshot.empty) {
+                    personeller = personnelSnapshot.docs.map(doc => doc.data());
+                } else {
+                    personeller = [
+                        { id: 1, name: 'Ahmet Yılmaz', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: true, certHeight: false },
+                        { id: 2, name: 'Ayşe Kaya', title: 'Zupervisor', shift: 'Akşamcı', certHygiene: true, certHeight: true },
+                        { id: 3, name: 'Mehmet Demir', title: 'Zupervisor', shift: 'İzinli', certHygiene: false, certHeight: false },
+                        { id: 4, name: 'Canan Şahin', title: 'Zupervisor', shift: 'Sabahçı', certHygiene: false, certHeight: true }
+                    ];
+                    for(let p of personeller) {
+                        await window.colDocs.setDoc(window.colDocs.doc(db, "personnel", String(p.id)), p);
+                    }
+                }
 
-                const storedAssignments = localStorage.getItem('kz_assignments');
-                assignments = storedAssignments ? JSON.parse(storedAssignments) : {};
+                const actSnapshot = await getDocs(collection(db, "activities"));
+                if (!actSnapshot.empty) {
+                    activities = actSnapshot.docs.map(doc => doc.data());
+                } else {
+                    activities = [
+                        { id: 101, name: 'Fırın & Pasta Atölyesi', type: 'Hygiene' },
+                        { id: 102, name: 'Tırmanma Duvarı', type: 'Height' },
+                        { id: 103, name: 'İtfaiye İstasyonu', type: 'Standard' },
+                        { id: 104, name: 'Gizli Ajan Eğitimi', type: 'Both' }
+                    ];
+                    for(let a of activities) {
+                        await window.colDocs.setDoc(window.colDocs.doc(db, "activities", String(a.id)), a);
+                    }
+                }
 
-                const storedTasks = localStorage.getItem('kz_tasks');
-                tasks = storedTasks ? JSON.parse(storedTasks) : [];
+                const assignSnapshot = await getDocs(collection(db, "assignments"));
+                assignments = {};
+                assignSnapshot.forEach(doc => {
+                    assignments[doc.id] = doc.data().list;
+                });
 
-                const storedReports = localStorage.getItem('kz_reports');
-                reports = storedReports ? JSON.parse(storedReports) : [];
+                const taskSnapshot = await getDocs(collection(db, "tasks"));
+const reportsSnapshot =
+await getDocs(collection(db, "reports"));
+const reportsArchiveSnapshot =
+await getDocs(collection(db, "savedReports"));
 
-                const storedDistReports = localStorage.getItem('kz_distributionReports');
-                distributionReports = storedDistReports ? JSON.parse(storedDistReports) : [];
+savedReports = [];
 
-            } catch (err) {
-                console.error("Yerel veri yükleme hatası:", err);
+reportsArchiveSnapshot.forEach(doc => {
+
+    savedReports.push(doc.data());
+
+});
+reports = [];
+
+reportsSnapshot.forEach(doc => {
+    reports.push(doc.data());
+});
+                if (!taskSnapshot.empty) {
+                    tasks = taskSnapshot.docs.map(doc => doc.data()).sort((a,b) => b.id - a.id);
+                }
+
+            } catch (error) {
+                console.error("Firebase veri çekme hatası:", error);
+                showAlert("Veriler buluttan yüklenirken hata oluştu.");
             }
         }
 
-        function saveToLocalStorage() {
-            localStorage.setItem('kz_systemUsers', JSON.stringify(systemUsers));
-            localStorage.setItem('kz_personeller', JSON.stringify(personeller));
-            localStorage.setItem('kz_activities', JSON.stringify(activities));
-            localStorage.setItem('kz_assignments', JSON.stringify(assignments));
-            localStorage.setItem('kz_tasks', JSON.stringify(tasks));
-            localStorage.setItem('kz_reports', JSON.stringify(reports));
-            localStorage.setItem('kz_distributionReports', JSON.stringify(distributionReports));
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('firebase-ready', async () => {
             const todayStr = new Date().toISOString().split('T')[0];
-            const dateInput = document.getElementById('schedule-date-filter');
-            if(dateInput) dateInput.value = todayStr;
+            document.getElementById('schedule-date-filter').value = todayStr;
 
-            loadFromLocalStorage();
+            await loadFromFirebase();
 
             setTimeout(() => {
-                const splash = document.getElementById('splash-screen');
-                if(splash) splash.classList.add('fade-out');
-                
+                document.getElementById('splash-screen').classList.add('fade-out');
                 const savedUser = sessionStorage.getItem('kz_logged_user');
                 if (savedUser) {
                     currentUser = JSON.parse(savedUser);
                     showMainApp();
                 } else {
-                    const loginScreen = document.getElementById('login-screen');
-                    if(loginScreen) loginScreen.classList.remove('hidden');
+                    document.getElementById('login-screen').classList.remove('hidden');
                 }
-            }, 800);
+            }, 1500);
         });
 
         function handleLogin(e) {
@@ -555,29 +659,69 @@
         }
 
         function showMainApp() {
-            document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('current-user-display').innerHTML = `<i class="fa-solid fa-circle-user"></i> ${currentUser.username} (${currentUser.role})`;
 
-            if(currentUser.role === "Personel") {
-                document.getElementById('btn-tab-dashboard').style.display = "none";
-                document.getElementById('btn-tab-schedule').style.display = "none";
-                document.getElementById('btn-tab-activities').style.display = "none";
-                document.getElementById('btn-tab-personnel').style.display = "none";
-                document.getElementById('btn-tab-tasks').style.display = "none";
-                document.getElementById('btn-tab-users').style.display = "none";
-                document.getElementById('btn-tab-reports').style.display = "none";
-                document.getElementById('btn-tab-notifications').style.display = "none";
+    document.getElementById('main-app').classList.remove('hidden');
 
-                document.getElementById('btn-tab-report').style.display = "block";
-                switchTab('report');
-            } else {
-                document.getElementById('btn-tab-notifications').style.display = "block";
-                document.getElementById('btn-tab-reports').style.display = "block";
-                document.getElementById('btn-tab-report').style.display = "none";
-                switchTab('dashboard');
-            }
-            renderAll();
-        }
+    document.getElementById('current-user-display').innerHTML =
+    `<i class="fa-solid fa-circle-user"></i>
+    ${currentUser.username} (${currentUser.role})`;
+
+    if(currentUser.role === "Personel"){
+
+        document.getElementById('btn-tab-dashboard').style.display = "none";
+        document.getElementById('btn-tab-schedule').style.display = "none";
+        document.getElementById('btn-tab-activities').style.display = "none";
+        document.getElementById('btn-tab-personnel').style.display = "none";
+        document.getElementById('btn-tab-tasks').style.display = "none";
+        document.getElementById('btn-tab-users').style.display = "none";
+
+        const notifBtn = document.getElementById('btn-tab-notifications');
+        if(notifBtn) notifBtn.style.display = "none";
+
+        document.getElementById('tab-dashboard').style.display = "none";
+        document.getElementById('tab-schedule').style.display = "none";
+        document.getElementById('tab-activities').style.display = "none";
+        document.getElementById('tab-personnel').style.display = "none";
+        document.getElementById('tab-tasks').style.display = "none";
+        document.getElementById('tab-users').style.display = "none";
+
+        const notifTab = document.getElementById('tab-notifications');
+        if(notifTab) notifTab.style.display = "none";
+
+        const reportBtn = document.getElementById('btn-tab-report');
+        if(reportBtn) reportBtn.style.display = "block";
+
+        switchTab('report');
+
+}
+
+else {
+
+
+
+    const notifBtn =
+    document.getElementById('btn-tab-notifications');
+
+    if(notifBtn){
+        notifBtn.style.display = "block";
+    }
+
+
+
+
+    const reportBtn =
+    document.getElementById('btn-tab-report');
+
+    if(reportBtn){
+        reportBtn.style.display = "none";
+    }
+
+    switchTab('dashboard');
+
+}
+
+    renderAll();
+}
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -588,7 +732,7 @@
             if(targetBtn) targetBtn.classList.add('bg-slate-700');
         }
 
-        function assignPersonnelToActivity(pId, actId) {
+        async function assignPersonnelToActivity(pId, actId) {
             if(!actId) return;
             pId = Number(pId);
             actId = Number(actId);
@@ -610,163 +754,68 @@
                 return;
             }
 
-            removePersonnelAssignment(pId, false);
+            await removePersonnelAssignment(pId, false);
 
             if(!assignments[actId]) assignments[actId] = [];
             assignments[actId].push(pId);
 
-            saveToLocalStorage();
+            await saveAssignmentsToFirebase();
             renderAll();
         }
 
-        function removePersonnelAssignment(pId, doRender = true) {
+        async function removePersonnelAssignment(pId, doRender = true) {
             pId = Number(pId);
             Object.keys(assignments).forEach(actId => {
                 assignments[actId] = assignments[actId].filter(id => id !== pId);
             });
-            saveToLocalStorage();
+            await saveAssignmentsToFirebase();
             if(doRender) renderAll();
         }
 
-        function clearAllAssignments() {
+        async function clearAllAssignments() {
             if(confirm("Tüm aktivite atamalarını sıfırlamak istediğinize emin misiniz?")) {
                 assignments = {};
-                saveToLocalStorage();
+                const db = window.db;
+                const { getDocs, collection, deleteDoc, doc } = window.colDocs;
+                const snap = await getDocs(collection(db, "assignments"));
+                for(let d of snap.docs) {
+                    await deleteDoc(doc(db, "assignments", d.id));
+                }
                 renderAll();
             }
         }
 
-        function saveDistributionReport() {
-            let currentSnapshotAssignments = JSON.parse(JSON.stringify(assignments));
-
-            const newReport = {
-                id: Date.now(),
-                createdAt: new Date().toLocaleString('tr-TR'),
-                user: currentUser.username,
-                assignmentsData: currentSnapshotAssignments
-            };
-
-            distributionReports.unshift(newReport);
-            saveToLocalStorage();
-            showAlert("Dağıtım raporu başarıyla kaydedildi.");
-            renderAll();
-        }
-
-        // TEK SAYFA KUSURSUZ YATAY YERLEŞİM (YAZIDAN ARINDIRILMIŞ)
-        function generateReportGridHtml(repAssignments) {
-            let rowsHtml = '';
-            let activitiesArray = [...activities];
-            
-            for (let i = 0; i < activitiesArray.length; i += 3) {
-                let chunk = activitiesArray.slice(i, i + 3);
-                let rowCells = '';
-                
-                chunk.forEach(act => {
-                    const assignedIds = repAssignments[act.id] || [];
-                    const assignedPeople = personeller.filter(p => assignedIds.includes(p.id));
-
-                    let badgeText = 'Standard';
-                    let badgeStyle = 'background: #f3f4f6; color: #4b5563;';
-                    if(act.type === 'Hygiene') { badgeText = 'Gıda'; badgeStyle = 'background: #d1fae5; color: #047857; font-weight: bold;'; }
-                    else if(act.type === 'Height') { badgeText = 'Yükseklik'; badgeStyle = 'background: #dbeafe; color: #1d4ed8; font-weight: bold;'; }
-                    else if(act.type === 'Both') { badgeText = 'Gıda + Yükseklik'; badgeStyle = 'background: #f3e8ff; color: #6b21a8; font-weight: bold;'; }
-
-                    let peopleHtml = assignedPeople.length ? assignedPeople.map(p => `
-                        <div style="background: #f8fafc; padding: 3px 5px; border: 1px solid #e2e8f0; border-radius: 3px; font-size: 10px; font-weight: 600; color: #334155; margin-bottom: 2px;">
-                            • ${p.name} <span style="font-weight: normal; color: #64748b; font-size: 9px;">(${p.title})</span>
-                        </div>
-                    `).join('') : '<span style="font-size: 9px; color: #94a3b8; font-style: italic; display: block; padding: 2px 0;">Atanan personel yok</span>';
-
-                    rowCells += `
-                        <td style="width: 33.33%; vertical-align: top; padding: 3px;">
-                            <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 5px; padding: 6px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 3px; margin-bottom: 4px;">
-                                    <span style="font-weight: bold; font-size: 10px; color: #0f172a;">${act.name}</span>
-                                    <span style="font-size: 8px; padding: 1px 4px; border-radius: 9999px; ${badgeStyle}">${badgeText}</span>
-                                </div>
-                                <div>${peopleHtml}</div>
-                            </div>
-                        </td>
-                    `;
-                });
-                rowsHtml += `<tr>${rowCells}</tr>`;
-            }
-
-            return `<table style="width: 100%; border-collapse: separate; border-spacing: 4px;">${rowsHtml}</table>`;
-        }
-
-        // RAPORU MODALDA GÖRÜNTÜLE
-        function viewReportModal(reportId) {
-            const report = distributionReports.find(r => r.id === reportId);
-            if(!report) return;
-
-            const contentBox = document.getElementById('modal-report-content');
-            contentBox.innerHTML = `
-                <div class="mb-4 text-xs text-gray-500 bg-slate-50 p-3 rounded-lg border flex justify-between items-center">
-                    <span><strong>Kayıt Tarihi:</strong> ${report.createdAt}</span>
-                    <span><strong>Oluşturan:</strong> ${report.user}</span>
-                </div>
-                ${generateReportGridHtml(report.assignmentsData || {})}
-            `;
-
-            document.getElementById('report-modal').classList.remove('hidden');
-        }
-
-        function closeReportModal() {
-            document.getElementById('report-modal').classList.add('hidden');
-        }
-
-        // TEK SAYFA YATAY PDF İNDİR (YAZDIR)
-        function downloadReportAsPDF(reportId) {
-            const report = distributionReports.find(r => r.id === reportId);
-            if(!report) return;
-
-            const printContainer = document.getElementById('print-container');
-            printContainer.innerHTML = `
-                <div style="font-family: Arial, sans-serif; padding: 4px; background: white; width: 100%; max-height: 100vh; overflow: hidden;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #dc2626; padding-bottom: 4px; margin-bottom: 8px;">
-                        <div>
-                            <h2 style="font-size: 13px; font-weight: bold; color: #1e293b; margin: 0;">KidZania İstanbul - Dağıtım Raporu Belgesi</h2>
-                            <p style="font-size: 9px; color: #64748b; margin: 1px 0 0 0;">Kayıt Tarihi: ${report.createdAt} | Oluşturan: ${report.user}</p>
-                        </div>
-                    </div>
-                    ${generateReportGridHtml(report.assignmentsData || {})}
-                </div>
-            `;
-
-            window.print();
-        }
-
-        function handleAddActivity(e) {
+        async function handleAddActivity(e) {
             e.preventDefault();
             const name = document.getElementById('act-name').value.trim();
             const type = document.getElementById('act-type').value;
             const newAct = { id: Date.now(), name, type };
 
             activities.push(newAct);
-            saveToLocalStorage();
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "activities", String(newAct.id)), newAct);
             renderAll();
             e.target.reset();
         }
 
-        function deleteActivity(actId) {
+        async function deleteActivity(actId) {
             activities = activities.filter(a => a.id !== actId);
             delete assignments[actId];
-            saveToLocalStorage();
+            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "activities", String(actId)));
+            await saveAssignmentsToFirebase();
             renderAll();
         }
 
-        function toggleCertificate(pId, certType) {
+        async function toggleCertificate(pId, certType) {
             const p = personeller.find(x => x.id === pId);
             if(p) {
                 if(certType === 'hygiene') p.certHygiene = !p.certHygiene;
                 if(certType === 'height') p.certHeight = !p.certHeight;
-                saveToLocalStorage();
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
                 renderAll();
             }
         }
 
-        function saveScheduleAndRegisterTask(redirectToDistribution = false) {
+        async function saveScheduleAndRegisterTask(redirectToDistribution = false) {
             const selectedDate = document.getElementById('schedule-date-filter').value;
             const formattedDate = selectedDate ? selectedDate.split('-').reverse().join('/') : new Date().toLocaleDateString('tr-TR');
 
@@ -774,7 +823,7 @@
             const aksamci = personeller.filter(p => p.shift === 'Akşamcı').map(p => p.name);
             const izinli = personeller.filter(p => p.shift === 'İzinli' || p.shift === 'OFF').map(p => p.name);
 
-            const desc = `Vardiya Planı Kaydedildi [Tarih: ${formattedDate}]\n- Sabahçı (${sabahci.length}): ${sabahci.join(', ') || 'Yok'}\n- Akşamçı (${aksamci.length}): ${aksamci.join(', ') || 'Yok'}\n- İzinli/OFF (${izinli.length}): ${izinli.join(', ') || 'Yok'}`;
+            const desc = `Vardiya Planı Kaydedildi [Tarih: ${formattedDate}]\n- Sabahçı (${sabahci.length}): ${sabahci.join(', ') || 'Yok'}\n- Akşamcı (${aksamci.length}): ${aksamci.join(', ') || 'Yok'}\n- İzinli/OFF (${izinli.length}): ${izinli.join(', ') || 'Yok'}`;
 
             const newTask = {
                 id: Date.now(),
@@ -785,7 +834,7 @@
             };
 
             tasks.unshift(newTask);
-            saveToLocalStorage();
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "tasks", String(newTask.id)), newTask);
             renderAll();
 
             if(redirectToDistribution) {
@@ -795,70 +844,86 @@
             }
         }
 
-        function updateShift(pId, newShift) {
+        async function updateShift(pId, newShift) {
             const p = personeller.find(x => x.id === pId);
             if(p) { 
                 p.shift = newShift; 
-                if(newShift === 'İzinli' || newShift === 'OFF') removePersonnelAssignment(pId, false);
-                saveToLocalStorage();
+                if(newShift === 'İzinli' || newShift === 'OFF') await removePersonnelAssignment(pId, false);
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
                 renderAll(); 
             }
         }
 
-        function handleAddPersonnel(e) {
+        async function handleAddPersonnel(e) {
             e.preventDefault();
             const name = document.getElementById('p-name').value;
             const title = document.getElementById('p-title').value;
-            const region = document.getElementById('p-region').value;
+const region = document.getElementById('p-region').value;
             const certHygiene = document.getElementById('p-cert-hygiene').checked;
             const certHeight = document.getElementById('p-cert-height').checked;
 
-            const newP = {
-                id: Date.now(),
-                name,
-                title,
-                region,
-                shift: 'Sabahçı',
-                certHygiene,
-                certHeight
-            };
+           
+
+const newP = {
+    id: Date.now(),
+    name,
+    title,
+    region,
+    shift: 'Sabahçı',
+    certHygiene,
+    certHeight
+};
             personeller.push(newP);
-            saveToLocalStorage();
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(newP.id)), newP);
             renderAll();
             e.target.reset();
         }
 
-        function deletePersonnel(id) {
+        async function deletePersonnel(id) {
             personeller = personeller.filter(p => p.id !== id);
-            removePersonnelAssignment(id, false);
-            saveToLocalStorage();
+            await removePersonnelAssignment(id, false);
+            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "personnel", String(id)));
             renderAll();
         }
 
-        function handleAddTask(e) {
+        async function handleAddTask(e) {
             e.preventDefault();
             const title = document.getElementById('task-title').value;
             const desc = document.getElementById('task-desc').value;
             const newTask = { id: Date.now(), title, desc, date: new Date().toLocaleDateString('tr-TR'), user: currentUser.username };
             tasks.unshift(newTask);
-            saveToLocalStorage();
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "tasks", String(newTask.id)), newTask);
             renderAll();
             e.target.reset();
         }
+function toggleRegionSelection(){
 
-        function toggleRegionSelection() {
-            const role = document.getElementById('new-role').value;
-            const managerBox = document.getElementById('manager-region-box');
-            const personnelBox = document.getElementById('personnel-region-box');
+    const role =
+    document.getElementById('new-role').value;
 
-            managerBox.classList.add('hidden');
-            personnelBox.classList.add('hidden');
+    const managerBox =
+    document.getElementById('manager-region-box');
 
-            if(role === "Manager") managerBox.classList.remove('hidden');
-            if(role === "Personel") personnelBox.classList.remove('hidden');
-        }
+    const personnelBox =
+    document.getElementById('personnel-region-box');
 
-        function handleAddUser(e) {
+    managerBox.classList.add('hidden');
+    personnelBox.classList.add('hidden');
+
+    if(role === "Manager"){
+
+        managerBox.classList.remove('hidden');
+
+    }
+
+    if(role === "Personel"){
+
+        personnelBox.classList.remove('hidden');
+
+    }
+
+}
+        async function handleAddUser(e) {
             e.preventDefault();
             const u = document.getElementById('new-username').value.trim();
             const p = document.getElementById('new-password').value.trim();
@@ -866,260 +931,324 @@
             if (systemUsers.some(x => x.username.toLowerCase() === u.toLowerCase())) { alert('Bu kullanıcı zaten var!'); return; }
             
             let responsibleRegions = [];
-            document.querySelectorAll('.manager-region:checked').forEach(x => {
-                responsibleRegions.push(x.value);
-            });
 
-            let personnelRegion = "";
-            if(r === "Personel") {
-                personnelRegion = document.getElementById('personnel-region').value;
-            }
+document
+.querySelectorAll('.manager-region:checked')
+.forEach(x => {
+    responsibleRegions.push(x.value);
+});
 
-            const newUser = {
-                username: u,
-                password: p,
-                role: r,
-                regions: responsibleRegions,
-                region: personnelRegion
-            };
+let personnelRegion = "";
+
+if(r === "Personel"){
+
+    personnelRegion =
+    document.getElementById('personnel-region').value;
+
+}
+
+const newUser = {
+    username: u,
+    password: p,
+    role: r,
+    regions: responsibleRegions,
+    region: personnelRegion
+};
             systemUsers.push(newUser);
-            saveToLocalStorage();
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", u), newUser);
             renderAll();
             e.target.reset();
         }
 
-        function deleteUser(u) {
+        async function deleteUser(u) {
             if(u === 'admin') return alert('Admin silinemez!');
             systemUsers = systemUsers.filter(x => x.username !== u);
-            saveToLocalStorage();
+            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "users", u));
             renderAll();
         }
 
-        function sendQuickReport(type) {
-            const report = {
-                id: Date.now(),
-                type: type,
-                user: currentUser.username,
-                date: new Date().toLocaleString('tr-TR'),
-                status: "Yeni"
-            };
-
-            reports.unshift(report);
-            saveToLocalStorage();
-            showAlert("Bildirim gönderildi.");
-            renderAll();
+        async function saveAssignmentsToFirebase() {
+            const db = window.db;
+            for (let actId of Object.keys(assignments)) {
+                await window.colDocs.setDoc(window.colDocs.doc(db, "assignments", String(actId)), { list: assignments[actId] });
+            }
         }
+async function sendQuickReport(type){
 
-        function renderAll() {
-            const activePersonnel = personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'OFF');
-            const activeBadge = document.getElementById('active-count-badge');
-            if(activeBadge) activeBadge.innerText = activePersonnel.length;
+    const report = {
+        id: Date.now(),
+        type: type,
+        user: currentUser.username,
+        date: new Date().toLocaleString('tr-TR'),
+        status: "Yeni"
+    };
 
-            const todayActiveList = document.getElementById('today-active-list');
-            if(todayActiveList) {
-                todayActiveList.innerHTML = activePersonnel.map(p => {
-                    let assignedActId = null;
-                    Object.keys(assignments).forEach(actId => {
-                        if(assignments[actId] && assignments[actId].includes(p.id)) assignedActId = actId;
-                    });
+    await window.colDocs.setDoc(
+        window.colDocs.doc(
+            window.db,
+            "reports",
+            String(report.id)
+        ),
+        report
+    );
 
-                    let certs = '';
-                    if(p.certHygiene) certs += '<span class="text-[9px] bg-emerald-100 text-emerald-800 px-1 rounded">H</span> ';
-                    if(p.certHeight) certs += '<span class="text-[9px] bg-blue-100 text-blue-800 px-1 rounded">Y</span>';
+reports.unshift(report);
 
-                    return `
-                        <div class="p-2.5 bg-slate-50 border rounded-lg flex flex-col gap-2">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="font-bold text-gray-800 text-xs">${p.name} ${certs}</div>
-                                    <div class="text-[10px] text-gray-400">${p.shift}</div>
-                                </div>
-                            </div>
+showAlert("Bildirim gönderildi.");
+
+renderAll();
+
+}
+async function saveReport(title, content){
+
+    const report = {
+
+        id: Date.now(),
+
+        title,
+
+        content,
+
+        createdBy: currentUser.username,
+
+        date: new Date().toLocaleString('tr-TR')
+
+    };
+
+    savedReports.unshift(report);
+
+    await window.colDocs.setDoc(
+        window.colDocs.doc(
+            window.db,
+            "savedReports",
+            String(report.id)
+        ),
+        report
+    );
+
+    showAlert("Rapor kaydedildi");
+
+    renderAll();
+}
+
+async function saveDistributionReport(){
+
+    const data = [];
+
+    activities.forEach(act => {
+
+        const assignedIds =
+        assignments[act.id] || [];
+
+        const assignedNames =
+        personeller
+        .filter(p => assignedIds.includes(p.id))
+        .map(p => p.name);
+
+        data.push({
+
+            activity: act.name,
+
+            personnel: assignedNames
+
+        });
+
+    });
+
+    await saveReport(
+        "Vardiya & Dağıtım",
+        data
+    );
+
+}
+function renderAll() {
+
+    const activePersonnel =
+    personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'OFF');
+
+    document.getElementById('active-count-badge').innerText =
+    activePersonnel.length;
+
+            document.getElementById('today-active-list').innerHTML = activePersonnel.map(p => {
+                let assignedActId = null;
+                Object.keys(assignments).forEach(actId => {
+                    if(assignments[actId] && assignments[actId].includes(p.id)) assignedActId = actId;
+                });
+
+                let certs = '';
+                if(p.certHygiene) certs += '<span class="text-[9px] bg-emerald-100 text-emerald-800 px-1 rounded">H</span> ';
+                if(p.certHeight) certs += '<span class="text-[9px] bg-blue-100 text-blue-800 px-1 rounded">Y</span>';
+
+                return `
+                    <div class="p-2.5 bg-slate-50 border rounded-lg flex flex-col gap-2">
+                        <div class="flex items-center justify-between">
                             <div>
-                                <select onchange="assignPersonnelToActivity(${p.id}, this.value)" class="w-full text-xs p-1 border rounded bg-white font-medium text-gray-700 outline-none">
-                                    <option value="">-- Aktivite Seç / Ata --</option>
-                                    ${activities.map(a => `
-                                        <option value="${a.id}" ${assignedActId == a.id ? 'selected' : ''}>
-                                            ${a.name} ${a.type === 'Hygiene' ? '[Gıda]' : a.type === 'Height' ? '[Yükseklik]' : a.type === 'Both' ? '[Gıda+Yükseklik]' : ''}
-                                        </option>
-                                    `).join('')}
-                                </select>
+                                <div class="font-bold text-gray-800 text-xs">${p.name} ${certs}</div>
+                                <div class="text-[10px] text-gray-400">${p.shift}</div>
                             </div>
                         </div>
-                    `;
-                }).join('') || '<div class="text-xs text-gray-400">Bugün çalışan aktif personel yok.</div>';
-            }
-
-            const assignGrid = document.getElementById('activities-assignment-grid');
-            if(assignGrid) {
-                assignGrid.innerHTML = activities.map(act => {
-                    const assignedIds = assignments[act.id] || [];
-                    const assignedPeople = personeller.filter(p => assignedIds.includes(p.id));
-
-                    let badge = '<span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded">Standard</span>';
-                    if(act.type === 'Hygiene') badge = '<span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded">Gıda (Hijyen Şart)</span>';
-                    if(act.type === 'Height') badge = '<span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded">Yükseklik Şart</span>';
-                    if(act.type === 'Both') badge = '<span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded">Gıda + Yükseklik</span>';
-
-                    return `
-                        <div class="p-4 bg-slate-50 border rounded-xl flex flex-col justify-between">
-                            <div>
-                                <div class="flex justify-between items-start mb-2">
-                                    <h4 class="font-bold text-gray-800 text-sm">${act.name}</h4>
-                                    ${badge}
-                                </div>
-                                <div class="space-y-1.5 mt-3">
-                                    ${assignedPeople.length ? assignedPeople.map(p => `
-                                        <div class="flex justify-between items-center bg-white p-2 border rounded shadow-sm text-xs">
-                                            <span class="font-semibold text-gray-700">${p.name}</span>
-                                            <button onclick="removePersonnelAssignment(${p.id})" class="text-red-400 hover:text-red-600 text-xs">
-                                                <i class="fa-solid fa-xmark"></i>
-                                            </button>
-                                        </div>
-                                    `).join('') : '<span class="text-xs text-gray-400 italic block">Henüz personel atanmadı.</span>'}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('') || '<div class="text-xs text-gray-400">Henüz aktivite tanımlanmadı.</div>';
-            }
-
-            const actTable = document.getElementById('activities-table-body');
-            if(actTable) {
-                actTable.innerHTML = activities.map(a => {
-                    let typeTxt = 'Normal';
-                    if(a.type === 'Hygiene') typeTxt = '<span class="text-emerald-700 font-semibold">Gıda Aktivitesi (Hijyen)</span>';
-                    if(a.type === 'Height') typeTxt = '<span class="text-blue-700 font-semibold">Yükseklik Aktivitesi</span>';
-                    if(a.type === 'Both') typeTxt = '<span class="text-purple-700 font-semibold">Gıda + Yükseklik</span>';
-                    return `
-                        <tr class="hover:bg-gray-50">
-                            <td class="p-3 font-medium text-gray-800">${a.name}</td>
-                            <td class="p-3">${typeTxt}</td>
-                            <td class="p-3 text-right">
-                                <button onclick="deleteActivity(${a.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-
-            const schedTable = document.getElementById('schedule-table-body');
-            if(schedTable) {
-                schedTable.innerHTML = personeller.map(p => {
-                    let certs = [];
-                    if(p.certHygiene) certs.push('<span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">Hijyen</span>');
-                    if(p.certHeight) certs.push('<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-semibold">Yükseklik</span>');
-                    return `
-                    <tr>
-                        <td class="p-3 font-medium">${p.name} <span class="text-xs text-gray-400">(${p.title})</span></td>
-                        <td class="p-3"><div class="flex gap-1">${certs.length ? certs.join(' ') : '<span class="text-xs text-gray-300">Yok</span>'}</div></td>
-                        <td class="p-3">
-                            <select onchange="updateShift(${p.id}, this.value)" class="p-1 border rounded text-xs font-semibold">
-                                <option value="Sabahçı" ${p.shift==='Sabahçı'?'selected':''}>Sabahçı</option>
-                                <option value="Akşamcı" ${p.shift==='Akşamcı'?'selected':''}>Akşamcı</option>
-                                <option value="İzinli" ${p.shift==='İzinli'?'selected':''}>İzinli</option>
-                                <option value="OFF" ${p.shift==='OFF'?'selected':''}>OFF</option>
+                        <div>
+                            <select onchange="assignPersonnelToActivity(${p.id}, this.value)" class="w-full text-xs p-1 border rounded bg-white font-medium text-gray-700 outline-none">
+                                <option value="">-- Aktivite Seç / Ata --</option>
+                                ${activities.map(a => `
+                                    <option value="${a.id}" ${assignedActId == a.id ? 'selected' : ''}>
+                                        ${a.name} ${a.type === 'Hygiene' ? '[Gıda]' : a.type === 'Height' ? '[Yükseklik]' : a.type === 'Both' ? '[Gıda+Yükseklik]' : ''}
+                                    </option>
+                                `).join('')}
                             </select>
-                        </td>
-                    </tr>
-                `}).join('');
-            }
-
-            const pTable = document.getElementById('personnel-table-body');
-            if(pTable) {
-                pTable.innerHTML = personeller.map(p => `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-3">
-                            <div class="font-medium text-gray-800">${p.name}</div>
-                            <div class="text-xs text-gray-400">${p.title} | ${p.region || '-'}</div>
-                        </td>
-                        <td class="p-3">
-                            <label class="inline-flex items-center cursor-pointer">
-                                <input type="checkbox" ${p.certHygiene ? 'checked' : ''} onchange="toggleCertificate(${p.id}, 'hygiene')" class="rounded text-red-600 focus:ring-0">
-                                <span class="ml-2 text-xs font-medium text-gray-700">Hijyen</span>
-                            </label>
-                        </td>
-                        <td class="p-3">
-                            <label class="inline-flex items-center cursor-pointer">
-                                <input type="checkbox" ${p.certHeight ? 'checked' : ''} onchange="toggleCertificate(${p.id}, 'height')" class="rounded text-red-600 focus:ring-0">
-                                <span class="ml-2 text-xs font-medium text-gray-700">Yükseklik</span>
-                            </label>
-                        </td>
-                        <td class="p-3 text-right">
-                            <button onclick="deletePersonnel(${p.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `).join('');
-            }
-
-            const tList = document.getElementById('tasks-list');
-            if(tList) {
-                tList.innerHTML = tasks.length ? tasks.map(t => `
-                    <div class="p-4 border rounded-xl bg-slate-50 shadow-sm">
-                        <div class="flex justify-between items-center font-bold text-slate-800 border-b pb-2 mb-2">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-red-600"></i> ${t.title}</span>
-                            <span class="text-xs text-gray-400 font-normal"><i class="fa-regular fa-clock"></i> ${t.date} | Ekleyen: ${t.user}</span>
                         </div>
-                        <p class="text-gray-700 whitespace-pre-line text-xs font-mono leading-relaxed">${t.desc}</p>
                     </div>
-                `).join('') : '<span class="text-gray-400">Henüz kaydedilmiş bir iş yok.</span>';
-            }
+                `;
+            }).join('') || '<div class="text-xs text-gray-400">Bugün çalışan aktif personel yok.</div>';
 
-            const uTable = document.getElementById('users-table-body');
-            if(uTable) {
-                uTable.innerHTML = systemUsers.map(u => `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-3 font-medium">${u.username}</td>
-                        <td class="p-3"><span class="px-2 py-1 text-xs rounded-full ${u.role === 'Admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} font-semibold">${u.role}</span></td>
-                        <td class="p-3 text-right">
-                            ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-xs text-gray-400">Ana Yönetici</span>'}
-                        </td>
-                    </tr>
-                `).join('');
-            }
+            document.getElementById('activities-assignment-grid').innerHTML = activities.map(act => {
+                const assignedIds = assignments[act.id] || [];
+                const assignedPeople = personeller.filter(p => assignedIds.includes(p.id));
 
-            const notificationList = document.getElementById('notification-list');
-            if(notificationList) {
-                notificationList.innerHTML = reports.length ? reports.map(r => `
-                    <div class="bg-white border rounded-xl p-4 shadow-sm">
-                        <div class="font-bold text-red-600">${r.type}</div>
-                        <div class="text-sm text-gray-500 mt-2">Gönderen: ${r.user}</div>
-                        <div class="text-xs text-gray-400 mt-2">${r.date}</div>
-                    </div>
-                `).join('') : '<div class="text-gray-400">Bildirim bulunmuyor.</div>';
-            }
+                let badge = '<span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded">Standard</span>';
+                if(act.type === 'Hygiene') badge = '<span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded">Gıda (Hijyen Şart)</span>';
+                if(act.type === 'Height') badge = '<span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded">Yükseklik Şart</span>';
+                if(act.type === 'Both') badge = '<span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded">Gıda + Yükseklik</span>';
 
-            const reportsList = document.getElementById('reports-list');
-            if(reportsList) {
-                reportsList.innerHTML = distributionReports.length ? distributionReports.map((r, index) => {
-                    return `
-                        <div class="bg-white border rounded-xl shadow-sm p-5 flex flex-col justify-between hover:shadow-md transition">
-                            <div>
-                                <div class="flex items-center gap-3 mb-3">
-                                    <div class="p-3 bg-red-50 text-red-600 rounded-xl">
-                                        <i class="fa-solid fa-file-pdf text-2xl"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-gray-800 text-sm">Dağıtım Raporu #${distributionReports.length - index}</h4>
-                                        <p class="text-xs text-gray-400 mt-0.5">${r.createdAt}</p>
-                                    </div>
-                                </div>
-                                <div class="text-xs text-gray-500 mb-4 bg-slate-50 p-2 rounded border">
-                                    <span><strong>Oluşturan:</strong> ${r.user}</span>
-                                </div>
+                return `
+                    <div class="p-4 bg-slate-50 border rounded-xl flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-bold text-gray-800 text-sm">${act.name}</h4>
+                                ${badge}
                             </div>
-                            <div class="flex items-center gap-2 pt-3 border-t">
-                                <button onclick="viewReportModal(${r.id})" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs py-2 rounded-lg transition flex items-center justify-center gap-1.5">
-                                    <i class="fa-solid fa-eye"></i> Görüntüle
-                                </button>
-                                <button onclick="downloadReportAsPDF(${r.id})" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs py-2 rounded-lg shadow transition flex items-center justify-center gap-1.5">
-                                    <i class="fa-solid fa-file-arrow-down"></i> PDF İndir
-                                </button>
+                            <div class="space-y-1.5 mt-3">
+                                ${assignedPeople.length ? assignedPeople.map(p => `
+                                    <div class="flex justify-between items-center bg-white p-2 border rounded shadow-sm text-xs">
+                                        <span class="font-semibold text-gray-700">${p.name}</span>
+                                        <button onclick="removePersonnelAssignment(${p.id})" class="text-red-400 hover:text-red-600 text-xs">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </div>
+                                `).join('') : '<span class="text-xs text-gray-400 italic block">Henüz personel atanmadı.</span>'}
                             </div>
                         </div>
-                    `;
-                }).join('') : '<div class="text-gray-400 col-span-3">Henüz kaydedilmiş rapor dosyası bulunmuyor.</div>';
-            }
+                    </div>
+                `;
+            }).join('') || '<div class="text-xs text-gray-400">Henüz aktivite tanımlanmadı.</div>';
+
+            document.getElementById('activities-table-body').innerHTML = activities.map(a => {
+                let typeTxt = 'Normal';
+                if(a.type === 'Hygiene') typeTxt = '<span class="text-emerald-700 font-semibold">Gıda Aktivitesi (Hijyen)</span>';
+                if(a.type === 'Height') typeTxt = '<span class="text-blue-700 font-semibold">Yükseklik Aktivitesi</span>';
+                if(a.type === 'Both') typeTxt = '<span class="text-purple-700 font-semibold">Gıda + Yükseklik</span>';
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-3 font-medium text-gray-800">${a.name}</td>
+                        <td class="p-3">${typeTxt}</td>
+                        <td class="p-3 text-right">
+                            <button onclick="deleteActivity(${a.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('schedule-table-body').innerHTML = personeller.map(p => {
+                let certs = [];
+                if(p.certHygiene) certs.push('<span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">Hijyen</span>');
+                if(p.certHeight) certs.push('<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-semibold">Yükseklik</span>');
+                return `
+                <tr>
+                    <td class="p-3 font-medium">${p.name} <span class="text-xs text-gray-400">(${p.title})</span></td>
+                    <td class="p-3"><div class="flex gap-1">${certs.length ? certs.join(' ') : '<span class="text-xs text-gray-300">Yok</span>'}</div></td>
+                    <td class="p-3">
+                        <select onchange="updateShift(${p.id}, this.value)" class="p-1 border rounded text-xs font-semibold">
+                            <option value="Sabahçı" ${p.shift==='Sabahçı'?'selected':''}>Sabahçı</option>
+                            <option value="Akşamcı" ${p.shift==='Akşamcı'?'selected':''}>Akşamcı</option>
+                            <option value="İzinli" ${p.shift==='İzinli'?'selected':''}>İzinli</option>
+                            <option value="OFF" ${p.shift==='OFF'?'selected':''}>OFF</option>
+                        </select>
+                    </td>
+                </tr>
+            `}).join('');
+
+            document.getElementById('personnel-table-body').innerHTML = personeller.map(p => `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-3">
+                        <div class="font-medium text-gray-800">${p.name}</div>
+                        <div class="text-xs text-gray-400">
+    ${p.title} | ${p.region || '-'}
+</div>
+                    </td>
+                    <td class="p-3">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" ${p.certHygiene ? 'checked' : ''} onchange="toggleCertificate(${p.id}, 'hygiene')" class="rounded text-red-600 focus:ring-0">
+                            <span class="ml-2 text-xs font-medium text-gray-700">Hijyen</span>
+                        </label>
+                    </td>
+                    <td class="p-3">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" ${p.certHeight ? 'checked' : ''} onchange="toggleCertificate(${p.id}, 'height')" class="rounded text-red-600 focus:ring-0">
+                            <span class="ml-2 text-xs font-medium text-gray-700">Yükseklik</span>
+                        </label>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="deletePersonnel(${p.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('tasks-list').innerHTML = tasks.length ? tasks.map(t => `
+                <div class="p-4 border rounded-xl bg-slate-50 shadow-sm">
+                    <div class="flex justify-between items-center font-bold text-slate-800 border-b pb-2 mb-2">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-red-600"></i> ${t.title}</span>
+                        <span class="text-xs text-gray-400 font-normal"><i class="fa-regular fa-clock"></i> ${t.date} | Ekleyen: ${t.user}</span>
+                    </div>
+                    <p class="text-gray-700 whitespace-pre-line text-xs font-mono leading-relaxed">${t.desc}</p>
+                </div>
+            `).join('') : '<span class="text-gray-400">Henüz kaydedilmiş bir iş yok.</span>';
+
+            document.getElementById('users-table-body').innerHTML = systemUsers.map(u => `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-3 font-medium">${u.username}</td>
+                    <td class="p-3"><span class="px-2 py-1 text-xs rounded-full ${u.role === 'Admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} font-semibold">${u.role}</span></td>
+                    <td class="p-3 text-right">
+                        ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-xs text-gray-400">Ana Yönetici</span>'}
+                    </td>
+                </tr>
+            `).join('');
+const notificationList =
+document.getElementById('notification-list');
+
+if(notificationList){
+
+    notificationList.innerHTML = reports.length ?
+
+    reports.map(r => `
+
+        <div class="bg-white border rounded-xl p-4 shadow-sm">
+
+            <div class="font-bold text-red-600">
+                ${r.type}
+            </div>
+
+            <div class="text-sm text-gray-500 mt-2">
+                Gönderen: ${r.user}
+            </div>
+
+            <div class="text-sm text-gray-500">
+                Bölge: ${r.region || '-'}
+            </div>
+
+            <div class="text-xs text-gray-400 mt-2">
+                ${r.date}
+            </div>
+
+        </div>
+
+    `).join('')
+
+    :
+
+    `<div class="text-gray-400">
+        Bildirim bulunmuyor.
+    </div>`;
+}
         }
     </script>
 </body>

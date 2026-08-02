@@ -11,6 +11,8 @@
     <!-- jsPDF & html2pdf Kütüphaneleri -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Stil Destekli Excel Kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     
     <!-- FIREBASE SDK (Modüler Sürüm) -->
     <script type="module">
@@ -66,6 +68,9 @@
             </div>
             <div id="modal-content" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto text-sm pr-1"></div>
             <div class="mt-6 flex justify-end gap-2 border-t pt-3">
+                <button id="modal-excel-btn" onclick="" class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hidden">
+                    <i class="fa-solid fa-file-excel"></i> Kurumsal Excel İndir
+                </button>
                 <button id="modal-pdf-btn" onclick="" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2">
                     <i class="fa-solid fa-file-pdf"></i> Yatay PDF İndir
                 </button>
@@ -270,6 +275,15 @@
                         </button>
                     </div>
                 </div>
+                <!-- Bölge Sekmeleri (Dağıtım) -->
+                <div id="distribution-region-tabs" class="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
+                    <button onclick="switchDistributionRegion('Tümü')" id="btn-dist-region-all" class="dist-region-btn bg-slate-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition">Tümü</button>
+                    <button onclick="switchDistributionRegion('1. Bölge')" id="btn-dist-region-1" class="dist-region-btn bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition">1. Bölge</button>
+                    <button onclick="switchDistributionRegion('2. Bölge')" id="btn-dist-region-2" class="dist-region-btn bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition">2. Bölge</button>
+                    <button onclick="switchDistributionRegion('3. Bölge')" id="btn-dist-region-3" class="dist-region-btn bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition">3. Bölge</button>
+                    <button onclick="switchDistributionRegion('4. Bölge')" id="btn-dist-region-4" class="dist-region-btn bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition">4. Bölge</button>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
                         <h3 class="font-bold text-gray-800 mb-3 border-b pb-2 flex items-center justify-between">
@@ -348,6 +362,15 @@
                         </button>
                     </div>
                 </div>
+                <!-- Bölge Sekmeleri (Vardiya Planı) -->
+                <div id="schedule-region-tabs" class="flex items-center gap-2 mb-4 overflow-x-auto pb-2">
+                    <button onclick="switchScheduleRegion('Tümü')" id="btn-sched-region-all" class="sched-region-btn bg-slate-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition">Tümü</button>
+                    <button onclick="switchScheduleRegion('1. Bölge')" id="btn-sched-region-1" class="sched-region-btn bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition">1. Bölge</button>
+                    <button onclick="switchScheduleRegion('2. Bölge')" id="btn-sched-region-2" class="sched-region-btn bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition">2. Bölge</button>
+                    <button onclick="switchScheduleRegion('3. Bölge')" id="btn-sched-region-3" class="sched-region-btn bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition">3. Bölge</button>
+                    <button onclick="switchScheduleRegion('4. Bölge')" id="btn-sched-region-4" class="sched-region-btn bg-gray-200 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition">4. Bölge</button>
+                </div>
+
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
@@ -410,8 +433,10 @@
                                 <thead>
                                     <tr class="border-b bg-gray-50 text-xs text-gray-600 uppercase">
                                         <th class="p-3">Personel</th>
-                                        <th class="p-3">Hijyen Sertifikası</th>
-                                        <th class="p-3">Yükseklik Sertifikası</th>
+                                        <th class="p-3">Çalışma Tipi</th>
+                                        <th class="p-3">Bölge</th>
+                                        <th class="p-3">Hijyen</th>
+                                        <th class="p-3">Yükseklik</th>
                                         <th class="p-3 text-right">İşlem</th>
                                     </tr>
                                 </thead>
@@ -550,10 +575,63 @@
 
             <!-- RAPORLAR SEKMESİ -->
             <div id="tab-reports" class="tab-content hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Dağıtım Raporları Arşivi</h2>
-                <div class="bg-white p-6 rounded-xl shadow-sm border">
-                    <div id="reports-list" class="space-y-3">
-                        <div class="text-gray-400">Henüz kaydedilmiş dağıtım raporu bulunmuyor.</div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Raporlar</h2>
+                
+                <!-- Alt Sekme Geçiş Butonları -->
+                <div class="flex items-center gap-2 mb-4">
+                    <button onclick="switchReportSubTab('distribution')" id="btn-subtab-distribution" class="report-subtab-btn bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-file-contract"></i> Dağıtım Raporları
+                    </button>
+                    <button onclick="switchReportSubTab('shift')" id="btn-subtab-shift" class="report-subtab-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-clock"></i> Vardiya Raporları
+                    </button>
+                </div>
+
+                <!-- DAĞITIM RAPORLARI ALT SEKME -->
+                <div id="subtab-distribution" class="report-subtab">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-700">Dağıtım Raporları</h3>
+                            <p class="text-xs text-gray-500">Aktivite dağılım raporlarını tarihe göre filtreleyin.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2 bg-white p-2 border rounded-lg shadow-sm">
+                                <i class="fa-solid fa-calendar text-gray-400 text-sm"></i>
+                                <input type="date" id="distribution-date-filter" onchange="renderDistributionReports()" class="text-sm border-none outline-none bg-transparent font-medium">
+                            </div>
+                            <button onclick="clearDistributionDateFilter()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs font-bold px-3 py-2 rounded-lg transition">
+                                <i class="fa-solid fa-filter-circle-xmark"></i> Filtreyi Temizle
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                        <div id="distribution-reports-list" class="space-y-3">
+                            <div class="text-gray-400">Henüz kaydedilmiş dağıtım raporu bulunmuyor.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VARDİYA RAPORLARI ALT SEKME -->
+                <div id="subtab-shift" class="report-subtab hidden">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-700">Vardiya Raporları</h3>
+                            <p class="text-xs text-gray-500">Vardiya planı raporlarını tarihe göre filtreleyin.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2 bg-white p-2 border rounded-lg shadow-sm">
+                                <i class="fa-solid fa-calendar text-gray-400 text-sm"></i>
+                                <input type="date" id="shift-date-filter" onchange="renderShiftReports()" class="text-sm border-none outline-none bg-transparent font-medium">
+                            </div>
+                            <button onclick="clearShiftDateFilter()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs font-bold px-3 py-2 rounded-lg transition">
+                                <i class="fa-solid fa-filter-circle-xmark"></i> Filtreyi Temizle
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                        <div id="shift-reports-list" class="space-y-3">
+                            <div class="text-gray-400">Henüz kaydedilmiş vardiya raporu bulunmuyor.</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -597,6 +675,8 @@
         let reports = [];
         let savedReports = [];
         let currentUser = null;
+        let currentDistRegion = 'Tümü';
+        let currentSchedRegion = 'Tümü';
 
         function showAlert(msg) {
             const box = document.getElementById('alert-box');
@@ -738,30 +818,43 @@
 
             if (currentUser.role === 'Personel') {
                 adminTabs.forEach(id => {
-                    if(document.getElementById(id)) {
-                        document.getElementById(id).style.display = 'none';
-                    }
+                    if(document.getElementById(id)) document.getElementById(id).style.display = 'none';
                 });
                 switchTab('report');
-            } else if (currentUser.role === 'Yönetici') {
-                // Yönetici rolü için görünürlük (Personel sekmelerini ve Admin sekmelerini görebilir)
+            } else if (currentUser.role === 'Manager') {
+                // Bölge Yöneticisi: Sadece kendi bölgesini görür
                 adminTabs.forEach(id => {
                     if(document.getElementById(id)) {
-                        // Kullanıcı yönetimi hariç her şeyi görebilir
-                        if (id === 'btn-tab-users') {
+                        if (['btn-tab-users', 'btn-tab-activities', 'btn-tab-personnel'].includes(id)) {
                             document.getElementById(id).style.display = 'none';
                         } else {
                             document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
                         }
                     }
                 });
+                // Manager için bölge sekmelerini gizle, otomatik kendi bölgesine sabitle
+                if (currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                    currentDistRegion = currentUser.assignedRegions[0];
+                    currentSchedRegion = currentUser.assignedRegions[0];
+                    
+                    const distTabs = document.getElementById('distribution-region-tabs');
+                    const schedTabs = document.getElementById('schedule-region-tabs');
+                    
+                    if(distTabs) distTabs.style.display = 'none';
+                    if(schedTabs) schedTabs.style.display = 'none';
+                }
                 switchTab('dashboard');
-            } else {
-                // Admin ve diğerleri
+            } else if (currentUser.role === 'Yönetici') {
                 adminTabs.forEach(id => {
                     if(document.getElementById(id)) {
-                        document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
+                        if (id === 'btn-tab-users') document.getElementById(id).style.display = 'none';
+                        else document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
                     }
+                });
+                switchTab('dashboard');
+            } else {
+                adminTabs.forEach(id => {
+                    if(document.getElementById(id)) document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
                 });
                 switchTab('dashboard');
             }
@@ -791,6 +884,11 @@
             
             const targetBtn = document.getElementById(`btn-tab-${tabId}`);
             if (targetBtn) targetBtn.classList.add('bg-slate-700');
+
+            // Raporlar sekmesine geçildiğinde dağıtım raporlarını render et
+            if (tabId === 'reports') {
+                renderDistributionReports();
+            }
         }
 
         function toggleRegionSelection() {
@@ -805,7 +903,17 @@
             const password = document.getElementById('new-password').value.trim();
             const role = document.getElementById('new-role').value;
 
-            const newUser = { username, password, role };
+            let assignedRegions = [];
+            if (role === 'Manager') {
+                document.querySelectorAll('.manager-region:checked').forEach(cb => {
+                    assignedRegions.push(cb.value);
+                });
+            } else if (role === 'Personel') {
+                const reg = document.getElementById('personnel-region').value;
+                if (reg) assignedRegions.push(reg);
+            }
+
+            const newUser = { username, password, role, assignedRegions };
             systemUsers.push(newUser);
             
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", username), newUser);
@@ -819,7 +927,10 @@
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = systemUsers.map(u => `
                 <tr class="border-b">
-                    <td class="p-3 font-medium">${u.username}</td>
+                    <td class="p-3 font-medium">
+                        ${u.username}
+                        ${u.assignedRegions && u.assignedRegions.length > 0 ? `<div class="text-[9px] text-gray-500 font-bold">${u.assignedRegions.join(', ')}</div>` : ''}
+                    </td>
                     <td class="p-3"><span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">${u.role}</span></td>
                     <td class="p-3 text-right">
                         ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>` : ''}
@@ -839,15 +950,26 @@
             const activeList = document.getElementById('today-active-list');
             const activeCount = document.getElementById('active-count-badge');
             
-            // "Seçilmedi" ve "İzinli" olmayanları aktif say
-            const activePersonnel = personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'Seçilmedi');
-            activeCount.innerText = activePersonnel.length;
+            // Bölge Filtreleme
+            let filteredActive = personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'Seçilmedi');
+            
+            // Manager ise sadece kendi bölgesini görebilsin (KESİN KISITLAMA)
+            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                const managerRegion = currentUser.assignedRegions[0];
+                filteredActive = filteredActive.filter(p => p.region === managerRegion);
+                // Global değişkeni de zorla güncelle (güvenlik için)
+                currentDistRegion = managerRegion;
+            } else if (currentDistRegion !== 'Tümü') {
+                filteredActive = filteredActive.filter(p => p.region === currentDistRegion);
+            }
+            
+            activeCount.innerText = filteredActive.length;
 
-            activeList.innerHTML = activePersonnel.map(p => `
+            activeList.innerHTML = filteredActive.map(p => `
                 <div class="p-2 bg-gray-50 border rounded flex items-center justify-between">
                     <div>
                         <p class="font-bold text-xs">${p.name}</p>
-                        <p class="text-[10px] text-gray-500">${p.title} (${p.shift})</p>
+                        <p class="text-[10px] text-gray-500">${p.title} (${p.shift}) | ${p.region || ''}</p>
                     </div>
                     <div class="flex gap-1">
                         ${p.certHygiene ? '<span class="text-[9px] bg-green-100 text-green-700 px-1 rounded">Hijyen</span>' : ''}
@@ -861,7 +983,7 @@
                 const assignedList = assignments[a.id] || [];
                 const typeVal = (a.type || '').toLowerCase();
                 
-                const optionsHtml = activePersonnel.map(p => {
+                const optionsHtml = filteredActive.map(p => {
                     let isEligible = true;
                     let reason = "";
 
@@ -983,6 +1105,53 @@
         // Global vardiya verisi (tarih bazlı)
         let dailyShifts = {};
 
+        function switchDistributionRegion(reg) {
+            // Manager ise bölge değiştiremesin, kendi bölgesine kilitle
+            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                currentDistRegion = currentUser.assignedRegions[0];
+            } else {
+                currentDistRegion = reg;
+            }
+            
+            document.querySelectorAll('.dist-region-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-700', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            // Buton aktiflik durumunu güncelle
+            const displayReg = currentDistRegion;
+            const btnId = displayReg === 'Tümü' ? 'btn-dist-region-all' : `btn-dist-region-${displayReg.split('.')[0]}`;
+            const activeBtn = document.getElementById(btnId);
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                activeBtn.classList.add('bg-slate-700', 'text-white');
+            }
+            renderDashboard();
+        }
+
+        function switchScheduleRegion(reg) {
+            // Manager ise bölge değiştiremesin, kendi bölgesine kilitle
+            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                currentSchedRegion = currentUser.assignedRegions[0];
+            } else {
+                currentSchedRegion = reg;
+            }
+
+            document.querySelectorAll('.sched-region-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-700', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            const displayReg = currentSchedRegion;
+            const btnId = displayReg === 'Tümü' ? 'btn-sched-region-all' : `btn-sched-region-${displayReg.split('.')[0]}`;
+            const activeBtn = document.getElementById(btnId);
+            if(activeBtn) {
+                activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                activeBtn.classList.add('bg-slate-700', 'text-white');
+            }
+            renderScheduleTable();
+        }
+
         async function renderScheduleTable() {
             const tbody = document.getElementById('schedule-table-body');
             const date = document.getElementById('schedule-date-filter').value;
@@ -992,30 +1161,40 @@
                 return;
             }
 
-            // Yükleniyor durumu
             tbody.innerHTML = '<tr><td colspan="3" class="p-8 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Veriler yükleniyor...</td></tr>';
 
-            // Seçilen tarihe ait veriyi Firebase'den çek
             try {
                 const shiftDoc = await window.colDocs.getDoc(window.colDocs.doc(window.db, "dailyShifts", date));
                 if (shiftDoc.exists()) {
                     dailyShifts = shiftDoc.data().shifts || {};
                 } else {
-                    dailyShifts = {}; // O tarih için kayıt yoksa boş gelsin
+                    dailyShifts = {};
                 }
             } catch (e) {
                 console.error("Vardiya yükleme hatası:", e);
                 dailyShifts = {};
             }
 
-            // Tabloyu oluştur
-            tbody.innerHTML = personeller.map(p => {
+            // Bölge Filtreleme
+            let filteredPersonnel = personeller;
+            
+            // Manager ise sadece kendi bölgesini görebilsin (KESİN KISITLAMA)
+            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                const managerRegion = currentUser.assignedRegions[0];
+                filteredPersonnel = personeller.filter(p => p.region === managerRegion);
+                // Global değişkeni de zorla güncelle (güvenlik için)
+                currentSchedRegion = managerRegion;
+            } else if (currentSchedRegion !== 'Tümü') {
+                filteredPersonnel = personeller.filter(p => p.region === currentSchedRegion);
+            }
+
+            tbody.innerHTML = filteredPersonnel.map(p => {
                 const currentShift = dailyShifts[p.id] || 'Seçilmedi';
                 return `
                 <tr class="border-b">
                     <td class="p-3 font-medium">
                         ${p.name}
-                        <div class="text-[10px] text-gray-500">${p.title} | ${p.type || ''}</div>
+                        <div class="text-[10px] text-gray-500">${p.title} | ${p.type || ''} | ${p.region || ''}</div>
                     </td>
                     <td class="p-3">
                         <div class="flex gap-1">
@@ -1035,7 +1214,6 @@
                 </tr>
             `}).join('');
 
-            // Dağıtım ekranındaki personel durumlarını da bu tarihe göre güncelle
             for (let p of personeller) {
                 p.shift = dailyShifts[p.id] || 'Seçilmedi';
             }
@@ -1069,16 +1247,35 @@
 
                 // 2. Raporlar sekmesine "Vardiya Raporu" olarak ekle
                 const reportId = Date.now();
+                
+                // Tarihi GG.AA.YYYY formatına çevir
+                const dParts = date.split('-');
+                const formattedTurkishDate = dParts.length === 3 ? `${dParts[2]}.${dParts[1]}.${dParts[0]}` : date;
+
+                // Bölge bilgisi ekle
+                let regionName = '';
+                if (currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                    regionName = currentUser.assignedRegions[0];
+                } else if (currentSchedRegion !== 'Tümü') {
+                    regionName = currentSchedRegion;
+                }
+
+                const reportTitle = `KidZania İstanbul ${regionName} Vardiya Takip Çizelgesi (${formattedTurkishDate})`.replace(/\s+/g, ' ');
+                const reportType = regionName ? `${regionName} Vardiya Raporu` : 'Vardiya Raporu';
+
                 const shiftReport = {
                     id: reportId,
-                    type: 'Vardiya Raporu',
+                    type: reportType,
+                    title: reportTitle,
                     date: date,
+                    reportDate: formattedTurkishDate,
                     createdAt: new Date().toLocaleString(),
                     data: personeller.map(p => ({
                         name: p.name,
                         title: p.title,
                         type: p.type || 'Belirtilmedi',
-                        shift: dailyShifts[p.id] || 'Seçilmedi'
+                        shift: dailyShifts[p.id] || 'Seçilmedi',
+                        region: p.region || ''
                     }))
                 };
                 await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(reportId)), shiftReport);
@@ -1160,14 +1357,21 @@
         function renderPersonnelTable() {
             const tbody = document.getElementById('personnel-table-body');
             const isAdmin = currentUser && currentUser.role === 'Admin';
-            tbody.innerHTML = personeller.map(p => `
+            
+            let displayPersonnel = personeller;
+            // Manager ise sadece kendi bölgesini görebilsin
+            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                displayPersonnel = personeller.filter(p => p.region === currentUser.assignedRegions[0]);
+            }
+
+            tbody.innerHTML = displayPersonnel.map(p => `
                 <tr class="border-b">
                     <td class="p-3">
                         <div class="font-medium">${p.name}</div>
                         <div class="text-[10px] text-gray-500">${p.title}</div>
                     </td>
                     <td class="p-3">
-                        <select onchange="updatePersonnelType(${p.id}, this.value)" class="p-1 border rounded text-[10px] font-bold text-red-600 bg-red-50 focus:ring-1 focus:ring-red-500 outline-none">
+                        <select onchange="updatePersonnelType(${p.id}, this.value)" class="p-1 border rounded text-[10px] font-bold text-red-600 bg-red-50 focus:ring-1 focus:ring-red-500 outline-none w-full">
                             <option value="Belirtilmedi" ${!p.type || p.type === 'Belirtilmedi' ? 'selected' : ''}>Tip Seçiniz</option>
                             <option value="Full-time" ${p.type === 'Full-time' ? 'selected' : ''}>Full-time</option>
                             <option value="Part-time" ${p.type === 'Part-time' ? 'selected' : ''}>Part-time</option>
@@ -1176,22 +1380,43 @@
                         </select>
                     </td>
                     <td class="p-3">
-                        <div class="flex gap-4">
-                            <label class="relative inline-flex items-center cursor-pointer" title="Hijyen">
-                                <input type="checkbox" class="sr-only peer" ${p.certHygiene ? 'checked' : ''} onchange="toggleCert(${p.id}, 'certHygiene')">
-                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                            </label>
-                            <label class="relative inline-flex items-center cursor-pointer" title="Yükseklik">
-                                <input type="checkbox" class="sr-only peer" ${p.certHeight ? 'checked' : ''} onchange="toggleCert(${p.id}, 'certHeight')">
-                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                            </label>
-                        </div>
+                        <select onchange="updatePersonnelRegion(${p.id}, this.value)" class="p-1 border rounded text-[10px] font-bold text-slate-700 bg-slate-50 focus:ring-1 focus:ring-slate-500 outline-none w-full">
+                            <option value="Belirtilmedi" ${!p.region || p.region === 'Belirtilmedi' ? 'selected' : ''}>Bölge Seçiniz</option>
+                            <option value="1. Bölge" ${p.region === '1. Bölge' ? 'selected' : ''}>1. Bölge</option>
+                            <option value="2. Bölge" ${p.region === '2. Bölge' ? 'selected' : ''}>2. Bölge</option>
+                            <option value="3. Bölge" ${p.region === '3. Bölge' ? 'selected' : ''}>3. Bölge</option>
+                            <option value="4. Bölge" ${p.region === '4. Bölge' ? 'selected' : ''}>4. Bölge</option>
+                        </select>
+                    </td>
+                    <td class="p-3 text-center">
+                        <label class="relative inline-flex items-center cursor-pointer" title="Hijyen">
+                            <input type="checkbox" class="sr-only peer" ${p.certHygiene ? 'checked' : ''} onchange="toggleCert(${p.id}, 'certHygiene')">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                    </td>
+                    <td class="p-3 text-center">
+                        <label class="relative inline-flex items-center cursor-pointer" title="Yükseklik">
+                            <input type="checkbox" class="sr-only peer" ${p.certHeight ? 'checked' : ''} onchange="toggleCert(${p.id}, 'certHeight')">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                        </label>
                     </td>
                     <td class="p-3 text-right">
                         ${isAdmin ? `<button onclick="deletePersonnel(${p.id})" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-gray-300 text-xs italic">Yetki Yok</span>'}
                     </td>
                 </tr>
             `).join('');
+        }
+
+        async function updatePersonnelRegion(id, newRegion) {
+            const p = personeller.find(x => x.id === id);
+            if(p) {
+                p.region = newRegion;
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(id)), p);
+                renderPersonnelTable();
+                renderScheduleTable();
+                renderDashboard();
+                showAlert(`${p.name} için bölge güncellendi: ${newRegion}`);
+            }
         }
 
         async function updatePersonnelType(id, newType) {
@@ -1331,8 +1556,21 @@
 
         async function saveDistributionReport() {
             const id = Date.now();
-            const date = new Date().toLocaleString();
+            const now = new Date();
+            const date = now.toLocaleString();
+            const today = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
             
+            // Bölge bilgisi ekle
+            let regionName = '';
+            if (currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                regionName = currentUser.assignedRegions[0];
+            } else if (currentDistRegion !== 'Tümü') {
+                regionName = currentDistRegion;
+            }
+
+            const reportTitle = `KidZania İstanbul ${regionName} Dağıtım Takip Çizelgesi (${today})`.replace(/\s+/g, ' ');
+            const reportType = regionName ? `${regionName} Dağıtım Raporu` : 'Dağıtım Raporu';
+
             let dataArr = [];
             activities.forEach(a => {
                 const assignedList = assignments[a.id] || [];
@@ -1342,7 +1580,7 @@
                 });
             });
 
-            const newReport = { id, date, data: dataArr };
+            const newReport = { id, date, type: reportType, title: reportTitle, data: dataArr, reportDate: today };
             savedReports.unshift(newReport);
             
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(id)), newReport);
@@ -1351,31 +1589,151 @@
             showAlert("Dağıtım raporu kaydedildi!");
         }
 
-        function renderReports() {
-            const list = document.getElementById('reports-list');
+        // Alt sekme geçişi
+        function switchReportSubTab(tabName) {
+            document.querySelectorAll('.report-subtab').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.report-subtab-btn').forEach(btn => {
+                btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white');
+                btn.classList.add('bg-gray-200', 'hover:bg-gray-300', 'text-gray-700');
+            });
+
+            document.getElementById(`subtab-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-subtab-${tabName}`);
+            activeBtn.classList.remove('bg-gray-200', 'hover:bg-gray-300', 'text-gray-700');
+            activeBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white');
+
+            if (tabName === 'distribution') {
+                renderDistributionReports();
+            } else {
+                renderShiftReports();
+            }
+        }
+
+        function renderDistributionReports() {
+            const list = document.getElementById('distribution-reports-list');
             const isAdmin = currentUser && currentUser.role === 'Admin';
-            if (savedReports.length === 0) {
-                list.innerHTML = '<div class="text-gray-400">Henüz kaydedilmiş rapor bulunmuyor.</div>';
+            const isAuthorized = currentUser && ['Admin', 'Yönetici', 'Manager'].includes(currentUser.role);
+            const filterVal = document.getElementById('distribution-date-filter') ? document.getElementById('distribution-date-filter').value : '';
+
+            let distributionReps = savedReports.filter(r => r.type && r.type.includes('Dağıtım Raporu'));
+
+            if (currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                distributionReps = distributionReps.filter(r => r.type.includes(currentUser.assignedRegions[0]));
+            }
+
+            if (filterVal) {
+                distributionReps = distributionReps.filter(r => {
+                    const repDate = r.reportDate || parseTurkishDate(r.date);
+                    if (!repDate) return false;
+                    const parts = repDate.split('.');
+                    if (parts.length === 3) {
+                        return `${parts[2]}-${parts[1]}-${parts[0]}` === filterVal;
+                    }
+                    return repDate === filterVal;
+                });
+            }
+
+            if (distributionReps.length === 0) {
+                list.innerHTML = filterVal
+                    ? '<div class="text-gray-400 italic">Seçilen tarihe ait dağıtım raporu bulunamadı.</div>'
+                    : '<div class="text-gray-400">Henüz kaydedilmiş dağıtım raporu bulunmuyor.</div>';
                 return;
             }
 
-            list.innerHTML = savedReports.map(rep => {
-                const isShiftReport = rep.type === 'Vardiya Raporu';
+            list.innerHTML = distributionReps.map(rep => {
+                const reportDate = rep.reportDate || rep.date;
+                const reportTitle = rep.title || (rep.type ? `${reportDate} tarihli ${rep.type}` : `${reportDate} tarihli aktivite dağılım raporu`);
                 return `
                 <div class="flex items-center justify-between p-4 bg-gray-50 border rounded-lg hover:bg-gray-100 transition">
                     <div>
                         <div class="font-bold text-sm text-gray-800">
-                            <i class="fa-solid ${isShiftReport ? 'fa-clock text-blue-600' : 'fa-file-contract text-red-600'} mr-1"></i> 
-                            ${isShiftReport ? 'İzin & Vardiya Raporu' : 'Dağıtım Raporu'}
+                            <i class="fa-solid fa-file-contract text-red-600 mr-1"></i> 
+                            ${reportTitle}
                         </div>
-                        <div class="text-xs text-gray-500 mt-0.5">${isShiftReport ? rep.date : rep.date}</div>
+                        <div class="text-xs text-gray-500 mt-0.5">Kayıt: ${rep.date}</div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="openReportModal(${rep.id})" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded text-xs font-bold transition">Görüntüle</button>
+                        ${isAuthorized ? `<button onclick="openReportModal(${rep.id})" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded text-xs font-bold transition">Görüntüle</button>` : ''}
                         ${isAdmin ? `<button onclick="deleteReport(${rep.id})" class="bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
                 </div>
             `}).join('');
+        }
+
+        function renderShiftReports() {
+            const list = document.getElementById('shift-reports-list');
+            const isAdmin = currentUser && currentUser.role === 'Admin';
+            const isAuthorized = currentUser && ['Admin', 'Yönetici', 'Manager'].includes(currentUser.role);
+            const filterVal = document.getElementById('shift-date-filter') ? document.getElementById('shift-date-filter').value : '';
+
+            let shiftReps = savedReports.filter(r => r.type && r.type.includes('Vardiya Raporu'));
+
+            if (currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                shiftReps = shiftReps.filter(r => r.type.includes(currentUser.assignedRegions[0]));
+            }
+
+            if (filterVal) {
+                shiftReps = shiftReps.filter(r => {
+                    if (r.date === filterVal) return true;
+                    if (r.reportDate) {
+                        const parts = r.reportDate.split('.');
+                        if (parts.length === 3) {
+                            return `${parts[2]}-${parts[1]}-${parts[0]}` === filterVal;
+                        }
+                    }
+                    return false;
+                });
+            }
+
+            if (shiftReps.length === 0) {
+                list.innerHTML = filterVal
+                    ? '<div class="text-gray-400 italic">Seçilen tarihe ait vardiya raporu bulunamadı.</div>'
+                    : '<div class="text-gray-400">Henüz kaydedilmiş vardiya raporu bulunmuyor.</div>';
+                return;
+            }
+
+            function formatDateTurkish(dateStr) {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    return `${parts[2]}.${parts[1]}.${parts[0]}`;
+                }
+                return dateStr;
+            }
+
+            list.innerHTML = shiftReps.map(rep => {
+                const formattedDate = rep.reportDate || formatDateTurkish(rep.date);
+                const reportTitle = rep.title || (rep.type ? `${formattedDate} tarihli ${rep.type}` : `${formattedDate} tarihli vardiya raporu`);
+                return `
+                <div class="flex items-center justify-between p-4 bg-gray-50 border rounded-lg hover:bg-gray-100 transition">
+                    <div>
+                        <div class="font-bold text-sm text-gray-800">
+                            <i class="fa-solid fa-clock text-blue-600 mr-1"></i> 
+                            ${reportTitle}
+                        </div>
+                        <div class="text-xs text-gray-500 mt-0.5">Kayıt: ${rep.date}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        ${isAuthorized ? `<button onclick="openReportModal(${rep.id})" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded text-xs font-bold transition">Görüntüle</button>` : ''}
+                        ${isAdmin ? `<button onclick="deleteReport(${rep.id})" class="bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function clearDistributionDateFilter() {
+            document.getElementById('distribution-date-filter').value = '';
+            renderDistributionReports();
+        }
+
+        function clearShiftDateFilter() {
+            document.getElementById('shift-date-filter').value = '';
+            renderShiftReports();
+        }
+
+        function renderReports() {
+            renderDistributionReports();
+            renderShiftReports();
         }
 
         async function deleteReport(id) {
@@ -1398,31 +1756,50 @@
             const rep = savedReports.find(r => r.id === id);
             if(!rep) return;
 
-            const isShiftReport = rep.type === 'Vardiya Raporu';
-            document.getElementById('modal-title').innerText = isShiftReport ? `Vardiya Raporu: ${rep.date}` : `Dağıtım Raporu: ${rep.date}`;
+            const isShiftReport = rep.type && rep.type.includes('Vardiya Raporu');
+            const modalDate = rep.reportDate || rep.date;
+            document.getElementById('modal-title').innerText = rep.title || (isShiftReport ? `Vardiya Raporu: ${modalDate}` : `Dağıtım Raporu: ${modalDate}`);
             
             const content = document.getElementById('modal-content');
             if (isShiftReport) {
                 content.innerHTML = `
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
+                        <table class="w-full text-left text-[10px] border-collapse border border-gray-300">
                             <thead>
-                                <tr class="bg-gray-100 border-b">
-                                    <th class="p-2">Personel</th>
-                                    <th class="p-2">Tip</th>
-                                    <th class="p-2">Vardiya</th>
+                                <tr class="bg-red-600 text-white">
+                                    <th class="p-2 border border-gray-300">Personel</th>
+                                    <th class="p-2 border border-gray-300">Giriş</th>
+                                    <th class="p-2 border border-gray-300">1. Mola</th>
+                                    <th class="p-2 border border-gray-300">Dönüş</th>
+                                    <th class="p-2 border border-gray-300">2. Mola</th>
+                                    <th class="p-2 border border-gray-300">Dönüş</th>
+                                    <th class="p-2 border border-gray-300">3. Mola</th>
+                                    <th class="p-2 border border-gray-300">Dönüş</th>
+                                    <th class="p-2 border border-gray-300">Çıkış</th>
+                                    <th class="p-2 border border-gray-300">İmza</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${rep.data.map(item => `
+                                ${rep.data.filter(item => item.shift === 'Sabahçı' || item.shift === 'Akşamcı').map(item => `
                                     <tr class="border-b">
-                                        <td class="p-2 font-bold">${item.name}</td>
-                                        <td class="p-2">${item.type}</td>
-                                        <td class="p-2 text-red-600 font-bold">${item.shift}</td>
+                                        <td class="p-2 border border-gray-300">
+                                            <div class="font-bold">${item.name}</div>
+                                            <div class="text-[8px] text-gray-500">${item.type || ''} | ${item.shift}</div>
+                                        </td>
+                                        <td class="p-2 border border-gray-300"></td>
+                                        <td class="p-2 border border-gray-300"></td>
+                                        <td class="p-2 border border-gray-300"></td>
+                                        <td class="p-2 border border-gray-300"></td>
+                                        <td class="p-2 border border-gray-300"></td>
+                                        <td class="p-2 border border-gray-300"></td>
+                                        <td class="p-2 border border-gray-300"></td>
+                                        <td class="p-2 border border-gray-300"></td>
+                                        <td class="p-2 border border-gray-300"></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
+                        <div class="mt-2 text-[9px] text-gray-400 italic">* Sadece Sabahçı ve Akşamcı personeller listelenmiştir.</div>
                     </div>
                 `;
             } else {
@@ -1434,8 +1811,127 @@
                 `).join('');
             }
 
+            // Excel butonu sadece vardiya raporlarında görünsün
+            const excelBtn = document.getElementById('modal-excel-btn');
+            if (isShiftReport) {
+                excelBtn.classList.remove('hidden');
+                excelBtn.onclick = () => generateVardiyaExcel(rep);
+            } else {
+                excelBtn.classList.add('hidden');
+            }
+
             document.getElementById('modal-pdf-btn').onclick = () => generateHorizontalPDF(rep);
             document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        async function generateVardiyaExcel(reportData) {
+            try {
+                const workbook = XLSX.utils.book_new();
+                
+                const headers = ["Personel Adı", "Giriş", "1. Mola", "Mola Dönüş", "2. Mola", "Mola Dönüş", "3. Mola", "Mola Dönüş", "Çıkış", "İmza"];
+                const activeStaff = reportData.data.filter(item => item.shift === 'Sabahçı' || item.shift === 'Akşamcı');
+
+                const rows = activeStaff.map(item => {
+                    const foundP = personeller.find(p => p.name === item.name);
+                    let details = `(${item.type || 'Belirtilmedi'}`;
+                    if (foundP) {
+                        if (foundP.certHygiene) details += ", Hijyen Var";
+                        if (foundP.certHeight) details += ", Yükseklik Var";
+                    }
+                    details += ")";
+                    return [`${item.name}\n${details}`, "", "", "", "", "", "", "", "", ""];
+                });
+
+                // Başlığı oluştur (Bölge bilgisini içerecek şekilde)
+                let excelTitle = reportData.title;
+                if (!excelTitle) {
+                    let regionPart = "";
+                    if (reportData.type && reportData.type.includes("Bölge")) {
+                        regionPart = reportData.type.split(" Vardiya")[0] + " ";
+                    }
+                    excelTitle = `KidZania İstanbul ${regionPart}Vardiya Takip Çizelgesi (${reportData.reportDate || reportData.date})`.replace(/\s+/g, ' ');
+                }
+
+                const worksheetData = [
+                    [excelTitle],
+                    [],
+                    headers,
+                    ...rows
+                ];
+
+                const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+                // Stil Tanımlamaları
+                const titleStyle = {
+                    font: { bold: true, size: 14, color: { rgb: "DC2626" } },
+                    alignment: { horizontal: "center", vertical: "center" }
+                };
+
+                const headerStyle = {
+                    fill: { fgColor: { rgb: "DC2626" } },
+                    font: { bold: true, color: { rgb: "FFFFFF" } },
+                    alignment: { horizontal: "center", vertical: "center" },
+                    border: {
+                        top: { style: "thin", color: { rgb: "000000" } },
+                        bottom: { style: "thin", color: { rgb: "000000" } },
+                        left: { style: "thin", color: { rgb: "000000" } },
+                        right: { style: "thin", color: { rgb: "000000" } }
+                    }
+                };
+
+                const cellStyle = {
+                    alignment: { vertical: "center", wrapText: true },
+                    border: {
+                        top: { style: "thin", color: { rgb: "000000" } },
+                        bottom: { style: "thin", color: { rgb: "000000" } },
+                        left: { style: "thin", color: { rgb: "000000" } },
+                        right: { style: "thin", color: { rgb: "000000" } }
+                    }
+                };
+
+                // Hücrelere Stilleri Uygula
+                const range = XLSX.utils.decode_range(worksheet['!ref']);
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!worksheet[cellRef]) continue;
+
+                        if (R === 0) {
+                            worksheet[cellRef].s = titleStyle;
+                        } else if (R === 2) {
+                            worksheet[cellRef].s = headerStyle;
+                        } else if (R > 2) {
+                            worksheet[cellRef].s = cellStyle;
+                            if (C === 0) {
+                                worksheet[cellRef].s = { 
+                                    ...cellStyle, 
+                                    font: { bold: true, size: 9 },
+                                    alignment: { vertical: "top", wrapText: true }
+                                };
+                            }
+                        }
+                    }
+                }
+
+                // Hücre Birleştirme (Başlık için)
+                worksheet['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }
+                ];
+
+                worksheet['!cols'] = [
+                    { wch: 30 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, 
+                    { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 15 }
+                ];
+
+                worksheet['!rows'] = worksheetData.map((r, i) => i === 0 ? { hpt: 30 } : (i > 2 ? { hpt: 45 } : { hpt: 25 }));
+
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Vardiya Listesi");
+                XLSX.writeFile(workbook, `KidZania_Vardiya_${reportData.reportDate || 'Rapor'}.xlsx`);
+                showAlert("Kurumsal Excel başarıyla oluşturuldu.");
+            } catch (error) {
+                console.error("Excel Hatası:", error);
+                showAlert("Excel oluşturulurken bir hata oluştu.");
+            }
         }
 
         function closeReportModal() {
@@ -1449,46 +1945,64 @@
             const isShiftReport = reportData.type === 'Vardiya Raporu';
             
             // Başlığı güncelle
-            const subtitle = template.querySelector('p');
-            if (isShiftReport) {
-                subtitle.innerText = "Personel Mola Giriş Çıkış Takip Listesi";
+            const titleEl = template.querySelector('h1');
+            const subtitleEl = template.querySelector('p');
+            
+            if (reportData.title) {
+                titleEl.innerText = reportData.title.split(' (')[0];
+                subtitleEl.innerText = reportData.title.includes('Vardiya') ? "Personel Mola Giriş Çıkış Takip Listesi" : "Aktivite Dağıtım Raporu";
             } else {
-                subtitle.innerText = "Aktivite Dağıtım Raporu";
+                titleEl.innerText = "KidZania İstanbul";
+                subtitleEl.innerText = isShiftReport ? "Personel Mola Giriş Çıkış Takip Listesi" : "Aktivite Dağıtım Raporu";
             }
 
             // Verileri temizle ve doldur
             dateEl.innerText = `Tarih: ${reportData.date}`;
             
             if (isShiftReport) {
-                // Vardiya raporu için Mola Takip Listesi düzeni (Sadece İsim ve Boş Alanlar)
+                // Vardiya raporu için Profesyonel Takip Listesi düzeni
                 grid.style.display = 'block';
-                // Satır yüksekliğini ve fontu personel sayısına göre dinamik daraltıyoruz
-                const rowPadding = reportData.data.length > 25 ? '3px 6px' : '6px 8px';
-                const fontSize = reportData.data.length > 30 ? '8px' : '10px';
+                const activeStaff = reportData.data.filter(item => item.shift === 'Sabahçı' || item.shift === 'Akşamcı');
+                const rowPadding = activeStaff.length > 25 ? '2px 4px' : '4px 6px';
+                const fontSize = activeStaff.length > 30 ? '7px' : '9px';
 
                 grid.innerHTML = `
                     <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; margin-top: 5px;">
                         <thead>
-                            <tr style="background: #f3f4f6; border: 1px solid #d1d5db;">
-                                <th style="padding: 6px; text-align: left; font-size: 10px; border: 1px solid #d1d5db; width: 30%;">Personel Adı Soyadı</th>
-                                <th style="padding: 6px; text-align: center; font-size: 10px; border: 1px solid #d1d5db; width: 15%;">Vardiya</th>
-                                <th style="padding: 6px; text-align: center; font-size: 10px; border: 1px solid #d1d5db; width: 18%;">Mola Giriş</th>
-                                <th style="padding: 6px; text-align: center; font-size: 10px; border: 1px solid #d1d5db; width: 18%;">Mola Çıkış</th>
-                                <th style="padding: 6px; text-align: center; font-size: 10px; border: 1px solid #d1d5db; width: 19%;">İmza</th>
+                            <tr style="background: #dc2626; color: white; border: 1px solid #000;">
+                                <th style="padding: 5px; text-align: left; font-size: 9px; border: 1px solid #000; width: 20%;">Personel</th>
+                                <th style="padding: 5px; text-align: center; font-size: 9px; border: 1px solid #000;">Giriş</th>
+                                <th style="padding: 5px; text-align: center; font-size: 9px; border: 1px solid #000;">1. Mola</th>
+                                <th style="padding: 5px; text-align: center; font-size: 9px; border: 1px solid #000;">Dönüş</th>
+                                <th style="padding: 5px; text-align: center; font-size: 9px; border: 1px solid #000;">2. Mola</th>
+                                <th style="padding: 5px; text-align: center; font-size: 9px; border: 1px solid #000;">Dönüş</th>
+                                <th style="padding: 5px; text-align: center; font-size: 9px; border: 1px solid #000;">3. Mola</th>
+                                <th style="padding: 5px; text-align: center; font-size: 9px; border: 1px solid #000;">Dönüş</th>
+                                <th style="padding: 5px; text-align: center; font-size: 9px; border: 1px solid #000;">Çıkış</th>
+                                <th style="padding: 5px; text-align: center; font-size: 9px; border: 1px solid #000; width: 10%;">İmza</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${reportData.data.map(item => `
-                                <tr style="border: 1px solid #e5e7eb;">
-                                    <td style="padding: ${rowPadding}; font-size: ${fontSize}; font-weight: bold; border: 1px solid #e5e7eb;">${item.name}</td>
-                                    <td style="padding: ${rowPadding}; font-size: ${fontSize}; text-align: center; border: 1px solid #e5e7eb; color: #dc2626; font-weight: 600;">${item.shift}</td>
-                                    <td style="padding: ${rowPadding}; border: 1px solid #e5e7eb; height: 20px;"></td>
-                                    <td style="padding: ${rowPadding}; border: 1px solid #e5e7eb;"></td>
-                                    <td style="padding: ${rowPadding}; border: 1px solid #e5e7eb;"></td>
+                            ${activeStaff.map(item => `
+                                <tr style="border: 1px solid #000;">
+                                    <td style="padding: ${rowPadding}; font-size: ${fontSize}; font-weight: bold; border: 1px solid #000;">
+                                        ${item.name}
+                                        <div style="font-size: 6px; color: #666; font-weight: normal;">${item.type || ''} | ${item.shift}</div>
+                                    </td>
+                                    <td style="padding: ${rowPadding}; border: 1px solid #000; height: 18px;"></td>
+                                    <td style="padding: ${rowPadding}; border: 1px solid #000;"></td>
+                                    <td style="padding: ${rowPadding}; border: 1px solid #000;"></td>
+                                    <td style="padding: ${rowPadding}; border: 1px solid #000;"></td>
+                                    <td style="padding: ${rowPadding}; border: 1px solid #000;"></td>
+                                    <td style="padding: ${rowPadding}; border: 1px solid #000;"></td>
+                                    <td style="padding: ${rowPadding}; border: 1px solid #000;"></td>
+                                    <td style="padding: ${rowPadding}; border: 1px solid #000;"></td>
+                                    <td style="padding: ${rowPadding}; border: 1px solid #000;"></td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
+                    <div style="margin-top: 5px; font-size: 8px; color: #666; font-style: italic;">* Sadece aktif vardiyadaki personeller listelenmiştir.</div>
                 `;
             } else {
                 // Dağıtım raporu için kutucuklu düzen

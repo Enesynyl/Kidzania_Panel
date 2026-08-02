@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <!-- FIREBASE SDK (Modüler Sürüm) -->
     <script type="module">
@@ -54,12 +56,28 @@
         <span id="alert-message" class="font-semibold text-sm"></span>
     </div>
 
+    <!-- RAPOR DETAY MODALI -->
+    <div id="report-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 id="modal-title" class="font-bold text-lg text-gray-800">Rapor Detayı</h3>
+                <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modal-content" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto text-sm pr-1"></div>
+            <div class="mt-6 flex justify-end gap-2 border-t pt-3">
+                <button id="modal-pdf-btn" onclick="" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-file-pdf"></i> Yatay PDF İndir
+                </button>
+                <button onclick="closeReportModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold">Kapat</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 1. AÇILIŞ EKRANI -->
     <div id="splash-screen" class="fixed inset-0 bg-red-600 z-50 flex flex-col items-center justify-center text-white p-4">
         <div class="bg-white p-3 rounded-2xl shadow-2xl mb-6 flex items-center justify-center max-w-md w-full">
             <img src="https://cdn.kplus.com.tr/?url=cGFuZWwucGFya2JpbGV0aS5jb20vL0FsYnVtTWVkaWEvRmFjaWxpdHkvMTEvNjdlYWIwMjAtMmQ3NS00YmYyLTg2NjctZTM3ZWQ1MjVjMmJjLmpwZw==" alt="KidZania İstanbul" class="w-full h-auto object-cover rounded-xl">
         </div>
-        
         <h1 class="text-2xl md:text-3xl font-bold tracking-wide mb-2 text-center">İstanbul Yönetim Paneli</h1>
         <p class="text-red-100 text-sm mb-6">Bulut Veritabanına Bağlanılıyor...</p>
         <div class="spinner"></div>
@@ -75,7 +93,6 @@
                 <h2 class="text-2xl font-bold text-gray-800">Sisteme Giriş Yapın</h2>
                 <p class="text-gray-500 text-sm mt-1">Devam etmek için bilgilerinizi giriniz</p>
             </div>
-            
             <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Kullanıcı Adı</label>
@@ -120,30 +137,15 @@
                 <button id="btn-tab-users" onclick="switchTab('users')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
                     <i class="fa-solid fa-user-shield w-5"></i> Kullanıcı Yönetimi
                 </button>
-<button id="btn-tab-notifications"
-onclick="switchTab('notifications')"
-class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
-
-    <i class="fa-solid fa-bell w-5"></i>
-
-    Bildirim Merkezi
-
-</button>
-<button id="btn-tab-reports"
-onclick="switchTab('reports')"
-class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
-
-    <i class="fa-solid fa-file-lines w-5"></i>
-
-    Raporlar
-
-</button>
-<button id="btn-tab-report"
-onclick="switchTab('report')"
-class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
-    <i class="fa-solid fa-triangle-exclamation w-5"></i>
-    Personel Bildirim
-</button>
+                <button id="btn-tab-notifications" onclick="switchTab('notifications')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-bell w-5"></i> Bildirim Merkezi
+                </button>
+                <button id="btn-tab-reports" onclick="switchTab('reports')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-file-lines w-5"></i> Raporlar
+                </button>
+                <button id="btn-tab-report" onclick="switchTab('report')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-triangle-exclamation w-5"></i> Personel Bildirim
+                </button>
             </nav>
             <div class="p-4 border-t border-slate-700 mt-auto">
                 <div class="flex items-center justify-between mb-3">
@@ -163,20 +165,16 @@ class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hov
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h2 class="text-2xl font-bold text-gray-800">Aktivite Dağıtımı & Vardiya Masası</h2>
-                        <p class="text-xs text-gray-500">Personelleri sertifika şartlarına göre aktivitelere atayın.</p>
+                        <p class="text-xs text-gray-500">Personelleri sertifika şartlarına göre aktivitelere dilediğiniz sayıda atayın.</p>
                     </div>
-<button
-onclick="saveDistributionReport()"
-class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition">
-
-    <i class="fa-solid fa-floppy-disk"></i>
-
-    Kaydet
-
-</button>
-                    <button onclick="clearAllAssignments()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg transition">
-                        <i class="fa-solid fa-rotate-left"></i> Dağıtımı Sıfırla
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="saveDistributionReport()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-floppy-disk"></i> Kaydet ve Raporlara Ekle
+                        </button>
+                        <button onclick="clearAllAssignments()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg transition">
+                            <i class="fa-solid fa-rotate-left"></i> Dağıtımı Sıfırla
+                        </button>
+                    </div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
@@ -281,13 +279,13 @@ class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 ro
                         <form onsubmit="handleAddPersonnel(event)" class="space-y-3">
                             <input type="text" id="p-name" placeholder="Ad Soyad" required class="w-full p-2 border rounded">
                             <input type="text" id="p-title" placeholder="Unvan / Rol" required class="w-full p-2 border rounded">
-<select id="p-region" class="w-full p-2 border rounded" required>
-    <option value="">Bölge Seçiniz</option>
-    <option value="1. Bölge">1. Bölge</option>
-    <option value="2. Bölge">2. Bölge</option>
-    <option value="3. Bölge">3. Bölge</option>
-    <option value="4. Bölge">4. Bölge</option>
-</select>
+                            <select id="p-region" class="w-full p-2 border rounded" required>
+                                <option value="">Bölge Seçiniz</option>
+                                <option value="1. Bölge">1. Bölge</option>
+                                <option value="2. Bölge">2. Bölge</option>
+                                <option value="3. Bölge">3. Bölge</option>
+                                <option value="4. Bölge">4. Bölge</option>
+                            </select>
                             <div class="space-y-2 pt-1 border-t">
                                 <span class="text-xs font-semibold text-gray-500 block">Başlangıç Sertifikaları:</span>
                                 <label class="flex items-center gap-2 text-xs font-medium text-gray-700 cursor-pointer">
@@ -354,77 +352,31 @@ class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3 py-2 ro
                                 <input type="password" id="new-password" required class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="••••••••">
                             </div>
                             <div>
-    <select
-id="new-role"
-onchange="toggleRegionSelection()"
-class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
-
-    <option value="Admin">Ana Yönetici</option>
-    <option value="Manager">Bölge Yöneticisi</option>
-    <option value="Personel">Personel</option>
-
-</select>
-
-</div>
-
-<div id="personnel-region-box" class="hidden">
-
-    <label class="block text-sm font-medium mb-2">
-        Personel Bölgesi
-    </label>
-
-    <select id="personnel-region"
-    class="w-full p-2 border rounded">
-
-        <option value="">Bölge Seçiniz</option>
-        <option value="1. Bölge">1. Bölge</option>
-        <option value="2. Bölge">2. Bölge</option>
-        <option value="3. Bölge">3. Bölge</option>
-        <option value="4. Bölge">4. Bölge</option>
-
-    </select>
-
-</div>
-
-<div id="manager-region-box" class="hidden">
-
-    <label class="block text-sm font-medium mb-2">
-        Sorumlu Bölgeler
-    </label>
-
-    <div class="space-y-2">
-
-        <label class="flex items-center gap-2">
-            <input type="checkbox"
-                   class="manager-region"
-                   value="1. Bölge">
-            1. Bölge
-        </label>
-
-        <label class="flex items-center gap-2">
-            <input type="checkbox"
-                   class="manager-region"
-                   value="2. Bölge">
-            2. Bölge
-        </label>
-
-        <label class="flex items-center gap-2">
-            <input type="checkbox"
-                   class="manager-region"
-                   value="3. Bölge">
-            3. Bölge
-        </label>
-
-        <label class="flex items-center gap-2">
-            <input type="checkbox"
-                   class="manager-region"
-                   value="4. Bölge">
-            4. Bölge
-        </label>
-
-    </div>
-
-</div>                           
+                                <select id="new-role" onchange="toggleRegionSelection()" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
+                                    <option value="Admin">Ana Yönetici</option>
+                                    <option value="Manager">Bölge Yöneticisi</option>
+                                    <option value="Personel">Personel</option>
+                                </select>
+                            </div>
+                            <div id="personnel-region-box" class="hidden">
+                                <label class="block text-sm font-medium mb-2">Personel Bölgesi</label>
+                                <select id="personnel-region" class="w-full p-2 border rounded">
+                                    <option value="">Bölge Seçiniz</option>
+                                    <option value="1. Bölge">1. Bölge</option>
+                                    <option value="2. Bölge">2. Bölge</option>
+                                    <option value="3. Bölge">3. Bölge</option>
+                                    <option value="4. Bölge">4. Bölge</option>
+                                </select>
+                            </div>
+                            <div id="manager-region-box" class="hidden">
+                                <label class="block text-sm font-medium mb-2">Sorumlu Bölgeler</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="1. Bölge"> 1. Bölge</label>
+                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="2. Bölge"> 2. Bölge</label>
+                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="3. Bölge"> 3. Bölge</label>
+                                    <label class="flex items-center gap-2"><input type="checkbox" class="manager-region" value="4. Bölge"> 4. Bölge</label>
+                                </div>
+                            </div>
                             <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 rounded transition">Kullanıcıyı Kaydet</button>
                         </form>
                     </div>
@@ -443,81 +395,43 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
                     </div>
                 </div>
             </div>
-<!-- PERSONEL BİLDİRİM PANELİ -->
-<div id="tab-report" class="tab-content hidden">
 
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">
-        Hızlı Sorun ve Arıza Bildirimi
-    </h2>
+            <!-- RAPORLAR SEKMESİ -->
+            <div id="tab-reports" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Dağıtım Raporları Arşivi</h2>
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <div id="reports-list" class="space-y-3">
+                        <div class="text-gray-400">Henüz kaydedilmiş dağıtım raporu bulunmuyor.</div>
+                    </div>
+                </div>
+            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- PERSONEL BİLDİRİM PANELİ -->
+            <div id="tab-report" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Hızlı Sorun ve Arıza Bildirimi</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <button onclick="sendQuickReport('Sistem / Cihaz Arızası')" class="bg-red-600 hover:bg-red-700 text-white p-8 rounded-xl font-bold text-lg shadow">
+                        <i class="fa-solid fa-desktop mb-2 block text-2xl"></i> Sistem / Cihaz Arızası
+                    </button>
+                    <button onclick="sendQuickReport('Malzeme / Ürün Eksikliği')" class="bg-orange-500 hover:bg-orange-600 text-white p-8 rounded-xl font-bold text-lg shadow">
+                        <i class="fa-solid fa-box-open mb-2 block text-2xl"></i> Malzeme / Ürün Eksikliği
+                    </button>
+                    <button onclick="sendQuickReport('Temizlik / Hijyen Problemi')" class="bg-blue-600 hover:bg-blue-700 text-white p-8 rounded-xl font-bold text-lg shadow">
+                        <i class="fa-solid fa-broom mb-2 block text-2xl"></i> Temizlik / Hijyen Problemi
+                    </button>
+                    <button onclick="sendQuickReport('Ziyaretçi / Müşteri Sorunu')" class="bg-purple-600 hover:bg-purple-700 text-white p-8 rounded-xl font-bold text-lg shadow">
+                        <i class="fa-solid fa-users mb-2 block text-2xl"></i> Ziyaretçi / Müşteri Sorunu
+                    </button>
+                </div>
+            </div>
 
-        <button onclick="sendQuickReport('Sistem / Cihaz Arızası')"
-        class="bg-red-600 hover:bg-red-700 text-white p-8 rounded-xl">
-
-            Sistem / Cihaz Arızası
-
-        </button>
-
-        <button onclick="sendQuickReport('Malzeme / Ürün Eksikliği')"
-        class="bg-orange-500 hover:bg-orange-600 text-white p-8 rounded-xl">
-
-            Malzeme / Ürün Eksikliği
-
-        </button>
-
-        <button onclick="sendQuickReport('Temizlik / Hijyen Problemi')"
-        class="bg-blue-600 hover:bg-blue-700 text-white p-8 rounded-xl">
-
-            Temizlik / Hijyen Problemi
-
-        </button>
-
-        <button onclick="sendQuickReport('Ziyaretçi / Müşteri Sorunu')"
-        class="bg-purple-600 hover:bg-purple-700 text-white p-8 rounded-xl">
-
-            Ziyaretçi / Müşteri Sorunu
-
-        </button>
-
-    </div>
-
-</div>
-<!-- BİLDİRİM MERKEZİ -->
-<div id="tab-notifications" class="tab-content hidden">
-
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">
-        Bildirim Merkezi
-    </h2>
-
-    <div id="notification-list" class="space-y-3">
-
-        <div class="text-gray-400">
-            Henüz bildirim bulunmuyor.
-        </div>
-
-    </div>
-
-</div>
-<div id="tab-reports" class="tab-content hidden">
-
-    <h2 class="text-2xl font-bold text-gray-800 mb-4">
-
-        Raporlar
-
-    </h2>
-
-    <div id="reports-list" class="space-y-4">
-
-        <div class="text-gray-400">
-
-            Henüz rapor bulunmuyor.
-
-        </div>
-
-    </div>
-
-</div>
+            <!-- BİLDİRİM MERKEZİ -->
+            <div id="tab-notifications" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Bildirim Merkezi</h2>
+                <div id="notification-list" class="space-y-3">
+                    <div class="text-gray-400">Henüz bildirim bulunmuyor.</div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -528,9 +442,9 @@ class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
         let activities = [];
         let assignments = {};
         let tasks = [];
-let reports = [];
-let savedReports = [];
-let currentUser = null;
+        let reports = [];
+        let savedReports = [];
+        let currentUser = null;
 
         function showAlert(msg) {
             const box = document.getElementById('alert-box');
@@ -585,27 +499,31 @@ let currentUser = null;
                 const assignSnapshot = await getDocs(collection(db, "assignments"));
                 assignments = {};
                 assignSnapshot.forEach(doc => {
-                    assignments[doc.id] = doc.data().list;
+                    const data = doc.data();
+                    // Eskiden kalan sayı ID listelerini temizle, sadece metin/isim listesini kabul et
+                    if (data.list && Array.isArray(data.list)) {
+                        assignments[doc.id] = data.list.map(item => {
+                            // Eğer öğe bir sayı ID ise, ilgili personelin adını bul ve eşle, değilse olduğu gibi bırak
+                            const foundP = personeller.find(p => String(p.id) === String(item));
+                            return foundP ? foundP.name : item;
+                        });
+                    }
                 });
 
                 const taskSnapshot = await getDocs(collection(db, "tasks"));
-const reportsSnapshot =
-await getDocs(collection(db, "reports"));
-const reportsArchiveSnapshot =
-await getDocs(collection(db, "savedReports"));
+                const reportsSnapshot = await getDocs(collection(db, "reports"));
+                const reportsArchiveSnapshot = await getDocs(collection(db, "savedReports"));
 
-savedReports = [];
+                savedReports = [];
+                reportsArchiveSnapshot.forEach(doc => {
+                    savedReports.push(doc.data());
+                });
 
-reportsArchiveSnapshot.forEach(doc => {
+                reports = [];
+                reportsSnapshot.forEach(doc => {
+                    reports.push(doc.data());
+                });
 
-    savedReports.push(doc.data());
-
-});
-reports = [];
-
-reportsSnapshot.forEach(doc => {
-    reports.push(doc.data());
-});
                 if (!taskSnapshot.empty) {
                     tasks = taskSnapshot.docs.map(doc => doc.data()).sort((a,b) => b.id - a.id);
                 }
@@ -642,147 +560,391 @@ reportsSnapshot.forEach(doc => {
 
             if (foundUser) {
                 currentUser = foundUser;
-                sessionStorage.setItem('kz_logged_user', JSON.stringify(foundUser));
-                document.getElementById('login-error').classList.add('hidden');
-                document.getElementById('login-screen').classList.add('hidden');
+                sessionStorage.setItem('kz_logged_user', JSON.stringify(currentUser));
                 showMainApp();
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
         }
 
-        function handleLogout() {
-            sessionStorage.removeItem('kz_logged_user');
-            currentUser = null;
-            document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('login-screen').classList.remove('hidden');
+        function showMainApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('splash-screen').classList.add('fade-out');
+            document.getElementById('main-app').classList.remove('hidden');
+            document.getElementById('current-user-display').innerHTML = `<i class="fa-solid fa-circle-user"></i> ${currentUser.username} (${currentUser.role})`;
+            
+            renderDashboard();
+            renderScheduleTable();
+            renderActivitiesTable();
+            renderPersonnelTable();
+            renderTasksList();
+            renderUsersTable();
+            renderReports();
+            renderNotifications();
         }
 
-        function showMainApp() {
+        function handleLogout() {
+            sessionStorage.removeItem('kz_logged_user');
+            location.reload();
+        }
 
-    document.getElementById('main-app').classList.remove('hidden');
-
-    document.getElementById('current-user-display').innerHTML =
-    `<i class="fa-solid fa-circle-user"></i>
-    ${currentUser.username} (${currentUser.role})`;
-
-    if(currentUser.role === "Personel"){
-
-        document.getElementById('btn-tab-dashboard').style.display = "none";
-        document.getElementById('btn-tab-schedule').style.display = "none";
-        document.getElementById('btn-tab-activities').style.display = "none";
-        document.getElementById('btn-tab-personnel').style.display = "none";
-        document.getElementById('btn-tab-tasks').style.display = "none";
-        document.getElementById('btn-tab-users').style.display = "none";
-
-        const notifBtn = document.getElementById('btn-tab-notifications');
-        if(notifBtn) notifBtn.style.display = "none";
-
-        document.getElementById('tab-dashboard').style.display = "none";
-        document.getElementById('tab-schedule').style.display = "none";
-        document.getElementById('tab-activities').style.display = "none";
-        document.getElementById('tab-personnel').style.display = "none";
-        document.getElementById('tab-tasks').style.display = "none";
-        document.getElementById('tab-users').style.display = "none";
-
-        const notifTab = document.getElementById('tab-notifications');
-        if(notifTab) notifTab.style.display = "none";
-
-        const reportBtn = document.getElementById('btn-tab-report');
-        if(reportBtn) reportBtn.style.display = "block";
-
-        switchTab('report');
-
-}
-
-else {
-
-
-
-    const notifBtn =
-    document.getElementById('btn-tab-notifications');
-
-    if(notifBtn){
-        notifBtn.style.display = "block";
-    }
-
-
-
-
-    const reportBtn =
-    document.getElementById('btn-tab-report');
-
-    if(reportBtn){
-        reportBtn.style.display = "none";
-    }
-
-    switchTab('dashboard');
-
-}
-
-    renderAll();
-}
-
-        function switchTab(tabName) {
+        function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('bg-slate-700'));
             
-            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            const targetBtn = document.getElementById(`btn-tab-${tabName}`);
-            if(targetBtn) targetBtn.classList.add('bg-slate-700');
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`btn-tab-${tabId}`).classList.add('bg-slate-700');
         }
 
-        async function assignPersonnelToActivity(pId, actId) {
-            if(!actId) return;
-            pId = Number(pId);
-            actId = Number(actId);
+        function toggleRegionSelection() {
+            const role = document.getElementById('new-role').value;
+            document.getElementById('personnel-region-box').classList.toggle('hidden', role !== 'Personel');
+            document.getElementById('manager-region-box').classList.toggle('hidden', role !== 'Manager');
+        }
 
-            const person = personeller.find(p => p.id === pId);
-            const activity = activities.find(a => a.id === actId);
+        async function handleAddUser(e) {
+            e.preventDefault();
+            const username = document.getElementById('new-username').value.trim();
+            const password = document.getElementById('new-password').value.trim();
+            const role = document.getElementById('new-role').value;
 
-            if(!person || !activity) return;
+            const newUser = { username, password, role };
+            systemUsers.push(newUser);
+            
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", username), newUser);
+            showAlert("Kullanıcı başarıyla eklendi.");
+            document.getElementById('add-user-form').reset();
+            toggleRegionSelection();
+            renderUsersTable();
+        }
 
-            if((activity.type === 'Hygiene' || activity.type === 'Both') && !person.certHygiene) {
-                showAlert(`HATA: ${person.name} isimli personelin Hijyen Sertifikası yok!`);
-                renderAll();
+        function renderUsersTable() {
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = systemUsers.map(u => `
+                <tr class="border-b">
+                    <td class="p-3 font-medium">${u.username}</td>
+                    <td class="p-3"><span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">${u.role}</span></td>
+                    <td class="p-3 text-right">
+                        ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function deleteUser(username) {
+            systemUsers = systemUsers.filter(u => u.username !== username);
+            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "users", username));
+            renderUsersTable();
+            showAlert("Kullanıcı silindi.");
+        }
+
+        function renderDashboard() {
+            const activeList = document.getElementById('today-active-list');
+            const activeCount = document.getElementById('active-count-badge');
+            
+            const activePersonnel = personeller.filter(p => p.shift !== 'İzinli');
+            activeCount.innerText = activePersonnel.length;
+
+            activeList.innerHTML = activePersonnel.map(p => `
+                <div class="p-2 bg-gray-50 border rounded flex items-center justify-between">
+                    <div>
+                        <p class="font-bold text-xs">${p.name}</p>
+                        <p class="text-[10px] text-gray-500">${p.title} (${p.shift})</p>
+                    </div>
+                    <div class="flex gap-1">
+                        ${p.certHygiene ? '<span class="text-[9px] bg-green-100 text-green-700 px-1 rounded">Hijyen</span>' : ''}
+                        ${p.certHeight ? '<span class="text-[9px] bg-blue-100 text-blue-700 px-1 rounded">Yükseklik</span>' : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            const grid = document.getElementById('activities-assignment-grid');
+            grid.innerHTML = activities.map(a => {
+                const assignedList = assignments[a.id] || [];
+                return `
+                    <div class="p-3 bg-gray-50 border rounded flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-xs">${a.name}</span>
+                                <span class="text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">${a.type}</span>
+                            </div>
+                            <div class="mb-2">
+                                <select onchange="assignPersonnelToActivity('${a.id}', this)" class="w-full p-1.5 text-xs border rounded bg-white">
+                                    <option value="">Personel Seç</option>
+                                    ${activePersonnel.map(p => `<option value="${p.name}">${p.name}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-semibold text-gray-500 block mb-1">Görevli Personeller:</span>
+                            <div id="assigned-tags-${a.id}" class="flex flex-wrap gap-1">
+                                ${assignedList.map(name => `
+                                    <span class="inline-flex items-center gap-1 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                                        ${name}
+                                        <button onclick="removeAssignment('${a.id}', '${name}')" class="hover:text-red-900"><i class="fa-solid fa-xmark"></i></button>
+                                    </span>
+                                `).join('') || '<span class="text-[10px] text-gray-400 italic">Atanan personel yok</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function assignPersonnelToActivity(actId, selectElement) {
+            const pName = selectElement.value;
+            if(!pName) return;
+
+            const activity = activities.find(a => String(a.id) === String(actId));
+            const personnel = personeller.find(p => p.name === pName);
+
+            const requiresHygiene = activity.type === 'Hygiene' || activity.type === 'Both';
+            if (requiresHygiene && (!personnel || !personnel.certHygiene)) {
+                showAlert(`HATA: ${pName} personelinin hijyen sertifikası yok! Gıda aktivitesine atanamaz.`);
+                selectElement.value = "";
                 return;
             }
 
-            if((activity.type === 'Height' || activity.type === 'Both') && !person.certHeight) {
-                showAlert(`HATA: ${person.name} isimli personelin Yükseklik Sertifikası yok!`);
-                renderAll();
+            const requiresHeight = activity.type === 'Height' || activity.type === 'Both';
+            if (requiresHeight && (!personnel || !personnel.certHeight)) {
+                showAlert(`HATA: ${pName} personelinin yükseklik sertifikası yok! Bu aktiviteye atanamaz.`);
+                selectElement.value = "";
                 return;
             }
 
-            await removePersonnelAssignment(pId, false);
-
-            if(!assignments[actId]) assignments[actId] = [];
-            assignments[actId].push(pId);
-
-            await saveAssignmentsToFirebase();
-            renderAll();
+            assignments[actId] = assignments[actId] || [];
+            if (!assignments[actId].includes(pName)) {
+                assignments[actId].push(pName);
+                // Firebase'e güncel ismi kaydet
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "assignments", String(actId)), { list: assignments[actId] });
+                showAlert(`${pName} başarıyla atandı.`);
+            }
+            selectElement.value = "";
+            renderDashboard();
         }
 
-        async function removePersonnelAssignment(pId, doRender = true) {
-            pId = Number(pId);
-            Object.keys(assignments).forEach(actId => {
-                assignments[actId] = assignments[actId].filter(id => id !== pId);
-            });
-            await saveAssignmentsToFirebase();
-            if(doRender) renderAll();
+        async function removeAssignment(actId, pName) {
+            if (assignments[actId]) {
+                assignments[actId] = assignments[actId].filter(name => name !== pName);
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "assignments", String(actId)), { list: assignments[actId] });
+                renderDashboard();
+            }
         }
 
         async function clearAllAssignments() {
-            if(confirm("Tüm aktivite atamalarını sıfırlamak istediğinize emin misiniz?")) {
-                assignments = {};
-                const db = window.db;
-                const { getDocs, collection, deleteDoc, doc } = window.colDocs;
-                const snap = await getDocs(collection(db, "assignments"));
-                for(let d of snap.docs) {
-                    await deleteDoc(doc(db, "assignments", d.id));
-                }
-                renderAll();
+            for (let actId of Object.keys(assignments)) {
+                await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "assignments", String(actId)));
             }
+            assignments = {};
+            showAlert("Atamalar sıfırlandı.");
+            renderDashboard();
+        }
+
+        async function saveDistributionReport() {
+            const reportId = Date.now();
+            const dateStr = new Date().toLocaleString('tr-TR');
+            
+            const reportData = {
+                id: reportId,
+                title: `Vardiya & Aktivite Dağıtım Raporu (${dateStr})`,
+                date: dateStr,
+                assignments: JSON.parse(JSON.stringify(assignments)),
+                activitiesList: activities.map(a => ({
+                    name: a.name,
+                    type: a.type,
+                    assigned: assignments[a.id] || []
+                }))
+            };
+
+            savedReports.unshift(reportData);
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(reportId)), reportData);
+            
+            showAlert("Dağıtım başarıyla kaydedildi ve Raporlar sekmesine aktarıldı!");
+            renderReports();
+            switchTab('reports');
+        }
+
+        function renderReports() {
+            const list = document.getElementById('reports-list');
+            list.innerHTML = savedReports.map(r => `
+                <div class="p-4 bg-gray-50 border rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-sm">
+                    <div>
+                        <p class="font-bold text-gray-800">${r.title}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Kayıt Tarihi: ${r.date}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openReportModal(${r.id})" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-eye"></i> Görüntüle
+                        </button>
+                        <button onclick="downloadLandscapePDF(${r.id})" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-pdf"></i> Yatay PDF İndir
+                        </button>
+                    </div>
+                </div>
+            `).join('') || '<div class="text-gray-400 text-sm">Henüz kaydedilmiş dağıtım raporu bulunmuyor.</div>';
+        }
+
+        function openReportModal(reportId) {
+            const r = savedReports.find(x => x.id === reportId);
+            if(!r) return;
+
+            document.getElementById('modal-title').innerText = r.title;
+            const content = document.getElementById('modal-content');
+            
+            content.innerHTML = r.activitiesList.map(act => `
+                <div class="p-3 bg-gray-50 border rounded-lg flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-xs text-gray-800">${act.name}</span>
+                            <span class="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-semibold">${act.type}</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 pt-2 border-t border-gray-200">
+                        <span class="text-[10px] font-semibold text-gray-500 block mb-1">Görevli Personeller:</span>
+                        <div class="flex flex-wrap gap-1">
+                            ${act.assigned.length > 0 ? act.assigned.map(name => `<span class="text-[10px] bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full font-medium">${name}</span>`).join('') : '<span class="text-[10px] text-gray-400 italic">Atanan kimse yok</span>'}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('modal-pdf-btn').setAttribute('onclick', `downloadLandscapePDF(${r.id})`);
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+        }
+
+        async function downloadLandscapePDF(reportId) {
+            const r = savedReports.find(x => x.id === reportId);
+            if(!r) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+            function trFix(text) {
+                if (!text) return "";
+                return String(text)
+                    .replace(/İ/g, "I")
+                    .replace(/ı/g, "i")
+                    .replace(/Ş/g, "S")
+                    .replace(/ş/g, "s")
+                    .replace(/Ğ/g, "G")
+                    .replace(/ğ/g, "g")
+                    .replace(/Ü/g, "U")
+                    .replace(/ü/g, "u")
+                    .replace(/Ö/g, "O")
+                    .replace(/ö/g, "o")
+                    .replace(/Ç/g, "C")
+                    .replace(/ç/g, "c");
+            }
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text(trFix("KIDZANIA ISTANBUL - VARDİYA VE AKTİVİTE DAGITIM RAPORU"), 15, 12);
+
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(trFix(`Rapor Tarihi: ${r.date}`), 15, 18);
+
+            let startX = 15;
+            let startY = 24;
+            let boxWidth = 62;
+            let boxHeight = 28;
+            let colCount = 4;
+            let marginX = 6;
+            let marginY = 5;
+
+            r.activitiesList.forEach((act, index) => {
+                let colIndex = index % colCount;
+                let rowIndex = Math.floor(index / colCount);
+
+                let x = startX + colIndex * (boxWidth + marginX);
+                let y = startY + rowIndex * (boxHeight + marginY);
+
+                if (y + boxHeight > 200) {
+                    doc.addPage();
+                    startY = 15;
+                    y = startY + rowIndex * (boxHeight + marginY);
+                }
+
+                doc.setFillColor(248, 249, 250);
+                doc.setDrawColor(218, 222, 226);
+                doc.roundedRect(x, y, boxWidth, boxHeight, 2, 2, "FD");
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(9);
+                doc.setTextColor(30, 41, 59);
+                doc.text(trFix(act.name), x + 3, y + 6, { maxWidth: boxWidth - 6 });
+
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(7);
+                doc.setTextColor(100, 116, 139);
+                doc.text(trFix(`Tur: ${act.type}`), x + 3, y + 11);
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(7.5);
+                doc.setTextColor(51, 65, 85);
+                
+                let assignedText = act.assigned.length > 0 ? act.assigned.join(', ') : 'Atanan kimse yok';
+                let splitNames = doc.splitTextToSize(trFix(assignedText), boxWidth - 6);
+                
+                doc.text(splitNames, x + 3, y + 16, { maxWidth: boxWidth - 6, lineHeightFactor: 1.15 });
+            });
+
+            doc.save(`KidZania_Dagitim_Raporu_${r.id}.pdf`);
+            showAlert("Yatay PDF başarıyla indirildi.");
+        }
+
+        function renderScheduleTable() {
+            const tbody = document.getElementById('schedule-table-body');
+            tbody.innerHTML = personeller.map(p => `
+                <tr class="border-b">
+                    <td class="p-3 font-medium">${p.name} <span class="text-xs text-gray-400 block">${p.title}</span></td>
+                    <td class="p-3">
+                        ${p.certHygiene ? '<span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded mr-1">Hijyen</span>' : ''}
+                        ${p.certHeight ? '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Yükseklik</span>' : ''}
+                    </td>
+                    <td class="p-3">
+                        <select onchange="updatePersonnelShift('${p.id}', this.value)" class="p-1.5 border rounded text-xs">
+                            <option value="Sabahçı" ${p.shift === 'Sabahçı' ? 'selected' : ''}>Sabahçı</option>
+                            <option value="Akşamcı" ${p.shift === 'Akşamcı' ? 'selected' : ''}>Akşamcı</option>
+                            <option value="İzinli" ${p.shift === 'İzinli' ? 'selected' : ''}>İzinli</option>
+                        </select>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function updatePersonnelShift(id, newShift) {
+            const p = personeller.find(x => String(x.id) === String(id));
+            if(p) {
+                p.shift = newShift;
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
+                renderDashboard();
+            }
+        }
+
+        async function saveScheduleAndRegisterTask(goToDashboard) {
+            showAlert("Vardiya planı kaydedildi.");
+            if(goToDashboard) {
+                switchTab('dashboard');
+                renderDashboard();
+            }
+        }
+
+        function renderActivitiesTable() {
+            const tbody = document.getElementById('activities-table-body');
+            tbody.innerHTML = activities.map(a => `
+                <tr class="border-b">
+                    <td class="p-3 font-medium">${a.name}</td>
+                    <td class="p-3">${a.type}</td>
+                    <td class="p-3 text-right">
+                        <button onclick="deleteActivity('${a.id}')" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         async function handleAddActivity(e) {
@@ -793,462 +955,108 @@ else {
 
             activities.push(newAct);
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "activities", String(newAct.id)), newAct);
-            renderAll();
-            e.target.reset();
+            document.getElementById('act-name').value = '';
+            renderActivitiesTable();
+            renderDashboard();
+            showAlert("Aktivite eklendi.");
         }
 
-        async function deleteActivity(actId) {
-            activities = activities.filter(a => a.id !== actId);
-            delete assignments[actId];
-            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "activities", String(actId)));
-            await saveAssignmentsToFirebase();
-            renderAll();
+        async function deleteActivity(id) {
+            activities = activities.filter(a => String(a.id) !== String(id));
+            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "activities", String(id)));
+            renderActivitiesTable();
+            renderDashboard();
+            showAlert("Aktivite silindi.");
         }
 
-        async function toggleCertificate(pId, certType) {
-            const p = personeller.find(x => x.id === pId);
-            if(p) {
-                if(certType === 'hygiene') p.certHygiene = !p.certHygiene;
-                if(certType === 'height') p.certHeight = !p.certHeight;
-                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
-                renderAll();
-            }
-        }
-
-        async function saveScheduleAndRegisterTask(redirectToDistribution = false) {
-            const selectedDate = document.getElementById('schedule-date-filter').value;
-            const formattedDate = selectedDate ? selectedDate.split('-').reverse().join('/') : new Date().toLocaleDateString('tr-TR');
-
-            const sabahci = personeller.filter(p => p.shift === 'Sabahçı').map(p => p.name);
-            const aksamci = personeller.filter(p => p.shift === 'Akşamcı').map(p => p.name);
-            const izinli = personeller.filter(p => p.shift === 'İzinli' || p.shift === 'OFF').map(p => p.name);
-
-            const desc = `Vardiya Planı Kaydedildi [Tarih: ${formattedDate}]\n- Sabahçı (${sabahci.length}): ${sabahci.join(', ') || 'Yok'}\n- Akşamcı (${aksamci.length}): ${aksamci.join(', ') || 'Yok'}\n- İzinli/OFF (${izinli.length}): ${izinli.join(', ') || 'Yok'}`;
-
-            const newTask = {
-                id: Date.now(),
-                title: `Vardiya Planlaması Yapıldı (${formattedDate})`,
-                desc: desc,
-                date: formattedDate,
-                user: currentUser.username
-            };
-
-            tasks.unshift(newTask);
-            await window.colDocs.setDoc(window.colDocs.doc(window.db, "tasks", String(newTask.id)), newTask);
-            renderAll();
-
-            if(redirectToDistribution) {
-                switchTab('dashboard');
-            } else {
-                alert(`Vardiya planı başarıyla kaydedildi.`);
-            }
-        }
-
-        async function updateShift(pId, newShift) {
-            const p = personeller.find(x => x.id === pId);
-            if(p) { 
-                p.shift = newShift; 
-                if(newShift === 'İzinli' || newShift === 'OFF') await removePersonnelAssignment(pId, false);
-                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
-                renderAll(); 
-            }
+        function renderPersonnelTable() {
+            const tbody = document.getElementById('personnel-table-body');
+            tbody.innerHTML = personeller.map(p => `
+                <tr class="border-b">
+                    <td class="p-3 font-medium">${p.name} <span class="text-xs text-gray-400 block">${p.title}</span></td>
+                    <td class="p-3"><input type="checkbox" ${p.certHygiene ? 'checked' : ''} onchange="toggleCert('${p.id}', 'certHygiene', this.checked)"></td>
+                    <td class="p-3"><input type="checkbox" ${p.certHeight ? 'checked' : ''} onchange="toggleCert('${p.id}', 'certHeight', this.checked)"></td>
+                    <td class="p-3 text-right">
+                        <button onclick="deletePersonnel('${p.id}')" class="text-red-500 hover:text-red-700 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
         async function handleAddPersonnel(e) {
             e.preventDefault();
-            const name = document.getElementById('p-name').value;
-            const title = document.getElementById('p-title').value;
-const region = document.getElementById('p-region').value;
+            const name = document.getElementById('p-name').value.trim();
+            const title = document.getElementById('p-title').value.trim();
             const certHygiene = document.getElementById('p-cert-hygiene').checked;
             const certHeight = document.getElementById('p-cert-height').checked;
+            const newP = { id: Date.now(), name, title, shift: 'Sabahçı', certHygiene, certHeight };
 
-           
-
-const newP = {
-    id: Date.now(),
-    name,
-    title,
-    region,
-    shift: 'Sabahçı',
-    certHygiene,
-    certHeight
-};
             personeller.push(newP);
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(newP.id)), newP);
-            renderAll();
             e.target.reset();
+            renderPersonnelTable();
+            renderDashboard();
+            renderScheduleTable();
+            showAlert("Personel eklendi.");
+        }
+
+        async function toggleCert(id, certField, value) {
+            const p = personeller.find(x => String(x.id) === String(id));
+            if(p) {
+                p[certField] = value;
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
+                renderDashboard();
+            }
         }
 
         async function deletePersonnel(id) {
-            personeller = personeller.filter(p => p.id !== id);
-            await removePersonnelAssignment(id, false);
+            personeller = personeller.filter(p => String(p.id) !== String(id));
             await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "personnel", String(id)));
-            renderAll();
+            renderPersonnelTable();
+            renderDashboard();
+            renderScheduleTable();
+            showAlert("Personel silindi.");
+        }
+
+        function renderTasksList() {
+            const list = document.getElementById('tasks-list');
+            list.innerHTML = tasks.map(t => `
+                <div class="p-3 bg-gray-50 border rounded">
+                    <p class="font-bold">${t.title}</p>
+                    <p class="text-xs text-gray-500 mt-1">${t.desc || ''}</p>
+                </div>
+            `).join('') || '<div class="text-gray-400">Kayıtlı iş bulunmuyor.</div>';
         }
 
         async function handleAddTask(e) {
             e.preventDefault();
-            const title = document.getElementById('task-title').value;
-            const desc = document.getElementById('task-desc').value;
-            const newTask = { id: Date.now(), title, desc, date: new Date().toLocaleDateString('tr-TR'), user: currentUser.username };
+            const title = document.getElementById('task-title').value.trim();
+            const desc = document.getElementById('task-desc').value.trim();
+            const newTask = { id: Date.now(), title, desc };
+
             tasks.unshift(newTask);
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "tasks", String(newTask.id)), newTask);
-            renderAll();
             e.target.reset();
-        }
-function toggleRegionSelection(){
-
-    const role =
-    document.getElementById('new-role').value;
-
-    const managerBox =
-    document.getElementById('manager-region-box');
-
-    const personnelBox =
-    document.getElementById('personnel-region-box');
-
-    managerBox.classList.add('hidden');
-    personnelBox.classList.add('hidden');
-
-    if(role === "Manager"){
-
-        managerBox.classList.remove('hidden');
-
-    }
-
-    if(role === "Personel"){
-
-        personnelBox.classList.remove('hidden');
-
-    }
-
-}
-        async function handleAddUser(e) {
-            e.preventDefault();
-            const u = document.getElementById('new-username').value.trim();
-            const p = document.getElementById('new-password').value.trim();
-            const r = document.getElementById('new-role').value;
-            if (systemUsers.some(x => x.username.toLowerCase() === u.toLowerCase())) { alert('Bu kullanıcı zaten var!'); return; }
-            
-            let responsibleRegions = [];
-
-document
-.querySelectorAll('.manager-region:checked')
-.forEach(x => {
-    responsibleRegions.push(x.value);
-});
-
-let personnelRegion = "";
-
-if(r === "Personel"){
-
-    personnelRegion =
-    document.getElementById('personnel-region').value;
-
-}
-
-const newUser = {
-    username: u,
-    password: p,
-    role: r,
-    regions: responsibleRegions,
-    region: personnelRegion
-};
-            systemUsers.push(newUser);
-            await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", u), newUser);
-            renderAll();
-            e.target.reset();
+            renderTasksList();
+            showAlert("İş kaydedildi.");
         }
 
-        async function deleteUser(u) {
-            if(u === 'admin') return alert('Admin silinemez!');
-            systemUsers = systemUsers.filter(x => x.username !== u);
-            await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "users", u));
-            renderAll();
+        async function sendQuickReport(type) {
+            const newReport = { id: Date.now(), type, user: currentUser?.username || 'Personel', date: new Date().toLocaleString() };
+            reports.push(newReport);
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "reports", String(newReport.id)), newReport);
+            showAlert("Bildirim başarıyla iletildi.");
+            renderNotifications();
         }
 
-        async function saveAssignmentsToFirebase() {
-            const db = window.db;
-            for (let actId of Object.keys(assignments)) {
-                await window.colDocs.setDoc(window.colDocs.doc(db, "assignments", String(actId)), { list: assignments[actId] });
-            }
-        }
-async function sendQuickReport(type){
-
-    const report = {
-        id: Date.now(),
-        type: type,
-        user: currentUser.username,
-        date: new Date().toLocaleString('tr-TR'),
-        status: "Yeni"
-    };
-
-    await window.colDocs.setDoc(
-        window.colDocs.doc(
-            window.db,
-            "reports",
-            String(report.id)
-        ),
-        report
-    );
-
-reports.unshift(report);
-
-showAlert("Bildirim gönderildi.");
-
-renderAll();
-
-}
-async function saveReport(title, content){
-
-    const report = {
-
-        id: Date.now(),
-
-        title,
-
-        content,
-
-        createdBy: currentUser.username,
-
-        date: new Date().toLocaleString('tr-TR')
-
-    };
-
-    savedReports.unshift(report);
-
-    await window.colDocs.setDoc(
-        window.colDocs.doc(
-            window.db,
-            "savedReports",
-            String(report.id)
-        ),
-        report
-    );
-
-    showAlert("Rapor kaydedildi");
-
-    renderAll();
-}
-
-async function saveDistributionReport(){
-
-    const data = [];
-
-    activities.forEach(act => {
-
-        const assignedIds =
-        assignments[act.id] || [];
-
-        const assignedNames =
-        personeller
-        .filter(p => assignedIds.includes(p.id))
-        .map(p => p.name);
-
-        data.push({
-
-            activity: act.name,
-
-            personnel: assignedNames
-
-        });
-
-    });
-
-    await saveReport(
-        "Vardiya & Dağıtım",
-        data
-    );
-
-}
-function renderAll() {
-
-    const activePersonnel =
-    personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'OFF');
-
-    document.getElementById('active-count-badge').innerText =
-    activePersonnel.length;
-
-            document.getElementById('today-active-list').innerHTML = activePersonnel.map(p => {
-                let assignedActId = null;
-                Object.keys(assignments).forEach(actId => {
-                    if(assignments[actId] && assignments[actId].includes(p.id)) assignedActId = actId;
-                });
-
-                let certs = '';
-                if(p.certHygiene) certs += '<span class="text-[9px] bg-emerald-100 text-emerald-800 px-1 rounded">H</span> ';
-                if(p.certHeight) certs += '<span class="text-[9px] bg-blue-100 text-blue-800 px-1 rounded">Y</span>';
-
-                return `
-                    <div class="p-2.5 bg-slate-50 border rounded-lg flex flex-col gap-2">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <div class="font-bold text-gray-800 text-xs">${p.name} ${certs}</div>
-                                <div class="text-[10px] text-gray-400">${p.shift}</div>
-                            </div>
-                        </div>
-                        <div>
-                            <select onchange="assignPersonnelToActivity(${p.id}, this.value)" class="w-full text-xs p-1 border rounded bg-white font-medium text-gray-700 outline-none">
-                                <option value="">-- Aktivite Seç / Ata --</option>
-                                ${activities.map(a => `
-                                    <option value="${a.id}" ${assignedActId == a.id ? 'selected' : ''}>
-                                        ${a.name} ${a.type === 'Hygiene' ? '[Gıda]' : a.type === 'Height' ? '[Yükseklik]' : a.type === 'Both' ? '[Gıda+Yükseklik]' : ''}
-                                    </option>
-                                `).join('')}
-                            </select>
-                        </div>
-                    </div>
-                `;
-            }).join('') || '<div class="text-xs text-gray-400">Bugün çalışan aktif personel yok.</div>';
-
-            document.getElementById('activities-assignment-grid').innerHTML = activities.map(act => {
-                const assignedIds = assignments[act.id] || [];
-                const assignedPeople = personeller.filter(p => assignedIds.includes(p.id));
-
-                let badge = '<span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded">Standard</span>';
-                if(act.type === 'Hygiene') badge = '<span class="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded">Gıda (Hijyen Şart)</span>';
-                if(act.type === 'Height') badge = '<span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded">Yükseklik Şart</span>';
-                if(act.type === 'Both') badge = '<span class="text-[10px] bg-purple-100 text-purple-700 font-bold px-2 py-0.5 rounded">Gıda + Yükseklik</span>';
-
-                return `
-                    <div class="p-4 bg-slate-50 border rounded-xl flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-start mb-2">
-                                <h4 class="font-bold text-gray-800 text-sm">${act.name}</h4>
-                                ${badge}
-                            </div>
-                            <div class="space-y-1.5 mt-3">
-                                ${assignedPeople.length ? assignedPeople.map(p => `
-                                    <div class="flex justify-between items-center bg-white p-2 border rounded shadow-sm text-xs">
-                                        <span class="font-semibold text-gray-700">${p.name}</span>
-                                        <button onclick="removePersonnelAssignment(${p.id})" class="text-red-400 hover:text-red-600 text-xs">
-                                            <i class="fa-solid fa-xmark"></i>
-                                        </button>
-                                    </div>
-                                `).join('') : '<span class="text-xs text-gray-400 italic block">Henüz personel atanmadı.</span>'}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('') || '<div class="text-xs text-gray-400">Henüz aktivite tanımlanmadı.</div>';
-
-            document.getElementById('activities-table-body').innerHTML = activities.map(a => {
-                let typeTxt = 'Normal';
-                if(a.type === 'Hygiene') typeTxt = '<span class="text-emerald-700 font-semibold">Gıda Aktivitesi (Hijyen)</span>';
-                if(a.type === 'Height') typeTxt = '<span class="text-blue-700 font-semibold">Yükseklik Aktivitesi</span>';
-                if(a.type === 'Both') typeTxt = '<span class="text-purple-700 font-semibold">Gıda + Yükseklik</span>';
-                return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="p-3 font-medium text-gray-800">${a.name}</td>
-                        <td class="p-3">${typeTxt}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="deleteActivity(${a.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            document.getElementById('schedule-table-body').innerHTML = personeller.map(p => {
-                let certs = [];
-                if(p.certHygiene) certs.push('<span class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">Hijyen</span>');
-                if(p.certHeight) certs.push('<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-semibold">Yükseklik</span>');
-                return `
-                <tr>
-                    <td class="p-3 font-medium">${p.name} <span class="text-xs text-gray-400">(${p.title})</span></td>
-                    <td class="p-3"><div class="flex gap-1">${certs.length ? certs.join(' ') : '<span class="text-xs text-gray-300">Yok</span>'}</div></td>
-                    <td class="p-3">
-                        <select onchange="updateShift(${p.id}, this.value)" class="p-1 border rounded text-xs font-semibold">
-                            <option value="Sabahçı" ${p.shift==='Sabahçı'?'selected':''}>Sabahçı</option>
-                            <option value="Akşamcı" ${p.shift==='Akşamcı'?'selected':''}>Akşamcı</option>
-                            <option value="İzinli" ${p.shift==='İzinli'?'selected':''}>İzinli</option>
-                            <option value="OFF" ${p.shift==='OFF'?'selected':''}>OFF</option>
-                        </select>
-                    </td>
-                </tr>
-            `}).join('');
-
-            document.getElementById('personnel-table-body').innerHTML = personeller.map(p => `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3">
-                        <div class="font-medium text-gray-800">${p.name}</div>
-                        <div class="text-xs text-gray-400">
-    ${p.title} | ${p.region || '-'}
-</div>
-                    </td>
-                    <td class="p-3">
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="checkbox" ${p.certHygiene ? 'checked' : ''} onchange="toggleCertificate(${p.id}, 'hygiene')" class="rounded text-red-600 focus:ring-0">
-                            <span class="ml-2 text-xs font-medium text-gray-700">Hijyen</span>
-                        </label>
-                    </td>
-                    <td class="p-3">
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="checkbox" ${p.certHeight ? 'checked' : ''} onchange="toggleCertificate(${p.id}, 'height')" class="rounded text-red-600 focus:ring-0">
-                            <span class="ml-2 text-xs font-medium text-gray-700">Yükseklik</span>
-                        </label>
-                    </td>
-                    <td class="p-3 text-right">
-                        <button onclick="deletePersonnel(${p.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-
-            document.getElementById('tasks-list').innerHTML = tasks.length ? tasks.map(t => `
-                <div class="p-4 border rounded-xl bg-slate-50 shadow-sm">
-                    <div class="flex justify-between items-center font-bold text-slate-800 border-b pb-2 mb-2">
-                        <span class="flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-red-600"></i> ${t.title}</span>
-                        <span class="text-xs text-gray-400 font-normal"><i class="fa-regular fa-clock"></i> ${t.date} | Ekleyen: ${t.user}</span>
-                    </div>
-                    <p class="text-gray-700 whitespace-pre-line text-xs font-mono leading-relaxed">${t.desc}</p>
+        function renderNotifications() {
+            const list = document.getElementById('notification-list');
+            list.innerHTML = reports.map(r => `
+                <div class="p-3 bg-red-50 border border-red-200 rounded text-sm">
+                    <p class="font-bold text-red-700">${r.type}</p>
+                    <p class="text-xs text-gray-500 mt-1">Gönderen: ${r.user} - ${r.date}</p>
                 </div>
-            `).join('') : '<span class="text-gray-400">Henüz kaydedilmiş bir iş yok.</span>';
-
-            document.getElementById('users-table-body').innerHTML = systemUsers.map(u => `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-3 font-medium">${u.username}</td>
-                    <td class="p-3"><span class="px-2 py-1 text-xs rounded-full ${u.role === 'Admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'} font-semibold">${u.role}</span></td>
-                    <td class="p-3 text-right">
-                        ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-xs text-gray-400">Ana Yönetici</span>'}
-                    </td>
-                </tr>
-            `).join('');
-const notificationList =
-document.getElementById('notification-list');
-
-if(notificationList){
-
-    notificationList.innerHTML = reports.length ?
-
-    reports.map(r => `
-
-        <div class="bg-white border rounded-xl p-4 shadow-sm">
-
-            <div class="font-bold text-red-600">
-                ${r.type}
-            </div>
-
-            <div class="text-sm text-gray-500 mt-2">
-                Gönderen: ${r.user}
-            </div>
-
-            <div class="text-sm text-gray-500">
-                Bölge: ${r.region || '-'}
-            </div>
-
-            <div class="text-xs text-gray-400 mt-2">
-                ${r.date}
-            </div>
-
-        </div>
-
-    `).join('')
-
-    :
-
-    `<div class="text-gray-400">
-        Bildirim bulunmuyor.
-    </div>`;
-}
+            `).join('') || '<div class="text-gray-400">Henüz bildirim bulunmuyor.</div>';
         }
     </script>
 </body>

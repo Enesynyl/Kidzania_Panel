@@ -207,7 +207,10 @@
                 <span class="font-bold text-lg">KidZania Yönetim <span class="text-[10px] bg-white/20 px-1 rounded">v1.7</span></span>
             </div>
             <nav class="p-4 space-y-1">
-                <button id="btn-tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 bg-slate-700 hover:bg-slate-700 transition">
+                <button id="btn-tab-overview" onclick="switchTab('overview')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 bg-slate-700 hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+                </button>
+                <button id="btn-tab-dashboard" onclick="switchTab('dashboard')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
                     <i class="fa-solid fa-calendar-days w-5"></i> Vardiya & Dağıtım
                 </button>
                 <button id="btn-tab-schedule" onclick="switchTab('schedule')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
@@ -392,6 +395,178 @@
                                 </tr>
                             </thead>
                             <tbody id="schedule-table-body" class="divide-y text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEKMELER 4: DASHBOARD (GENEL ÖZET) -->
+            <div id="tab-overview" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-red-600"></i> Dashboard
+                </h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- SABAHÇI KARTI -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-sun text-yellow-500"></i> Sabahçı
+                            </h3>
+                            <span id="dash-sabah-count" class="text-2xl font-black text-yellow-600">0</span>
+                        </div>
+                        <button onclick="showShiftPersonnel('Sabahçı')" class="w-full mt-2 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition border border-yellow-200 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Görüntüle
+                        </button>
+                    </div>
+                    <!-- AKŞAMCI KARTI -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-moon text-indigo-500"></i> Akşamcı
+                            </h3>
+                            <span id="dash-aksam-count" class="text-2xl font-black text-indigo-600">0</span>
+                        </div>
+                        <button onclick="showShiftPersonnel('Akşamcı')" class="w-full mt-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition border border-indigo-200 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Görüntüle
+                        </button>
+                    </div>
+                    <!-- FULL KARTI -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-briefcase text-orange-500"></i> Full
+                            </h3>
+                            <span id="dash-full-count" class="text-2xl font-black text-orange-600">0</span>
+                        </div>
+                        <button onclick="showShiftPersonnel('Full')" class="w-full mt-2 bg-orange-50 hover:bg-orange-100 text-orange-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition border border-orange-200 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Görüntüle
+                        </button>
+                    </div>
+                    <!-- İZİNLİ KARTI -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-umbrella-beach text-green-500"></i> İzinli
+                            </h3>
+                            <span id="dash-izinli-count" class="text-2xl font-black text-green-600">0</span>
+                        </div>
+                        <button onclick="showShiftPersonnel('izinli')" class="w-full mt-2 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition border border-green-200 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Görüntüle
+                        </button>
+                    </div>
+                    <!-- RAPORLU KARTI -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-notes-medical text-teal-500"></i> Raporlu
+                            </h3>
+                            <span id="dash-raporlu-count" class="text-2xl font-black text-teal-600">0</span>
+                        </div>
+                        <button onclick="showShiftPersonnel('Raporlu')" class="w-full mt-2 bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition border border-teal-200 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Görüntüle
+                        </button>
+                    </div>
+                    <!-- YILLIK İZİN KARTI -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-plane-departure text-blue-500"></i> Yıllık İzin
+                            </h3>
+                            <span id="dash-yillik-izin-count" class="text-2xl font-black text-blue-600">0</span>
+                        </div>
+                        <button onclick="showShiftPersonnel('Yıllık İzin')" class="w-full mt-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition border border-blue-200 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Görüntüle
+                        </button>
+                    </div>
+                    <!-- ÜCRETSİZ İZİN KARTI -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-umbrella text-purple-500"></i> Ücretsiz İzin
+                            </h3>
+                            <span id="dash-ucretsiz-izin-count" class="text-2xl font-black text-purple-600">0</span>
+                        </div>
+                        <button onclick="showShiftPersonnel('Ücretsiz İzin')" class="w-full mt-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition border border-purple-200 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Görüntüle
+                        </button>
+                    </div>
+                    <!-- GÜNÜ DEĞİL KARTI -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-xmark text-pink-500"></i> Günü Değil
+                            </h3>
+                            <span id="dash-gunu-degil-count" class="text-2xl font-black text-pink-600">0</span>
+                        </div>
+                        <button onclick="showShiftPersonnel('Günü Değil')" class="w-full mt-2 bg-pink-50 hover:bg-pink-100 text-pink-700 text-xs font-semibold py-1.5 px-3 rounded-lg transition border border-pink-200 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-eye"></i> Görüntüle
+                        </button>
+                    </div>
+                </div>
+                <!-- TOPLAM ÇALIŞAN KARTI -->
+                <div class="bg-gradient-to-r from-red-600 to-red-700 p-6 rounded-xl shadow-sm text-white mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold text-white/90 flex items-center gap-2">
+                                <i class="fa-solid fa-users"></i> Bugün Toplam Çalışan
+                            </h3>
+                            <p class="text-xs text-white/70 mt-1">Sabahçı + Akşamcı + Full</p>
+                        </div>
+                        <div class="text-right">
+                            <span id="dash-total-calisma-count" class="text-4xl font-black">0</span>
+                            <div class="text-xs text-white/70">Kişi</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4 mt-4 text-xs">
+                        <div class="bg-white/20 px-3 py-1.5 rounded-lg">
+                            <i class="fa-solid fa-sun text-yellow-300 mr-1"></i> Sabahçı: <span id="dash-total-calisma-sabah" class="font-bold">0</span>
+                        </div>
+                        <div class="bg-white/20 px-3 py-1.5 rounded-lg">
+                            <i class="fa-solid fa-moon text-indigo-300 mr-1"></i> Akşamcı: <span id="dash-total-calisma-aksam" class="font-bold">0</span>
+                        </div>
+                        <div class="bg-white/20 px-3 py-1.5 rounded-lg">
+                            <i class="fa-solid fa-briefcase text-orange-300 mr-1"></i> Full: <span id="dash-total-calisma-full" class="font-bold">0</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- BÖLGE BAZLI ÖZET TABLO -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-map-marker-alt text-red-600"></i> Bölge Bazlı Vardiya Özeti
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b bg-gray-50 text-xs font-semibold uppercase text-gray-500">
+                                    <th class="p-3">Bölge</th>
+                                    <th class="p-3 text-center">Sabahçı</th>
+                                    <th class="p-3 text-center">Akşamcı</th>
+                                    <th class="p-3 text-center">Full</th>
+                                    <th class="p-3 text-center">İzinli</th>
+                                    <th class="p-3 text-center">Raporlu</th>
+                                    <th class="p-3 text-center">Yıllık İzin</th>
+                                    <th class="p-3 text-center">Ücretsiz İzin</th>
+                                    <th class="p-3 text-center">Günü Değil</th>
+                                    <th class="p-3 text-center">Seçilmedi</th>
+                                    <th class="p-3 text-center">Toplam</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dash-region-table-body" class="divide-y text-sm"></tbody>
+                            <tfoot>
+                                <tr class="border-t-2 bg-gray-100 font-bold text-sm">
+                                    <td class="p-3">TOPLAM</td>
+                                    <td class="p-3 text-center text-yellow-700" id="dash-total-sabah">0</td>
+                                    <td class="p-3 text-center text-indigo-700" id="dash-total-aksam">0</td>
+                                    <td class="p-3 text-center text-orange-700" id="dash-total-full">0</td>
+                                    <td class="p-3 text-center text-green-700" id="dash-total-izinli">0</td>
+                                    <td class="p-3 text-center text-teal-700" id="dash-total-raporlu">0</td>
+                                    <td class="p-3 text-center text-blue-700" id="dash-total-yillik">0</td>
+                                    <td class="p-3 text-center text-purple-700" id="dash-total-ucretsiz">0</td>
+                                    <td class="p-3 text-center text-pink-700" id="dash-total-gunudegil">0</td>
+                                    <td class="p-3 text-center text-gray-500" id="dash-total-secilmedi">0</td>
+                                    <td class="p-3 text-center text-red-700" id="dash-total-all">0</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -888,10 +1063,35 @@
             }
         }
 
-        function showMainApp() {
+        async function showMainApp() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('splash-screen').classList.add('fade-out');
             document.getElementById('main-app').classList.remove('hidden');
+
+            // --- HER GİRİŞTE GEÇİCİ VERİLERİ SIFIRLA ---
+            // Yeni kullanıcı her girişte sıfır dağıtım ve vardiya ile başlamalı
+            assignments = {};
+            dailyShifts = {};
+            
+            // Firebase'deki assignments koleksiyonunu sil
+            try {
+                const assignSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "assignments"));
+                for (let assignDoc of assignSnapshot.docs) {
+                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "assignments", assignDoc.id));
+                }
+                // Firebase'deki dailyShifts koleksiyonunu sil
+                const shiftSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "dailyShifts"));
+                for (let shiftDoc of shiftSnapshot.docs) {
+                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "dailyShifts", shiftDoc.id));
+                }
+                // Personellerin shift alanını sıfırla
+                for (let p of personeller) {
+                    p.shift = 'Seçilmedi';
+                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
+                }
+            } catch (e) {
+                console.error("Giriş sıfırlama hatası:", e);
+            }
             
             // Sidebar Kullanıcı Bilgilerini Güncelle
             const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.username;
@@ -912,6 +1112,7 @@
             
             // --- ROL BAZLI YETKİLENDİRME ---
             const adminTabs = [
+                'btn-tab-overview',
                 'btn-tab-dashboard', 
                 'btn-tab-schedule', 
                 'btn-tab-activities', 
@@ -950,7 +1151,7 @@
                     if(distTabs) distTabs.style.display = 'none';
                     if(schedTabs) schedTabs.style.display = 'none';
                 }
-                switchTab('dashboard');
+                switchTab('overview');
             } else if (currentUser.role === 'Yönetici') {
                 adminTabs.forEach(id => {
                     if(document.getElementById(id)) {
@@ -958,12 +1159,12 @@
                         else document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
                     }
                 });
-                switchTab('dashboard');
+                switchTab('overview');
             } else {
                 adminTabs.forEach(id => {
                     if(document.getElementById(id)) document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
                 });
-                switchTab('dashboard');
+                switchTab('overview');
             }
             // -------------------------------
 
@@ -975,10 +1176,33 @@
             renderUsersTable();
             renderReports();
             renderNotifications();
+            renderOverview();
         }
 
-        function handleLogout() {
+        async function handleLogout() {
             sessionStorage.removeItem('kz_logged_user');
+            // Çıkışta tüm geçici verileri Firebase'den temizle
+            try {
+                // 1. Assignments koleksiyonunu tamamen sil
+                const assignSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "assignments"));
+                for (let assignDoc of assignSnapshot.docs) {
+                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "assignments", assignDoc.id));
+                }
+                // 2. DailyShifts koleksiyonunu tamamen sil
+                const shiftSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "dailyShifts"));
+                for (let shiftDoc of shiftSnapshot.docs) {
+                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "dailyShifts", shiftDoc.id));
+                }
+                // 3. Personellerin shift alanını 'Seçilmedi' yap
+                const personnelSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "personnel"));
+                for (let pDoc of personnelSnapshot.docs) {
+                    const pData = pDoc.data();
+                    pData.shift = 'Seçilmedi';
+                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", pDoc.id), pData);
+                }
+            } catch (e) {
+                console.error("Çıkış temizliği hatası:", e);
+            }
             location.reload();
         }
 
@@ -1000,6 +1224,11 @@
             // Profil sekmesine geçildiğinde bilgileri yükle
             if (tabId === 'profile') {
                 loadProfileInfo();
+            }
+            
+            // Dashboard sekmesine geçildiğinde verileri render et
+            if (tabId === 'overview') {
+                renderOverview();
             }
         }
 
@@ -1173,12 +1402,165 @@
             showAlert("Kullanıcı silindi.");
         }
 
+        // --- DASHBOARD PERSONEL GÖRÜNTÜLE MODAL ---
+        function showShiftPersonnel(shiftType) {
+            let title, color, filterFn;
+
+            if (shiftType === 'izinli') {
+                title = 'İzinli Personeller';
+                color = 'green';
+                filterFn = p => p.shift === 'İzinli' || p.shift === 'Raporlu' || p.shift === 'Yıllık İzin' || p.shift === 'Ücretsiz İzin' || p.shift === 'Günü Değil';
+            } else {
+                title = shiftType + ' Personeller';
+                const colorMap = { 'Sabahçı': 'yellow', 'Akşamcı': 'indigo', 'Full': 'orange', 'Raporlu': 'teal', 'Yıllık İzin': 'blue', 'Ücretsiz İzin': 'purple', 'Günü Değil': 'pink' };
+                color = colorMap[shiftType] || 'gray';
+                filterFn = p => p.shift === shiftType;
+            }
+
+            // Bölge filtresi
+            let filteredPersonnel = personeller;
+            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                filteredPersonnel = personeller.filter(p => p.region === currentUser.assignedRegions[0]);
+            } else if (currentDistRegion !== 'Tümü') {
+                filteredPersonnel = personeller.filter(p => p.region === currentDistRegion);
+            }
+
+            const matched = filteredPersonnel.filter(filterFn);
+
+            const html = matched.length > 0
+                ? matched.map(p => `
+                    <div class="flex items-center justify-between p-3 border-b last:border-b-0">
+                        <div>
+                            <span class="font-semibold text-sm text-gray-800">${p.name}</span>
+                            <div class="text-xs text-gray-500">${p.title} | ${p.region || ''}</div>
+                        </div>
+                        <span class="text-xs bg-${color}-100 text-${color}-700 px-2 py-0.5 rounded font-bold">${p.shift}</span>
+                    </div>
+                `).join('')
+                : '<div class="text-center text-gray-400 py-8 text-sm">Bu kategoride personel yok.</div>';
+
+            const modalHTML = `
+                <div id="shiftModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-xl shadow-2xl w-[90%] max-w-lg max-h-[80vh] flex flex-col">
+                        <div class="flex items-center justify-between p-4 border-b bg-${color}-50">
+                            <h3 class="font-bold text-gray-800 text-lg">${title}</h3>
+                            <button onclick="document.getElementById('shiftModal').remove()" class="text-gray-400 hover:text-gray-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div class="overflow-y-auto flex-1">${html}</div>
+                        <div class="p-3 border-t text-center text-xs text-gray-500 bg-gray-50">
+                            Toplam: <span class="font-bold">${matched.length}</span> kişi
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Mevcut modali kapat
+            const existing = document.getElementById('shiftModal');
+            if (existing) existing.remove();
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        // --- DASHBOARD (GENEL ÖZET) ---
+        function renderOverview() {
+            // Bölge Filtreleme
+            let filteredPersonnel = personeller;
+            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                filteredPersonnel = personeller.filter(p => p.region === currentUser.assignedRegions[0]);
+            } else if (currentDistRegion !== 'Tümü') {
+                filteredPersonnel = personeller.filter(p => p.region === currentDistRegion);
+            }
+
+            const sabahcilar = filteredPersonnel.filter(p => p.shift === 'Sabahçı');
+            const aksamcilar = filteredPersonnel.filter(p => p.shift === 'Akşamcı');
+            const fullcilar = filteredPersonnel.filter(p => p.shift === 'Full');
+            const izinliler = filteredPersonnel.filter(p => p.shift === 'İzinli');
+            const raporlular = filteredPersonnel.filter(p => p.shift === 'Raporlu');
+            const yillikIzinliler = filteredPersonnel.filter(p => p.shift === 'Yıllık İzin');
+            const ucretsizIzinliler = filteredPersonnel.filter(p => p.shift === 'Ücretsiz İzin');
+            const gunudegil = filteredPersonnel.filter(p => p.shift === 'Günü Değil');
+            const secilmemisler = filteredPersonnel.filter(p => p.shift === 'Seçilmedi');
+
+            // Kartlardaki sayılar (sadece sayılar)
+            document.getElementById('dash-sabah-count').innerText = sabahcilar.length;
+            document.getElementById('dash-aksam-count').innerText = aksamcilar.length;
+            document.getElementById('dash-full-count').innerText = fullcilar.length;
+            document.getElementById('dash-izinli-count').innerText = izinliler.length;
+            document.getElementById('dash-raporlu-count').innerText = raporlular.length;
+            document.getElementById('dash-yillik-izin-count').innerText = yillikIzinliler.length;
+            document.getElementById('dash-ucretsiz-izin-count').innerText = ucretsizIzinliler.length;
+            document.getElementById('dash-gunu-degil-count').innerText = gunudegil.length;
+
+            // Bölge bazlı tablo
+            const regions = ['1. Bölge', '2. Bölge', '3. Bölge', '4. Bölge'];
+            let totalSabah = 0, totalAksam = 0, totalFull = 0, totalIzinli = 0, totalRaporlu = 0, totalYillik = 0, totalUcretsiz = 0, totalGunudegil = 0, totalSecilmedi = 0;
+
+            const regionRows = regions.map(region => {
+                const regionP = personeller.filter(p => p.region === region);
+                const rSabah = regionP.filter(p => p.shift === 'Sabahçı').length;
+                const rAksam = regionP.filter(p => p.shift === 'Akşamcı').length;
+                const rFull = regionP.filter(p => p.shift === 'Full').length;
+                const rIzinli = regionP.filter(p => p.shift === 'İzinli').length;
+                const rRaporlu = regionP.filter(p => p.shift === 'Raporlu').length;
+                const rYillik = regionP.filter(p => p.shift === 'Yıllık İzin').length;
+                const rUcretsiz = regionP.filter(p => p.shift === 'Ücretsiz İzin').length;
+                const rGunudegil = regionP.filter(p => p.shift === 'Günü Değil').length;
+                const rSecilmedi = regionP.filter(p => p.shift === 'Seçilmedi').length;
+                const rTotal = regionP.length;
+
+                totalSabah += rSabah; totalAksam += rAksam; totalFull += rFull;
+                totalIzinli += rIzinli; totalRaporlu += rRaporlu;
+                totalYillik += rYillik; totalUcretsiz += rUcretsiz;
+                totalGunudegil += rGunudegil; totalSecilmedi += rSecilmedi;
+
+                return `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3 font-medium text-gray-800">
+                            <i class="fa-solid fa-location-dot text-red-400 mr-1"></i> ${region}
+                        </td>
+                        <td class="p-3 text-center">${rSabah > 0 ? `<span class="inline-block bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-0.5 rounded">${rSabah}</span>` : '<span class="text-gray-300">-</span>'}</td>
+                        <td class="p-3 text-center">${rAksam > 0 ? `<span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-bold px-2 py-0.5 rounded">${rAksam}</span>` : '<span class="text-gray-300">-</span>'}</td>
+                        <td class="p-3 text-center">${rFull > 0 ? `<span class="inline-block bg-orange-100 text-orange-800 text-xs font-bold px-2 py-0.5 rounded">${rFull}</span>` : '<span class="text-gray-300">-</span>'}</td>
+                        <td class="p-3 text-center">${rIzinli > 0 ? `<span class="inline-block bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">${rIzinli}</span>` : '<span class="text-gray-300">-</span>'}</td>
+                        <td class="p-3 text-center">${rRaporlu > 0 ? `<span class="inline-block bg-teal-100 text-teal-800 text-xs font-bold px-2 py-0.5 rounded">${rRaporlu}</span>` : '<span class="text-gray-300">-</span>'}</td>
+                        <td class="p-3 text-center">${rYillik > 0 ? `<span class="inline-block bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">${rYillik}</span>` : '<span class="text-gray-300">-</span>'}</td>
+                        <td class="p-3 text-center">${rUcretsiz > 0 ? `<span class="inline-block bg-purple-100 text-purple-800 text-xs font-bold px-2 py-0.5 rounded">${rUcretsiz}</span>` : '<span class="text-gray-300">-</span>'}</td>
+                        <td class="p-3 text-center">${rGunudegil > 0 ? `<span class="inline-block bg-pink-100 text-pink-800 text-xs font-bold px-2 py-0.5 rounded">${rGunudegil}</span>` : '<span class="text-gray-300">-</span>'}</td>
+                        <td class="p-3 text-center">${rSecilmedi > 0 ? `<span class="inline-block bg-gray-100 text-gray-600 text-xs font-bold px-2 py-0.5 rounded">${rSecilmedi}</span>` : '<span class="text-gray-300">-</span>'}</td>
+                        <td class="p-3 text-center"><span class="font-bold text-red-700">${rTotal}</span></td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('dash-region-table-body').innerHTML = regionRows;
+
+            // Toplam satırı
+            document.getElementById('dash-total-sabah').innerText = totalSabah;
+            document.getElementById('dash-total-aksam').innerText = totalAksam;
+            document.getElementById('dash-total-full').innerText = totalFull;
+            document.getElementById('dash-total-izinli').innerText = totalIzinli;
+            document.getElementById('dash-total-raporlu').innerText = totalRaporlu;
+            document.getElementById('dash-total-yillik').innerText = totalYillik;
+            document.getElementById('dash-total-ucretsiz').innerText = totalUcretsiz;
+            document.getElementById('dash-total-gunudegil').innerText = totalGunudegil;
+            document.getElementById('dash-total-secilmedi').innerText = totalSecilmedi;
+            document.getElementById('dash-total-all').innerText = totalSabah + totalAksam + totalFull + totalIzinli + totalRaporlu + totalYillik + totalUcretsiz + totalGunudegil + totalSecilmedi;
+
+            // Toplam çalışan kartı (Sabahçı + Akşamcı + Full)
+            const toplamCalisan = sabahcilar.length + aksamcilar.length + fullcilar.length;
+            document.getElementById('dash-total-calisma-count').innerText = toplamCalisan;
+            document.getElementById('dash-total-calisma-sabah').innerText = sabahcilar.length;
+            document.getElementById('dash-total-calisma-aksam').innerText = aksamcilar.length;
+            document.getElementById('dash-total-calisma-full').innerText = fullcilar.length;
+        }
+
         function renderDashboard() {
             const activeList = document.getElementById('today-active-list');
             const activeCount = document.getElementById('active-count-badge');
             
-            // Bölge Filtreleme
-            let filteredActive = personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'Seçilmedi');
+            // Bölge Filtreleme - Sadece aktif çalışanları göster (Sabahçı, Akşamcı, Full)
+            const activeShifts = ['Sabahçı', 'Akşamcı', 'Full'];
+            let filteredActive = personeller.filter(p => activeShifts.includes(p.shift));
             
             // Manager ise sadece kendi bölgesini görebilsin (KESİN KISITLAMA)
             if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
@@ -1435,7 +1817,12 @@
                             <option value="Seçilmedi" ${currentShift === 'Seçilmedi' ? 'selected' : ''}>- Seçiniz -</option>
                             <option value="Sabahçı" ${currentShift === 'Sabahçı' ? 'selected' : ''}>Sabahçı</option>
                             <option value="Akşamcı" ${currentShift === 'Akşamcı' ? 'selected' : ''}>Akşamcı</option>
+                            <option value="Full" ${currentShift === 'Full' ? 'selected' : ''}>Full</option>
                             <option value="İzinli" ${currentShift === 'İzinli' ? 'selected' : ''}>İzinli</option>
+                            <option value="Raporlu" ${currentShift === 'Raporlu' ? 'selected' : ''}>Raporlu</option>
+                            <option value="Ücretsiz İzin" ${currentShift === 'Ücretsiz İzin' ? 'selected' : ''}>Ücretsiz İzin</option>
+                            <option value="Yıllık İzin" ${currentShift === 'Yıllık İzin' ? 'selected' : ''}>Yıllık İzin</option>
+                            <option value="Günü Değil" ${currentShift === 'Günü Değil' ? 'selected' : ''}>Günü Değil</option>
                         </select>
                     </td>
                 </tr>
@@ -1508,25 +1895,21 @@
                 await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(reportId)), shiftReport);
                 savedReports.unshift(shiftReport);
 
-                // Ana personel listesindeki shift bilgisini de o gün için güncelle
+                // Ana personel listesindeki shift bilgisini güncelle (BU DEĞERLER KORUNACAK, DAĞITIM EKRANINA GEÇECEK)
                 for (let p of personeller) {
                     p.shift = dailyShifts[p.id] || 'Seçilmedi';
-                }
-
-                // Vardiya raporu kaydedildikten sonra yerel vardiya verisini ve tarih seçimini sıfırla
-                dailyShifts = {};
-                document.getElementById('schedule-date-filter').value = '';
-                // Personellerin shift durumunu da sıfırla (YEREL + FIREBASE)
-                for (let p of personeller) {
-                    p.shift = 'Seçilmedi';
-                    // Firebase'de de güncelle ki yeni girişte eski shift gelmesin
+                    // Firebase'de de güncelle
                     await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
                 }
 
+                // Yerel vardiya verisini ve tarih seçimini sıfırla (ama personellerin shift bilgisi korunuyor)
+                dailyShifts = {};
+                document.getElementById('schedule-date-filter').value = '';
+
                 renderDashboard();
-                renderReports();
                 renderScheduleTable();
-                showAlert(`${date} tarihli vardiya planı kaydedildi, raporlara eklendi ve sayfa sıfırlandı.`);
+                renderReports();
+                showAlert(`${date} tarihli vardiya planı kaydedildi ve raporlara eklendi.`);
 
                 if(goToDashboard) {
                     switchTab('dashboard');

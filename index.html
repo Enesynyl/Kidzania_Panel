@@ -1068,12 +1068,26 @@
             document.getElementById('splash-screen').classList.add('fade-out');
             document.getElementById('main-app').classList.remove('hidden');
 
-            // --- GİRİŞTE VERİLERİ SIFIRLAMA! ---
-            // Vardiya ve dağıtım verileri Firebase'den geldiği gibi korunacak.
-            // Sıfırlama sadece "Kaydet ve Dağıtıma Git" sonrası raporu oluştururken yapılmaz.
-            // Assignments sadece loadFromFirebase'da yeniden yüklenir.
+            // --- HER YENİ GÜNDE SIFIRLAMA ---
+            // Son kayıt tarihini kontrol et, yeni günse tüm personellerin shift bilgisi sıfırlansın
             assignments = {};
             dailyShifts = {};
+            
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD formatında bugünün tarihi
+            const lastResetDate = localStorage.getItem('kz_last_shift_reset');
+            
+            if (lastResetDate !== today) {
+                // Yeni gün, tüm personellerin shift bilgisi sıfırlanmalı
+                try {
+                    for (let p of personeller) {
+                        p.shift = 'Seçilmedi';
+                        await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
+                    }
+                    localStorage.setItem('kz_last_shift_reset', today);
+                } catch (e) {
+                    console.error("Günlük sıfırlama hatası:", e);
+                }
+            }
             
             // Sidebar Kullanıcı Bilgilerini Güncelle
             const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.username;

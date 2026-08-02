@@ -1417,15 +1417,8 @@
                 filterFn = p => p.shift === shiftType;
             }
 
-            // Bölge filtresi
-            let filteredPersonnel = personeller;
-            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
-                filteredPersonnel = personeller.filter(p => p.region === currentUser.assignedRegions[0]);
-            } else if (currentDistRegion !== 'Tümü') {
-                filteredPersonnel = personeller.filter(p => p.region === currentDistRegion);
-            }
-
-            const matched = filteredPersonnel.filter(filterFn);
+            // Tüm yöneticiler TÜM bölgelerin personellerini görür
+            const matched = personeller.filter(filterFn);
 
             const html = matched.length > 0
                 ? matched.map(p => `
@@ -1463,13 +1456,8 @@
 
         // --- DASHBOARD (GENEL ÖZET) ---
         function renderOverview() {
-            // Bölge Filtreleme
-            let filteredPersonnel = personeller;
-            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
-                filteredPersonnel = personeller.filter(p => p.region === currentUser.assignedRegions[0]);
-            } else if (currentDistRegion !== 'Tümü') {
-                filteredPersonnel = personeller.filter(p => p.region === currentDistRegion);
-            }
+            // Tüm yöneticiler TÜM bölgelerin verilerini toplu görür
+            const filteredPersonnel = personeller;
 
             const sabahcilar = filteredPersonnel.filter(p => p.shift === 'Sabahçı');
             const aksamcilar = filteredPersonnel.filter(p => p.shift === 'Akşamcı');

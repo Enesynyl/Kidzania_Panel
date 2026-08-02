@@ -402,8 +402,15 @@
 
             <!-- SEKMELER 4: DASHBOARD (GENEL ÖZET) -->
             <div id="tab-overview" class="tab-content hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-red-600"></i> Dashboard
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-red-600"></i> Dashboard
+                    </div>
+                    <div id="dashboard-reset-btn-wrap" class="hidden">
+                        <button onclick="resetAllShifts()" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-left"></i> Vardiyayı Sıfırla
+                        </button>
+                    </div>
                 </h2>
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
                     <!-- SABAHÇI KARTI -->
@@ -1175,6 +1182,28 @@
             renderOverview();
         }
 
+        // --- DASHBOARD SIFIRLAMA ---
+        async function resetAllShifts() {
+            if (!confirm("TÜM personellerin vardiya bilgisini 'Seçilmedi' olarak sıfırlamak istediğinize emin misiniz?")) return;
+
+            try {
+                for (let p of personeller) {
+                    p.shift = 'Seçilmedi';
+                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
+                }
+
+                // localStorage'daki sıfırlama tarihini de güncelle
+                const today = new Date().toISOString().split('T')[0];
+                localStorage.setItem('kz_last_shift_reset', today);
+
+                showAlert("Tüm personellerin vardiya bilgisi sıfırlandı!");
+                renderOverview();
+            } catch (e) {
+                console.error("Sıfırlama hatası:", e);
+                showAlert("Sıfırlama sırasında bir hata oluştu.");
+            }
+        }
+
         async function handleLogout() {
             sessionStorage.removeItem('kz_logged_user');
             // Çıkışta veriler KORUNACAK - Başka yönetici giriş yaptığında aynı veriler görünecek
@@ -1431,6 +1460,16 @@
 
         // --- DASHBOARD (GENEL ÖZET) ---
         function renderOverview() {
+            // Sıfırla butonu sadece Admin ve Yönetici rollerinde görünsün
+            const resetBtnWrap = document.getElementById('dashboard-reset-btn-wrap');
+            if (resetBtnWrap) {
+                if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Yönetici')) {
+                    resetBtnWrap.classList.remove('hidden');
+                } else {
+                    resetBtnWrap.classList.add('hidden');
+                }
+            }
+
             // Tüm yöneticiler TÜM bölgelerin verilerini toplu görür
             const filteredPersonnel = personeller;
 

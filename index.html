@@ -1068,30 +1068,12 @@
             document.getElementById('splash-screen').classList.add('fade-out');
             document.getElementById('main-app').classList.remove('hidden');
 
-            // --- HER GİRİŞTE GEÇİCİ VERİLERİ SIFIRLA ---
-            // Yeni kullanıcı her girişte sıfır dağıtım ve vardiya ile başlamalı
+            // --- GİRİŞTE VERİLERİ SIFIRLAMA! ---
+            // Vardiya ve dağıtım verileri Firebase'den geldiği gibi korunacak.
+            // Sıfırlama sadece "Kaydet ve Dağıtıma Git" sonrası raporu oluştururken yapılmaz.
+            // Assignments sadece loadFromFirebase'da yeniden yüklenir.
             assignments = {};
             dailyShifts = {};
-            
-            // Firebase'deki assignments koleksiyonunu sil
-            try {
-                const assignSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "assignments"));
-                for (let assignDoc of assignSnapshot.docs) {
-                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "assignments", assignDoc.id));
-                }
-                // Firebase'deki dailyShifts koleksiyonunu sil
-                const shiftSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "dailyShifts"));
-                for (let shiftDoc of shiftSnapshot.docs) {
-                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "dailyShifts", shiftDoc.id));
-                }
-                // Personellerin shift alanını sıfırla
-                for (let p of personeller) {
-                    p.shift = 'Seçilmedi';
-                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
-                }
-            } catch (e) {
-                console.error("Giriş sıfırlama hatası:", e);
-            }
             
             // Sidebar Kullanıcı Bilgilerini Güncelle
             const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.username;
@@ -1181,28 +1163,7 @@
 
         async function handleLogout() {
             sessionStorage.removeItem('kz_logged_user');
-            // Çıkışta tüm geçici verileri Firebase'den temizle
-            try {
-                // 1. Assignments koleksiyonunu tamamen sil
-                const assignSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "assignments"));
-                for (let assignDoc of assignSnapshot.docs) {
-                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "assignments", assignDoc.id));
-                }
-                // 2. DailyShifts koleksiyonunu tamamen sil
-                const shiftSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "dailyShifts"));
-                for (let shiftDoc of shiftSnapshot.docs) {
-                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "dailyShifts", shiftDoc.id));
-                }
-                // 3. Personellerin shift alanını 'Seçilmedi' yap
-                const personnelSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "personnel"));
-                for (let pDoc of personnelSnapshot.docs) {
-                    const pData = pDoc.data();
-                    pData.shift = 'Seçilmedi';
-                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", pDoc.id), pData);
-                }
-            } catch (e) {
-                console.error("Çıkış temizliği hatası:", e);
-            }
+            // Çıkışta veriler KORUNACAK - Başka yönetici giriş yaptığında aynı veriler görünecek
             location.reload();
         }
 

@@ -245,10 +245,20 @@
                 <button id="btn-tab-report" onclick="switchTab('report')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
                     <i class="fa-solid fa-triangle-exclamation w-5"></i> Personel Bildirim
                 </button>
+                <button id="btn-tab-profile" onclick="switchTab('profile')" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 hover:bg-slate-700 transition">
+                    <i class="fa-solid fa-id-card w-5"></i> Profilim
+                </button>
             </nav>
             <div class="p-4 border-t border-slate-700 mt-auto">
-                <div class="flex items-center justify-between mb-3">
-                    <span id="current-user-display" class="text-sm text-slate-300 font-medium"><i class="fa-solid fa-circle-user"></i> Admin</span>
+                <div class="flex items-center gap-3 mb-3">
+                    <img id="current-user-photo" src="" alt="" class="w-10 h-10 rounded-full border-2 border-red-600 object-cover hidden">
+                    <div id="current-user-no-photo" class="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center border-2 border-slate-500">
+                        <i class="fa-solid fa-user text-slate-300"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span id="current-user-fullname" class="text-xs font-bold text-white truncate max-w-[140px]">Misafir</span>
+                        <span id="current-user-role" class="text-[10px] text-slate-400">Rol Belirtilmedi</span>
+                    </div>
                 </div>
                 <button onclick="handleLogout()" class="w-full bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-2 transition">
                     <i class="fa-solid fa-power-off"></i> Çıkış Yap
@@ -519,15 +529,36 @@
                     <div class="bg-white p-6 rounded-xl shadow-sm border">
                         <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-user-plus text-red-600"></i> Yeni Kullanıcı Ekle</h3>
                         <form id="add-user-form" onsubmit="handleAddUser(event)" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">Ad *</label>
+                                    <input type="text" id="new-fname" required class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="Ad">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">Soyad *</label>
+                                    <input type="text" id="new-lname" required class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="Soyad">
+                                </div>
+                            </div>
                             <div>
-                                <label class="block text-sm font-medium mb-1">Kullanıcı Adı</label>
+                                <label class="block text-xs font-medium mb-1">Kullanıcı Adı *</label>
                                 <input type="text" id="new-username" required class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="örn: ahmet">
                             </div>
                             <div>
-                                <label class="block text-sm font-medium mb-1">Şifre</label>
+                                <label class="block text-xs font-medium mb-1">Şifre *</label>
                                 <input type="password" id="new-password" required class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="••••••••">
                             </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">E-posta</label>
+                                    <input type="email" id="new-email" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="mail@example.com">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium mb-1">Telefon</label>
+                                    <input type="text" id="new-phone" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" placeholder="05xx ...">
+                                </div>
+                            </div>
                             <div>
+                                <label class="block text-xs font-medium mb-1">Rol</label>
                                 <select id="new-role" onchange="toggleRegionSelection()" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
                                     <option value="Admin">Ana Yönetici</option>
                                     <option value="Yönetici">Yönetici</option>
@@ -561,9 +592,10 @@
                         <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-users-gear text-red-600"></i> Kayıtlı Panel Kullanıcıları</h3>
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="border-b bg-gray-50 text-xs font-semibold uppercase">
-                                    <th class="p-3">Kullanıcı Adı</th>
-                                    <th class="p-3">Rol</th>
+                                <tr class="border-b bg-gray-50 text-xs font-semibold uppercase text-gray-500">
+                                    <th class="p-3">Kullanıcı / Profil</th>
+                                    <th class="p-3">Yetki & Bölge</th>
+                                    <th class="p-3">İletişim</th>
                                     <th class="p-3 text-right">İşlem</th>
                                 </tr>
                             </thead>
@@ -660,6 +692,65 @@
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Bildirim Merkezi</h2>
                 <div id="notification-list" class="space-y-3">
                     <div class="text-gray-400">Henüz bildirim bulunmuyor.</div>
+                </div>
+            </div>
+
+            <!-- SEKMELER 7: PROFİLİM -->
+            <div id="tab-profile" class="tab-content hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Profil Bilgilerim</h2>
+                <div class="max-w-2xl bg-white p-8 rounded-2xl shadow-sm border">
+                    <form onsubmit="handleUpdateProfile(event)" class="space-y-6">
+                        <div class="flex flex-col md:flex-row items-center gap-6 pb-6 border-b">
+                            <div class="relative group">
+                                <img id="profile-edit-photo" src="" alt="" class="w-32 h-32 rounded-full border-4 border-red-50 object-cover hidden">
+                                <div id="profile-edit-no-photo" class="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-4 border-gray-50">
+                                    <i class="fa-solid fa-user text-4xl text-gray-300"></i>
+                                </div>
+                                <label class="absolute bottom-0 right-0 bg-red-600 text-white p-2 rounded-full cursor-pointer shadow-lg hover:bg-red-700 transition">
+                                    <i class="fa-solid fa-camera"></i>
+                                    <input type="file" id="profile-photo-input" class="hidden" accept="image/*" onchange="previewProfilePhoto(event)">
+                                </label>
+                            </div>
+                            <div class="flex-1">
+                                <h3 id="profile-display-name" class="text-xl font-bold text-gray-800">Ad Soyad</h3>
+                                <p id="profile-display-role" class="text-red-600 font-medium text-sm">Rol</p>
+                                <p class="text-gray-400 text-xs mt-1 italic">* Fotoğrafınızı değiştirmek için kamera ikonuna tıklayın.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Ad *</label>
+                                <input type="text" id="edit-fname" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Soyad *</label>
+                                <input type="text" id="edit-lname" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">E-posta</label>
+                                <input type="email" id="edit-email" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Telefon</label>
+                                <input type="text" id="edit-phone" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Kullanıcı Adı (Giriş için)</label>
+                                <input type="text" id="edit-username" disabled class="w-full p-2 border rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Yeni Şifre (Değiştirmek istemiyorsanız boş bırakın)</label>
+                                <input type="password" id="edit-password" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none" placeholder="••••••••">
+                            </div>
+                        </div>
+
+                        <div class="pt-4 flex justify-end">
+                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition flex items-center gap-2">
+                                <i class="fa-solid fa-floppy-disk"></i> Değişiklikleri Kaydet
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </main>
@@ -801,7 +892,23 @@
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('splash-screen').classList.add('fade-out');
             document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('current-user-display').innerHTML = `<i class="fa-solid fa-circle-user"></i> ${currentUser.username} (${currentUser.role})`;
+            
+            // Sidebar Kullanıcı Bilgilerini Güncelle
+            const fullName = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.username;
+            document.getElementById('current-user-fullname').innerText = fullName;
+            document.getElementById('current-user-role').innerText = currentUser.role;
+            
+            const photoImg = document.getElementById('current-user-photo');
+            const noPhotoDiv = document.getElementById('current-user-no-photo');
+            
+            if (currentUser.profilePhoto) {
+                photoImg.src = currentUser.profilePhoto;
+                photoImg.classList.remove('hidden');
+                noPhotoDiv.classList.add('hidden');
+            } else {
+                photoImg.classList.add('hidden');
+                noPhotoDiv.classList.remove('hidden');
+            }
             
             // --- ROL BAZLI YETKİLENDİRME ---
             const adminTabs = [
@@ -889,6 +996,97 @@
             if (tabId === 'reports') {
                 renderDistributionReports();
             }
+            
+            // Profil sekmesine geçildiğinde bilgileri yükle
+            if (tabId === 'profile') {
+                loadProfileInfo();
+            }
+        }
+
+        // --- PROFİL YÖNETİMİ FONKSİYONLARI ---
+
+        function loadProfileInfo() {
+            document.getElementById('edit-fname').value = currentUser.firstName || '';
+            document.getElementById('edit-lname').value = currentUser.lastName || '';
+            document.getElementById('edit-email').value = currentUser.email || '';
+            document.getElementById('edit-phone').value = currentUser.phone || '';
+            document.getElementById('edit-username').value = currentUser.username;
+            document.getElementById('edit-password').value = ''; // Şifre alanı boş başlar
+
+            document.getElementById('profile-display-name').innerText = `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || currentUser.username;
+            document.getElementById('profile-display-role').innerText = currentUser.role;
+
+            const editPhoto = document.getElementById('profile-edit-photo');
+            const editNoPhoto = document.getElementById('profile-edit-no-photo');
+
+            if (currentUser.profilePhoto) {
+                editPhoto.src = currentUser.profilePhoto;
+                editPhoto.classList.remove('hidden');
+                editNoPhoto.classList.add('hidden');
+            } else {
+                editPhoto.classList.add('hidden');
+                editNoPhoto.classList.remove('hidden');
+            }
+        }
+
+        function previewProfilePhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Image = e.target.result;
+                const editPhoto = document.getElementById('profile-edit-photo');
+                const editNoPhoto = document.getElementById('profile-edit-no-photo');
+                
+                editPhoto.src = base64Image;
+                editPhoto.classList.remove('hidden');
+                editNoPhoto.classList.add('hidden');
+                
+                // Fotoğrafı geçici olarak sakla, kaydet butonuna basınca Firebase'e gidecek
+                window.tempProfilePhoto = base64Image;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function handleUpdateProfile(e) {
+            e.preventDefault();
+            
+            const updatedUser = {
+                ...currentUser,
+                firstName: document.getElementById('edit-fname').value.trim(),
+                lastName: document.getElementById('edit-lname').value.trim(),
+                email: document.getElementById('edit-email').value.trim(),
+                phone: document.getElementById('edit-phone').value.trim()
+            };
+
+            const newPass = document.getElementById('edit-password').value.trim();
+            if (newPass) {
+                updatedUser.password = newPass;
+            }
+
+            if (window.tempProfilePhoto) {
+                updatedUser.profilePhoto = window.tempProfilePhoto;
+            }
+
+            // Global state ve session güncelle
+            currentUser = updatedUser;
+            sessionStorage.setItem('kz_logged_user', JSON.stringify(currentUser));
+            
+            // systemUsers dizisini güncelle
+            const userIndex = systemUsers.findIndex(u => u.username === currentUser.username);
+            if (userIndex !== -1) systemUsers[userIndex] = currentUser;
+
+            // Firebase güncelle
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", currentUser.username), currentUser);
+            
+            // Sidebar ve UI güncelle
+            showMainApp();
+            loadProfileInfo();
+            renderUsersTable();
+            
+            showAlert("Profil bilgileriniz başarıyla güncellendi.");
+            window.tempProfilePhoto = null;
         }
 
         function toggleRegionSelection() {
@@ -899,8 +1097,12 @@
 
         async function handleAddUser(e) {
             e.preventDefault();
+            const fname = document.getElementById('new-fname').value.trim();
+            const lname = document.getElementById('new-lname').value.trim();
             const username = document.getElementById('new-username').value.trim();
             const password = document.getElementById('new-password').value.trim();
+            const email = document.getElementById('new-email').value.trim();
+            const phone = document.getElementById('new-phone').value.trim();
             const role = document.getElementById('new-role').value;
 
             let assignedRegions = [];
@@ -913,10 +1115,21 @@
                 if (reg) assignedRegions.push(reg);
             }
 
-            const newUser = { username, password, role, assignedRegions };
-            systemUsers.push(newUser);
+            const newUser = { 
+                firstName: fname, 
+                lastName: lname, 
+                username, 
+                password, 
+                email, 
+                phone, 
+                role, 
+                assignedRegions,
+                profilePhoto: '' 
+            };
             
+            systemUsers.push(newUser);
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "users", username), newUser);
+            
             showAlert("Kullanıcı başarıyla eklendi.");
             document.getElementById('add-user-form').reset();
             toggleRegionSelection();
@@ -926,14 +1139,28 @@
         function renderUsersTable() {
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = systemUsers.map(u => `
-                <tr class="border-b">
-                    <td class="p-3 font-medium">
-                        ${u.username}
-                        ${u.assignedRegions && u.assignedRegions.length > 0 ? `<div class="text-[9px] text-gray-500 font-bold">${u.assignedRegions.join(', ')}</div>` : ''}
+                <tr class="border-b hover:bg-gray-50 transition">
+                    <td class="p-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                                ${u.profilePhoto ? `<img src="${u.profilePhoto}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-user text-gray-400 text-xs"></i>`}
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="font-bold text-gray-800">${u.firstName || ''} ${u.lastName || ''}</span>
+                                <span class="text-[10px] text-gray-500">@${u.username}</span>
+                            </div>
+                        </div>
                     </td>
-                    <td class="p-3"><span class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">${u.role}</span></td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 bg-red-100 text-red-700 rounded text-[10px] font-bold uppercase tracking-wider">${u.role}</span>
+                        ${u.assignedRegions && u.assignedRegions.length > 0 ? `<div class="text-[9px] text-gray-400 mt-1">${u.assignedRegions.join(', ')}</div>` : ''}
+                    </td>
+                    <td class="p-3">
+                        <div class="text-[10px] text-gray-600">${u.email || '-'}</div>
+                        <div class="text-[10px] text-gray-600">${u.phone || '-'}</div>
+                    </td>
                     <td class="p-3 text-right">
-                        ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        ${u.username !== 'admin' ? `<button onclick="deleteUser('${u.username}')" class="text-red-400 hover:text-red-600 transition"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </td>
                 </tr>
             `).join('');
@@ -1842,15 +2069,19 @@
                     return [`${item.name}\n${details}`, "", "", "", "", "", "", "", "", ""];
                 });
 
-                // Başlığı oluştur (Bölge bilgisini içerecek şekilde)
-                let excelTitle = reportData.title;
-                if (!excelTitle) {
-                    let regionPart = "";
-                    if (reportData.type && reportData.type.includes("Bölge")) {
-                        regionPart = reportData.type.split(" Vardiya")[0] + " ";
-                    }
-                    excelTitle = `KidZania İstanbul ${regionPart}Vardiya Takip Çizelgesi (${reportData.reportDate || reportData.date})`.replace(/\s+/g, ' ');
+                // Başlığı her zaman temiz ve kurumsal formatta oluştur
+                let regionName = "";
+                if (reportData.type && reportData.type.includes("Bölge")) {
+                    // "2. Bölge Vardiya Raporu" içinden "2. Bölge" kısmını al
+                    regionName = reportData.type.split(" Vardiya")[0].trim();
+                } else if (reportData.title && reportData.title.includes("Bölge")) {
+                    // Başlık içinde varsa oradan ayıkla
+                    const match = reportData.title.match(/(\d+\.\s*Bölge)/);
+                    if (match) regionName = match[0];
                 }
+
+                const formattedDate = reportData.reportDate || reportData.date;
+                const excelTitle = `KidZania İstanbul ${regionName} Vardiya Takip Çizelgesi (${formattedDate})`.replace(/\s+/g, ' ').replace("-", "").trim();
 
                 const worksheetData = [
                     [excelTitle],

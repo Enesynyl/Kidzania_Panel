@@ -299,10 +299,10 @@
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Aktivite Türü & Gereksinimler</label>
                                 <select id="act-type" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-red-500 outline-none">
-                                    <option value="Standard">Normal Aktivite (Özel Sertifika Yok)</option>
-                                    <option value="Hygiene">Gıda Aktivitesi (Hijyen Sertifikası Zorunlu)</option>
-                                    <option value="Height">Yükseklik Aktivitesi (Yükseklik Sertifikası Zorunlu)</option>
-                                    <option value="Both">Gıda + Yükseklik (Her İki Sertifika da Zorunlu)</option>
+                                    <option value="Normal">Normal Aktivite (Özel Sertifika Yok)</option>
+                                    <option value="Gıda">Gıda Aktivitesi (Hijyen Sertifikası Zorunlu)</option>
+                                    <option value="Yükseklik">Yükseklik Aktivitesi (Yükseklik Sertifikası Zorunlu)</option>
+                                    <option value="Gıda + Yükseklik">Gıda + Yükseklik (Her İki Sertifika da Zorunlu)</option>
                                 </select>
                             </div>
                             <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded text-sm transition">
@@ -494,6 +494,7 @@
                             <div>
                                 <select id="new-role" onchange="toggleRegionSelection()" class="w-full p-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
                                     <option value="Admin">Ana Yönetici</option>
+                                    <option value="Yönetici">Yönetici</option>
                                     <option value="Manager">Bölge Yöneticisi</option>
                                     <option value="Personel">Personel</option>
                                 </select>
@@ -673,8 +674,8 @@
         }
 
         window.addEventListener('firebase-ready', async () => {
-            const todayStr = new Date().toISOString().split('T')[0];
-            document.getElementById('schedule-date-filter').value = todayStr;
+            // Başlangıçta tarih seçilmemiş olsun
+            document.getElementById('schedule-date-filter').value = '';
 
             await loadFromFirebase();
 
@@ -731,7 +732,21 @@
                     }
                 });
                 switchTab('report');
+            } else if (currentUser.role === 'Yönetici') {
+                // Yönetici rolü için görünürlük (Personel sekmelerini ve Admin sekmelerini görebilir)
+                adminTabs.forEach(id => {
+                    if(document.getElementById(id)) {
+                        // Kullanıcı yönetimi hariç her şeyi görebilir
+                        if (id === 'btn-tab-users') {
+                            document.getElementById(id).style.display = 'none';
+                        } else {
+                            document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
+                        }
+                    }
+                });
+                switchTab('dashboard');
             } else {
+                // Admin ve diğerleri
                 adminTabs.forEach(id => {
                     if(document.getElementById(id)) {
                         document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
@@ -813,7 +828,8 @@
             const activeList = document.getElementById('today-active-list');
             const activeCount = document.getElementById('active-count-badge');
             
-            const activePersonnel = personeller.filter(p => p.shift !== 'İzinli');
+            // "Seçilmedi" ve "İzinli" olmayanları aktif say
+            const activePersonnel = personeller.filter(p => p.shift !== 'İzinli' && p.shift !== 'Seçilmedi');
             activeCount.innerText = activePersonnel.length;
 
             activeList.innerHTML = activePersonnel.map(p => `
@@ -838,8 +854,8 @@
                     let isEligible = true;
                     let reason = "";
 
-                    const needsHygiene = typeVal.includes('hygiene') || typeVal.includes('gıda') || typeVal.includes('hijyen') || typeVal === 'both';
-                    const needsHeight = typeVal.includes('height') || typeVal.includes('yükseklik') || typeVal === 'both';
+                    const needsHygiene = typeVal.includes('hygiene') || typeVal.includes('gıda') || typeVal.includes('hijyen') || typeVal.includes('both') || typeVal.includes('+');
+                    const needsHeight = typeVal.includes('height') || typeVal.includes('yükseklik') || typeVal.includes('both') || typeVal.includes('+');
 
                     if (needsHygiene && !p.certHygiene) {
                         isEligible = false;
@@ -863,7 +879,7 @@
                         <div>
                             <div class="flex justify-between items-center mb-1">
                                 <span class="font-bold text-xs">${a.name}</span>
-                                <span class="text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">${a.type}</span>
+                                <span class="text-[10px] bg-gray-200 px-1.5 py-0.5 rounded">${(a.type === 'Standard' ? 'Normal' : (a.type === 'Hygiene' ? 'Gıda' : (a.type === 'Height' ? 'Yükseklik' : (a.type === 'Both' ? 'Gıda + Yükseklik' : a.type))))}</span>
                             </div>
                             <div class="mb-2">
                                 <select onchange="assignPersonnelToActivity('${a.id}', this)" class="w-full p-1.5 text-xs border rounded bg-white outline-none focus:ring-1 focus:ring-red-500">
@@ -896,14 +912,14 @@
             const personnel = personeller.find(p => p.name === pName);
             const typeVal = (activity.type || '').toLowerCase();
 
-            const needsHygiene = typeVal.includes('hygiene') || typeVal.includes('gıda') || typeVal.includes('hijyen') || typeVal === 'both';
+            const needsHygiene = typeVal.includes('hygiene') || typeVal.includes('gıda') || typeVal.includes('hijyen') || typeVal.includes('both') || typeVal.includes('+');
             if (needsHygiene && (!personnel || !personnel.certHygiene)) {
                 showAlert(`HATA: ${pName} personelinin hijyen sertifikası yok! Gıda/Hijyen aktivitesine atanamaz.`);
                 selectElement.value = "";
                 return;
             }
 
-            const needsHeight = typeVal.includes('height') || typeVal.includes('yükseklik') || typeVal === 'both';
+            const needsHeight = typeVal.includes('height') || typeVal.includes('yükseklik') || typeVal.includes('both') || typeVal.includes('+');
             if (needsHeight && (!personnel || !personnel.certHeight)) {
                 showAlert(`HATA: ${pName} personelinin yükseklik sertifikası yok!`);
                 selectElement.value = "";
@@ -953,9 +969,38 @@
             }
         }
 
-        function renderScheduleTable() {
+        // Global vardiya verisi (tarih bazlı)
+        let dailyShifts = {};
+
+        async function renderScheduleTable() {
             const tbody = document.getElementById('schedule-table-body');
-            tbody.innerHTML = personeller.map(p => `
+            const date = document.getElementById('schedule-date-filter').value;
+
+            if (!date) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-8 text-center text-gray-400 italic">Lütfen işlem yapmak için bir tarih seçiniz.</td></tr>';
+                return;
+            }
+
+            // Yükleniyor durumu
+            tbody.innerHTML = '<tr><td colspan="3" class="p-8 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Veriler yükleniyor...</td></tr>';
+
+            // Seçilen tarihe ait veriyi Firebase'den çek
+            try {
+                const shiftDoc = await window.colDocs.getDoc(window.colDocs.doc(window.db, "dailyShifts", date));
+                if (shiftDoc.exists()) {
+                    dailyShifts = shiftDoc.data().shifts || {};
+                } else {
+                    dailyShifts = {}; // O tarih için kayıt yoksa boş gelsin
+                }
+            } catch (e) {
+                console.error("Vardiya yükleme hatası:", e);
+                dailyShifts = {};
+            }
+
+            // Tabloyu oluştur
+            tbody.innerHTML = personeller.map(p => {
+                const currentShift = dailyShifts[p.id] || 'Seçilmedi';
+                return `
                 <tr class="border-b">
                     <td class="p-3 font-medium">
                         ${p.name}
@@ -969,53 +1014,79 @@
                         </div>
                     </td>
                     <td class="p-3">
-                        <select onchange="updateShift(${p.id}, this.value)" class="p-1 border rounded text-xs">
-                            <option value="Sabahçı" ${p.shift === 'Sabahçı' ? 'selected' : ''}>Sabahçı</option>
-                            <option value="Akşamcı" ${p.shift === 'Akşamcı' ? 'selected' : ''}>Akşamcı</option>
-                            <option value="İzinli" ${p.shift === 'İzinli' ? 'selected' : ''}>İzinli</option>
+                        <select onchange="updateShiftLocal(${p.id}, this.value)" class="p-1 border rounded text-xs w-full">
+                            <option value="Seçilmedi" ${currentShift === 'Seçilmedi' ? 'selected' : ''}>- Seçiniz -</option>
+                            <option value="Sabahçı" ${currentShift === 'Sabahçı' ? 'selected' : ''}>Sabahçı</option>
+                            <option value="Akşamcı" ${currentShift === 'Akşamcı' ? 'selected' : ''}>Akşamcı</option>
+                            <option value="İzinli" ${currentShift === 'İzinli' ? 'selected' : ''}>İzinli</option>
                         </select>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
+
+            // Dağıtım ekranındaki personel durumlarını da bu tarihe göre güncelle
+            for (let p of personeller) {
+                p.shift = dailyShifts[p.id] || 'Seçilmedi';
+            }
+            renderDashboard();
         }
 
-        async function updateShift(id, newShift) {
-            const p = personeller.find(x => x.id === id);
-            if(p) {
-                p.shift = newShift;
-                await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(id)), p);
-            }
+        // Tarih değiştiğinde tabloyu yenile
+        document.getElementById('schedule-date-filter').addEventListener('change', renderScheduleTable);
+
+        function updateShiftLocal(id, newShift) {
+            dailyShifts[id] = newShift;
         }
 
         async function saveScheduleAndRegisterTask(goToDashboard = false) {
             const date = document.getElementById('schedule-date-filter').value;
-            const logEntry = {
-                id: Date.now(),
-                title: `${date} Tarihli İzin & Vardiya Planı Kaydedildi`,
-                desc: 'Tüm personellerin vardiya durumları sisteme işlendi.',
-                date: new Date().toLocaleString()
-            };
-            tasks.unshift(logEntry);
-            
-            await window.colDocs.setDoc(window.colDocs.doc(window.db, "tasks", String(logEntry.id)), logEntry);
+            if (!date) {
+                showAlert("Lütfen önce bir tarih seçiniz!");
+                return;
+            }
 
-            renderDashboard();
-            renderTasksList();
-            showAlert("Vardiya planı başarıyla kaydedildi.");
+            try {
+                // Sadece seçilen tarihe ait vardiyaları kaydet
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "dailyShifts", date), {
+                    date: date,
+                    shifts: dailyShifts,
+                    updatedAt: new Date().toLocaleString()
+                });
 
-            if(goToDashboard) {
-                switchTab('dashboard');
+                // Ana personel listesindeki shift bilgisini de o gün için güncelle (Dağıtım ekranı için)
+                for (let p of personeller) {
+                    p.shift = dailyShifts[p.id] || 'Seçilmedi';
+                }
+
+                renderDashboard();
+                showAlert(`${date} tarihli vardiya planı başarıyla kaydedildi.`);
+
+                if(goToDashboard) {
+                    switchTab('dashboard');
+                }
+            } catch (e) {
+                console.error("Kaydetme hatası:", e);
+                showAlert("Kaydedilirken bir hata oluştu.");
             }
         }
 
         function renderActivitiesTable() {
             const tbody = document.getElementById('activities-table-body');
+            const isAdmin = currentUser && currentUser.role === 'Admin';
+            
+            const typeMap = {
+                'Standard': 'Normal',
+                'Hygiene': 'Gıda',
+                'Height': 'Yükseklik',
+                'Both': 'Gıda + Yükseklik'
+            };
+
             tbody.innerHTML = activities.map(a => `
                 <tr class="border-b">
                     <td class="p-3 font-medium">${a.name}</td>
-                    <td class="p-3"><span class="px-2 py-1 bg-gray-200 rounded text-xs">${a.type}</span></td>
+                    <td class="p-3"><span class="px-2 py-1 bg-gray-200 rounded text-xs">${typeMap[a.type] || a.type}</span></td>
                     <td class="p-3 text-right">
-                        <button onclick="deleteActivity(${a.id})" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-trash"></i></button>
+                        ${isAdmin ? `<button onclick="deleteActivity(${a.id})" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-gray-300 text-xs italic">Yetki Yok</span>'}
                     </td>
                 </tr>
             `).join('');
@@ -1037,6 +1108,12 @@
         }
 
         async function deleteActivity(id) {
+            if (currentUser.role !== 'Admin') {
+                showAlert("Bu işlemi yapmak için Admin yetkiniz olmalıdır.");
+                return;
+            }
+            if(!confirm("Bu aktiviteyi silmek istediğinize emin misiniz?")) return;
+            
             activities = activities.filter(a => a.id !== id);
             delete assignments[id];
             
@@ -1045,10 +1122,12 @@
             
             renderActivitiesTable();
             renderDashboard();
+            showAlert("Aktivite silindi.");
         }
 
         function renderPersonnelTable() {
             const tbody = document.getElementById('personnel-table-body');
+            const isAdmin = currentUser && currentUser.role === 'Admin';
             tbody.innerHTML = personeller.map(p => `
                 <tr class="border-b">
                     <td class="p-3">
@@ -1068,7 +1147,7 @@
                         </label>
                     </td>
                     <td class="p-3 text-right">
-                        <button onclick="deletePersonnel(${p.id})" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-trash"></i></button>
+                        ${isAdmin ? `<button onclick="deletePersonnel(${p.id})" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-gray-300 text-xs italic">Yetki Yok</span>'}
                     </td>
                 </tr>
             `).join('');
@@ -1085,8 +1164,8 @@
                         const act = activities.find(a => String(a.id) === String(actId));
                         if (act) {
                             const typeVal = (act.type || '').toLowerCase();
-                            const needsHygiene = typeVal.includes('hygiene') || typeVal.includes('gıda') || typeVal.includes('hijyen') || typeVal === 'both';
-                            const needsHeight = typeVal.includes('height') || typeVal.includes('yükseklik') || typeVal === 'both';
+                            const needsHygiene = typeVal.includes('hygiene') || typeVal.includes('gıda') || typeVal.includes('hijyen') || typeVal.includes('both') || typeVal.includes('+');
+                            const needsHeight = typeVal.includes('height') || typeVal.includes('yükseklik') || typeVal.includes('both') || typeVal.includes('+');
 
                             if ((certType === 'certHygiene' && needsHygiene) || (certType === 'certHeight' && needsHeight)) {
                                 if (assignments[actId].includes(p.name)) {
@@ -1127,6 +1206,12 @@
         }
 
         async function deletePersonnel(id) {
+            if (currentUser.role !== 'Admin') {
+                showAlert("Bu işlemi yapmak için Admin yetkiniz olmalıdır.");
+                return;
+            }
+            if(!confirm("Bu personeli silmek istediğinize emin misiniz?")) return;
+
             const p = personeller.find(x => x.id === id);
             personeller = personeller.filter(x => x.id !== id);
             
@@ -1146,16 +1231,18 @@
             renderPersonnelTable();
             renderScheduleTable();
             renderDashboard();
+            showAlert("Personel silindi.");
         }
 
         function renderTasksList() {
             const list = document.getElementById('tasks-list');
+            const isAdmin = currentUser && currentUser.role === 'Admin';
             list.innerHTML = tasks.map(t => `
                 <div class="p-3 bg-gray-50 border rounded relative">
                     <div class="font-bold text-gray-800">${t.title}</div>
                     <div class="text-xs text-gray-600 mt-1">${t.desc}</div>
                     <div class="text-[10px] text-gray-400 mt-2"><i class="fa-regular fa-clock"></i> ${t.date}</div>
-                    <button onclick="deleteTask(${t.id})" class="absolute top-3 right-3 text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    ${isAdmin ? `<button onclick="deleteTask(${t.id})" class="absolute top-3 right-3 text-gray-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>` : ''}
                 </div>
             `).join('') || '<div class="text-gray-400 italic">Henüz kaydedilmiş bir iş bulunmuyor.</div>';
         }
@@ -1177,9 +1264,15 @@
         }
 
         async function deleteTask(id) {
+            if (currentUser.role !== 'Admin') {
+                showAlert("Bu işlemi yapmak için Admin yetkiniz olmalıdır.");
+                return;
+            }
+            if(!confirm("Bu kaydı silmek istediğinize emin misiniz?")) return;
             tasks = tasks.filter(t => t.id !== id);
             await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "tasks", String(id)));
             renderTasksList();
+            showAlert("İş kaydı silindi.");
         }
 
         // ---------- PDF VE RAPOR İŞLEMLERİ -----------
@@ -1208,6 +1301,7 @@
 
         function renderReports() {
             const list = document.getElementById('reports-list');
+            const isAdmin = currentUser && currentUser.role === 'Admin';
             if (savedReports.length === 0) {
                 list.innerHTML = '<div class="text-gray-400">Henüz kaydedilmiş dağıtım raporu bulunmuyor.</div>';
                 return;
@@ -1221,17 +1315,22 @@
                     </div>
                     <div class="flex gap-2">
                         <button onclick="openReportModal(${rep.id})" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded text-xs font-bold transition">Görüntüle</button>
-                        <button onclick="deleteReport(${rep.id})" class="bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button>
+                        ${isAdmin ? `<button onclick="deleteReport(${rep.id})" class="bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </div>
                 </div>
             `).join('');
         }
 
         async function deleteReport(id) {
+            if (currentUser.role !== 'Admin') {
+                showAlert("Bu işlemi yapmak için Admin yetkiniz olmalıdır.");
+                return;
+            }
             if(confirm("Bu raporu silmek istediğinize emin misiniz?")) {
                 savedReports = savedReports.filter(r => r.id !== id);
                 await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "savedReports", String(id)));
                 renderReports();
+                showAlert("Rapor silindi.");
             }
         }
 
@@ -1536,6 +1635,10 @@
         }
 
         async function deleteIssueReport(id, type) {
+            if (currentUser.role !== 'Admin') {
+                showAlert("Bu işlemi yapmak için Admin yetkiniz olmalıdır.");
+                return;
+            }
             if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
             reports = reports.filter(r => r.id !== id);
             await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "reports", String(id)));

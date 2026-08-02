@@ -8,8 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- jsPDF Kütüphanesi -->
+    <!-- jsPDF & html2pdf Kütüphaneleri -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <!-- FIREBASE SDK (Modüler Sürüm) -->
     <script type="module">
@@ -127,6 +128,30 @@
             </div>
             <div class="mt-6 flex justify-end">
                 <button onclick="closeViewResolutionModal()" class="bg-gray-800 hover:bg-gray-900 text-white px-6 py-2 rounded-lg text-sm font-bold">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF TASLAK (GİZLİ) -->
+    <div id="pdf-template" class="hidden">
+        <div style="padding: 40px; font-family: 'DejaVu Sans', Arial, sans-serif; color: #333;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #dc2626; padding-bottom: 20px; margin-bottom: 30px;">
+                <div>
+                    <h1 style="color: #dc2626; margin: 0; font-size: 28px; font-weight: bold;">KidZania İstanbul</h1>
+                    <p style="margin: 5px 0 0 0; color: #666; font-size: 16px;">Aktivite Dağıtım Raporu</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="margin: 0; font-size: 14px; color: #999;" id="pdf-date"></p>
+                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Yönetim Paneli Çıktısı</p>
+                </div>
+            </div>
+            
+            <div id="pdf-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <!-- İçerik buraya gelecek -->
+            </div>
+
+            <div style="margin-top: 50px; border-top: 1px solid #eee; pt-20; font-size: 10px; color: #aaa; text-align: center;">
+                Bu rapor KidZania İstanbul Yönetim Paneli tarafından otomatik oluşturulmuştur.
             </div>
         </div>
     </div>
@@ -1232,71 +1257,44 @@
             document.getElementById('report-modal').classList.add('hidden');
         }
 
-        function generateHorizontalPDF(reportData) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'landscape',
-                unit: 'mm',
-                format: 'a4'
-            });
+        async function generateHorizontalPDF(reportData) {
+            const template = document.getElementById('pdf-template');
+            const grid = document.getElementById('pdf-grid');
+            const dateEl = document.getElementById('pdf-date');
+            
+            // Verileri temizle ve doldur
+            dateEl.innerText = `Tarih: ${reportData.date}`;
+            grid.innerHTML = reportData.data.map(item => `
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
+                    <div style="font-size: 11px; font-weight: bold; color: #374151; margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+                        ${item.activityName}
+                    </div>
+                    <div style="font-size: 10px; color: #dc2626; font-weight: 600; line-height: 1.3;">
+                        ${item.assigned}
+                    </div>
+                </div>
+            `).join('');
 
-            doc.setFontSize(18);
-            doc.setTextColor(220, 38, 38); 
-            doc.text("KidZania Istanbul - Aktivite Dagitim Raporu", 14, 22);
+            // Görünür yap (html2pdf için gerekli)
+            template.classList.remove('hidden');
 
-            doc.setFontSize(11);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Tarih: ${reportData.date}`, 14, 30);
+            const opt = {
+                margin:       [10, 10],
+                filename:     `KidZania_Dagitim_${reportData.id}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
 
-            doc.setDrawColor(200, 200, 200);
-            doc.line(14, 34, 283, 34);
-
-            doc.setFontSize(10);
-            doc.setTextColor(40, 40, 40);
-
-            let startY = 45;
-            let currentX = 14;
-            let colWidth = 63; 
-            let rowHeight = 25; 
-            let maxCols = 4;
-            let colIndex = 0;
-
-            reportData.data.forEach((item, index) => {
-                if (colIndex >= maxCols) {
-                    colIndex = 0;
-                    startY += rowHeight;
-                    currentX = 14;
-                }
-
-                if (startY > 180) { 
-                    doc.addPage();
-                    startY = 20;
-                    currentX = 14;
-                    colIndex = 0;
-                }
-
-                doc.setFillColor(249, 250, 251);
-                doc.setDrawColor(229, 231, 235);
-                doc.roundedRect(currentX, startY, colWidth, 20, 2, 2, 'FD');
-
-                doc.setFont("helvetica", "bold");
-                doc.text(item.activityName.substring(0, 30), currentX + 3, startY + 6);
-
-                doc.setFont("helvetica", "normal");
-                doc.setTextColor(220, 38, 38);
-                
-                let assignedText = item.assigned;
-                if(assignedText.length > 35) assignedText = assignedText.substring(0, 32) + "...";
-                
-                doc.text(assignedText, currentX + 3, startY + 14);
-                
-                doc.setTextColor(40, 40, 40);
-
-                colIndex++;
-                currentX += colWidth + 5; 
-            });
-
-            doc.save(`KidZania_Dagitim_${reportData.id}.pdf`);
+            try {
+                await html2pdf().set(opt).from(template).save();
+            } catch (error) {
+                console.error("PDF Hatası:", error);
+                showAlert("PDF oluşturulurken bir hata oluştu.");
+            } finally {
+                // Tekrar gizle
+                template.classList.add('hidden');
+            }
         }
 
         async function sendQuickReport(title) {

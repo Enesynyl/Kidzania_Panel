@@ -1844,11 +1844,25 @@
                 await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(reportId)), shiftReport);
                 savedReports.unshift(shiftReport);
 
-                // Ana personel listesindeki shift bilgisini güncelle (BU DEĞERLER KORUNACAK, DAĞITIM EKRANINA GEÇECEK)
+                // Ana personel listesindeki shift bilgisini güncelle
+                // SADECE o yöneticinin bölge personellerini güncelle, diğer bölgeleri DOKUNMA
+                let managerRegion = '';
+                if (currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                    managerRegion = currentUser.assignedRegions[0];
+                } else if (currentSchedRegion !== 'Tümü') {
+                    managerRegion = currentSchedRegion;
+                }
+
                 for (let p of personeller) {
-                    p.shift = dailyShifts[p.id] || 'Seçilmedi';
-                    // Firebase'de de güncelle
-                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
+                    // Eğer bu bir yöneticiyse ve bölgesi belliyse, sadece kendi bölgesinin personellerini güncelle
+                    if (managerRegion && p.region !== managerRegion) continue;
+
+                    // dailyShifts'te bu personel varsa güncelle, yoksa mevcut değerini koru
+                    if (dailyShifts[p.id] !== undefined) {
+                        p.shift = dailyShifts[p.id];
+                        // Firebase'de de güncelle
+                        await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
+                    }
                 }
 
                 // Yerel vardiya verisini ve tarih seçimini sıfırla (ama personellerin shift bilgisi korunuyor)

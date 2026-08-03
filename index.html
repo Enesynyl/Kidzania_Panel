@@ -1987,6 +1987,13 @@
                 await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(reportId)), shiftReport);
                 savedReports.unshift(shiftReport);
 
+                // Kaydedilen vardiya verisini personellerin shift alanına aktar (sadece lokal state, Firebase personel koleksiyonuna yazmıyoruz)
+                for (let p of personeller) {
+                    if (mergedShifts[p.id] !== undefined) {
+                        p.shift = mergedShifts[p.id];
+                    }
+                }
+
                 // Yerel vardiya verisini sıfırla (tarih seçimini koru, kullanıcı aynı güne tekrar bakabilsin)
                 dailyShifts = {};
 

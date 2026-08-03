@@ -547,40 +547,40 @@
                     </div>
                 </div>
 
-                <!-- YENİ: KADRO ÖZETİ KARTI -->
-                <div class="bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-700 text-white relative">
-                    <h3 class="font-bold mb-5 flex items-center gap-2 text-lg border-b border-slate-700 pb-3">
-                        <i class="fa-solid fa-clipboard-user text-red-500"></i> KADRO OLMASI GEREKEN ÖZETİ
+                <!-- YENİ: KADRO ÖZETİ KARTI (AÇIK RENK & DARALTILMIŞ YAPI) -->
+                <div class="max-w-4xl bg-white p-6 rounded-xl shadow-sm border border-gray-200 relative">
+                    <h3 class="font-bold mb-5 flex items-center gap-2 text-lg border-b border-gray-200 pb-3 text-gray-800">
+                        <i class="fa-solid fa-clipboard-user text-red-600"></i> KADRO OLMASI GEREKEN ÖZETİ
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
-                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                            <span class="text-slate-300">Kadro Olması Gereken:</span>
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <span class="text-gray-600 font-medium">Kadro Olması Gereken:</span>
                             <div class="flex items-center gap-3">
-                                <input type="number" id="kadro-hedef-input" class="bg-slate-700 text-white w-20 px-2 py-1 rounded outline-none hidden focus:ring-1 focus:ring-red-500 text-right">
-                                <span id="kadro-hedef-text" class="font-bold text-xl text-white">122</span>
-                                <button id="btn-edit-kadro" onclick="editKadro()" class="text-red-400 hover:text-red-300 hidden transition" title="Hedef Kadroyu Düzenle"><i class="fa-solid fa-pen"></i></button>
-                                <button id="btn-save-kadro" onclick="saveKadro()" class="text-green-400 hover:text-green-300 hidden transition bg-green-900/30 px-2 py-1 rounded"><i class="fa-solid fa-check mr-1"></i>Kaydet</button>
+                                <input type="number" id="kadro-hedef-input" class="bg-gray-50 border border-gray-300 text-gray-800 w-20 px-2 py-1 rounded outline-none hidden focus:ring-2 focus:ring-red-500 text-right font-bold">
+                                <span id="kadro-hedef-text" class="font-black text-xl text-gray-800">122</span>
+                                <button id="btn-edit-kadro" onclick="editKadro()" class="text-gray-400 hover:text-red-600 hidden transition" title="Hedef Kadroyu Düzenle"><i class="fa-solid fa-pen"></i></button>
+                                <button id="btn-save-kadro" onclick="saveKadro()" class="text-white hover:bg-green-700 hidden transition bg-green-600 px-3 py-1 rounded font-bold shadow-sm"><i class="fa-solid fa-check mr-1"></i>Kaydet</button>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                            <span class="text-slate-300">Mevcut Kadro:</span>
-                            <span id="kadro-mevcut" class="font-bold text-xl text-yellow-400">0</span>
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <span class="text-gray-600 font-medium">Mevcut Kadro:</span>
+                            <span id="kadro-mevcut" class="font-black text-xl text-indigo-600">0</span>
                         </div>
-                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                            <span class="text-slate-300">İşe Alım Kaynaklı Açık:</span>
-                            <span id="kadro-fark" class="font-bold text-xl text-red-400">0</span>
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <span class="text-gray-600 font-medium">İşe Alım Kaynaklı Açık:</span>
+                            <span id="kadro-fark" class="font-black text-xl text-red-600">0</span>
                         </div>
-                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                            <span class="text-slate-300">Bugün Çalışan:</span>
-                            <span id="kadro-bugun" class="font-bold text-xl text-blue-400">0</span>
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <span class="text-gray-600 font-medium">Bugün Çalışan:</span>
+                            <span id="kadro-bugun" class="font-black text-xl text-blue-600">0</span>
                         </div>
-                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                            <span class="text-slate-300">Raporlu:</span>
-                            <span id="kadro-raporlu" class="font-bold text-xl text-teal-400">0</span>
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <span class="text-gray-600 font-medium">Raporlu:</span>
+                            <span id="kadro-raporlu" class="font-black text-xl text-teal-600">0</span>
                         </div>
-                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
-                            <span class="text-slate-300">İzinli:</span>
-                            <span id="kadro-izinli" class="font-bold text-xl text-green-400">0</span>
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                            <span class="text-gray-600 font-medium">İzinli:</span>
+                            <span id="kadro-izinli" class="font-black text-xl text-green-600">0</span>
                         </div>
                     </div>
                 </div>
@@ -1651,7 +1651,6 @@
                 `;
             }).join('');
 
-            // MOLACILAR DOLDURMA
             const molaciSelect = document.getElementById('molaci-select');
             const molacilarTags = document.getElementById('molacilar-assigned-tags');
             

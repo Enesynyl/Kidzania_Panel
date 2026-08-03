@@ -257,7 +257,6 @@
                                 </select>
                             </div>
                             <div>
-                                <span class="text-xs font-semibold text-gray-500 block mb-1">Moladaki Personeller:</span>
                                 <div id="molacilar-assigned-tags" class="flex flex-wrap gap-2">
                                     <!-- JS İle Doldurulacak -->
                                 </div>
@@ -1513,7 +1512,6 @@
                 setSafeTotal('dash-total-calisma-aksam', aksamcilar.length);
                 setSafeTotal('dash-total-calisma-full', fullcilar.length);
 
-                // --- KADRO ÖZETİ BÖLÜMÜ ---
                 const isKadroAdmin = currentUser && currentUser.role === 'Admin';
                 if(isKadroAdmin) {
                     document.getElementById('btn-edit-kadro').classList.remove('hidden');
@@ -1524,15 +1522,14 @@
                 document.getElementById('kadro-hedef-text').innerText = targetKadro;
                 document.getElementById('kadro-hedef-input').value = targetKadro;
                 
-                const mevcutKadro = sabahcilar.length + aksamcilar.length + fullcilar.length; // Sadece çalışan vardiyaları toplanır
+                const mevcutKadro = sabahcilar.length + aksamcilar.length + fullcilar.length;
                 const iseAlimKaynakli = mevcutKadro - targetKadro;
 
                 document.getElementById('kadro-mevcut').innerText = mevcutKadro;
                 document.getElementById('kadro-fark').innerText = iseAlimKaynakli;
-                document.getElementById('kadro-bugun').innerText = mevcutKadro; // Bugün çalışanlar ile mevcut aynı mantık
+                document.getElementById('kadro-bugun').innerText = mevcutKadro;
                 document.getElementById('kadro-raporlu').innerText = raporlular.length;
                 document.getElementById('kadro-izinli').innerText = izinliler.length;
-                // --------------------------
 
             } catch(e) {
                 console.error("renderOverview hatası:", e);
@@ -2281,7 +2278,6 @@
                 });
             });
 
-            // Molacıları da rapora dahil edelim
             if(assignments['molacilar'] && assignments['molacilar'].length > 0) {
                 dataArr.push({
                     activityName: 'MOLACILAR',

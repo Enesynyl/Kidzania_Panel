@@ -1488,69 +1488,71 @@
 
         // --- DASHBOARD (GENEL ÖZET) ---
         async function renderOverview() {
-            // Sıfırla butonu sadece Admin ve Yönetici rollerinde görünsün
-            const resetBtnWrap = document.getElementById('dashboard-reset-btn-wrap');
-            if (resetBtnWrap) {
-                if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Yönetici')) {
-                    resetBtnWrap.classList.remove('hidden');
-                } else {
-                    resetBtnWrap.classList.add('hidden');
-                }
-            }
-
-            // Seçili tarihe göre dailyShifts verisini Firebase'den çek
-            const selectedDate = document.getElementById('overview-date-filter')?.value || '';
-            const today = new Date().toISOString().split('T')[0];
-            const dateToLoad = selectedDate || today;
-
-            // Tarih etiketini güncelle
-            const dateLabelWrap = document.getElementById('overview-date-label');
-            const dateLabelText = document.getElementById('overview-date-label-text');
-            if (selectedDate && selectedDate !== today) {
-                const dParts = selectedDate.split('-');
-                const formattedDate = dParts.length === 3 ? `${dParts[2]}.${dParts[1]}.${dParts[0]}` : selectedDate;
-                dateLabelText.innerText = `Gösterilen Tarih: ${formattedDate}`;
-                dateLabelWrap.classList.remove('hidden');
-            } else {
-                dateLabelWrap.classList.add('hidden');
-            }
-
-            // Firebase'den seçili tarihin vardiya verisini çek
-            let overviewShifts = {};
             try {
-                const shiftDoc = await window.colDocs.getDoc(window.colDocs.doc(window.db, "dailyShifts", dateToLoad));
-                if (shiftDoc.exists()) {
-                    overviewShifts = shiftDoc.data().shifts || {};
+                // Sıfırla butonu sadece Admin ve Yönetici rollerinde görünsün
+                const resetBtnWrap = document.getElementById('dashboard-reset-btn-wrap');
+                if (resetBtnWrap) {
+                    if (currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Yönetici')) {
+                        resetBtnWrap.classList.remove('hidden');
+                    } else {
+                        resetBtnWrap.classList.add('hidden');
+                    }
                 }
-            } catch (e) {
-                console.error("Dashboard vardiya yükleme hatası:", e);
-            }
 
-            // Personellerin görüntülenecek shift değerlerini seçili tarihe göre belirle
-            const filteredPersonnel = personeller.map(p => ({
-                ...p,
-                shift: overviewShifts[p.id] !== undefined ? overviewShifts[p.id] : 'Seçilmedi'
-            }));
+                // Seçili tarihe göre dailyShifts verisini Firebase'den çek
+                const selectedDate = document.getElementById('overview-date-filter')?.value || '';
+                const today = new Date().toISOString().split('T')[0];
+                const dateToLoad = selectedDate || today;
 
-            const sabahcilar = filteredPersonnel.filter(p => p.shift === 'Sabahçı');
-            const aksamcilar = filteredPersonnel.filter(p => p.shift === 'Akşamcı');
-            const fullcilar = filteredPersonnel.filter(p => p.shift === 'Full');
-            const izinliler = filteredPersonnel.filter(p => p.shift === 'İzinli');
-            const raporlular = filteredPersonnel.filter(p => p.shift === 'Raporlu');
-            const yillikIzinliler = filteredPersonnel.filter(p => p.shift === 'Yıllık İzin');
-            const ucretsizIzinliler = filteredPersonnel.filter(p => p.shift === 'Ücretsiz İzin');
-            const gunudegil = filteredPersonnel.filter(p => p.shift === 'Günü Değil');
-            const secilmemisler = filteredPersonnel.filter(p => p.shift === 'Seçilmedi');
+                // Tarih etiketini güncelle
+                const dateLabelWrap = document.getElementById('overview-date-label');
+                const dateLabelText = document.getElementById('overview-date-label-text');
+                if (selectedDate && selectedDate !== today) {
+                    const dParts = selectedDate.split('-');
+                    const formattedDate = dParts.length === 3 ? `${dParts[2]}.${dParts[1]}.${dParts[0]}` : selectedDate;
+                    if (dateLabelText) dateLabelText.innerText = `Gösterilen Tarih: ${formattedDate}`;
+                    if (dateLabelWrap) dateLabelWrap.classList.remove('hidden');
+                } else {
+                    if (dateLabelWrap) dateLabelWrap.classList.add('hidden');
+                }
 
-            // Kartlardaki sayılar (sadece sayılar)
-            document.getElementById('dash-sabah-count').innerText = sabahcilar.length;
-            document.getElementById('dash-aksam-count').innerText = aksamcilar.length;
-            document.getElementById('dash-full-count').innerText = fullcilar.length;
-            document.getElementById('dash-izinli-count').innerText = izinliler.length;
-            document.getElementById('dash-raporlu-count').innerText = raporlular.length;
-            document.getElementById('dash-yillik-izin-count').innerText = yillikIzinliler.length;
-            document.getElementById('dash-ucretsiz-izin-count').innerText = ucretsizIzinliler.length;
-            document.getElementById('dash-gunu-degil-count').innerText = gunudegil.length;
+                // Firebase'den seçili tarihin vardiya verisini çek
+                let overviewShifts = {};
+                try {
+                    const shiftDoc = await window.colDocs.getDoc(window.colDocs.doc(window.db, "dailyShifts", dateToLoad));
+                    if (shiftDoc.exists()) {
+                        overviewShifts = shiftDoc.data().shifts || {};
+                    }
+                } catch (e) {
+                    console.error("Dashboard vardiya yükleme hatası:", e);
+                }
+
+                // Personellerin görüntülenecek shift değerlerini seçili tarihe göre belirle
+                const filteredPersonnel = personeller.map(p => ({
+                    ...p,
+                    shift: overviewShifts[p.id] !== undefined ? overviewShifts[p.id] : 'Seçilmedi'
+                }));
+
+                const sabahcilar = filteredPersonnel.filter(p => p.shift === 'Sabahçı');
+                const aksamcilar = filteredPersonnel.filter(p => p.shift === 'Akşamcı');
+                const fullcilar = filteredPersonnel.filter(p => p.shift === 'Full');
+                const izinliler = filteredPersonnel.filter(p => p.shift === 'İzinli');
+                const raporlular = filteredPersonnel.filter(p => p.shift === 'Raporlu');
+                const yillikIzinliler = filteredPersonnel.filter(p => p.shift === 'Yıllık İzin');
+                const ucretsizIzinliler = filteredPersonnel.filter(p => p.shift === 'Ücretsiz İzin');
+                const gunudegil = filteredPersonnel.filter(p => p.shift === 'Günü Değil');
+                const secilmemisler = filteredPersonnel.filter(p => p.shift === 'Seçilmedi');
+
+                // Kartlardaki sayılar (sadece sayılar)
+                const setSafe = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+                setSafe('dash-sabah-count', sabahcilar.length);
+                setSafe('dash-aksam-count', aksamcilar.length);
+                setSafe('dash-full-count', fullcilar.length);
+                setSafe('dash-izinli-count', izinliler.length);
+                setSafe('dash-raporlu-count', raporlular.length);
+                setSafe('dash-yillik-izin-count', yillikIzinliler.length);
+                setSafe('dash-ucretsiz-izin-count', ucretsizIzinliler.length);
+                setSafe('dash-gunu-degil-count', gunudegil.length);
 
             // Bölge bazlı tablo
             const regions = ['1. Bölge', '2. Bölge', '3. Bölge', '4. Bölge'];
@@ -1593,26 +1595,32 @@
                 `;
             }).join('');
 
-            document.getElementById('dash-region-table-body').innerHTML = regionRows;
+            const regionBody = document.getElementById('dash-region-table-body');
+            if (regionBody) regionBody.innerHTML = regionRows;
 
             // Toplam satırı
-            document.getElementById('dash-total-sabah').innerText = totalSabah;
-            document.getElementById('dash-total-aksam').innerText = totalAksam;
-            document.getElementById('dash-total-full').innerText = totalFull;
-            document.getElementById('dash-total-izinli').innerText = totalIzinli;
-            document.getElementById('dash-total-raporlu').innerText = totalRaporlu;
-            document.getElementById('dash-total-yillik').innerText = totalYillik;
-            document.getElementById('dash-total-ucretsiz').innerText = totalUcretsiz;
-            document.getElementById('dash-total-gunudegil').innerText = totalGunudegil;
-            document.getElementById('dash-total-secilmedi').innerText = totalSecilmedi;
-            document.getElementById('dash-total-all').innerText = totalSabah + totalAksam + totalFull + totalIzinli + totalRaporlu + totalYillik + totalUcretsiz + totalGunudegil + totalSecilmedi;
+            const setSafeT = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+            setSafeT('dash-total-sabah', totalSabah);
+            setSafeT('dash-total-aksam', totalAksam);
+            setSafeT('dash-total-full', totalFull);
+            setSafeT('dash-total-izinli', totalIzinli);
+            setSafeT('dash-total-raporlu', totalRaporlu);
+            setSafeT('dash-total-yillik', totalYillik);
+            setSafeT('dash-total-ucretsiz', totalUcretsiz);
+            setSafeT('dash-total-gunudegil', totalGunudegil);
+            setSafeT('dash-total-secilmedi', totalSecilmedi);
+            setSafeT('dash-total-all', totalSabah + totalAksam + totalFull + totalIzinli + totalRaporlu + totalYillik + totalUcretsiz + totalGunudegil + totalSecilmedi);
 
-            // Toplam çalışan kartı (Sabahçı + Akşamçı + Full)
+            // Toplam çalışan kartı (Sabahçı + Akşamcı + Full)
             const toplamCalisan = sabahcilar.length + aksamcilar.length + fullcilar.length;
-            document.getElementById('dash-total-calisma-count').innerText = toplamCalisan;
-            document.getElementById('dash-total-calisma-sabah').innerText = sabahcilar.length;
-            document.getElementById('dash-total-calisma-aksam').innerText = aksamcilar.length;
-            document.getElementById('dash-total-calisma-full').innerText = fullcilar.length;
+            const setSafeTotal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+            setSafeTotal('dash-total-calisma-count', toplamCalisan);
+            setSafeTotal('dash-total-calisma-sabah', sabahcilar.length);
+            setSafeTotal('dash-total-calisma-aksam', aksamcilar.length);
+            setSafeTotal('dash-total-calisma-full', fullcilar.length);
+            } catch(e) {
+                console.error("renderOverview hatası:", e);
+            }
         }
 
         function clearOverviewDateFilter() {

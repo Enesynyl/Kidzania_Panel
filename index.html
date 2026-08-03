@@ -595,8 +595,8 @@
             <!-- SEKMELER 4: PERSONEL LİSTESİ -->
             <div id="tab-personnel" class="tab-content hidden">
                 <h2 class="text-2xl font-bold text-gray-800 mb-4">Personel Yönetimi</h2>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="personnel-grid-container">
+                    <div id="personnel-add-form-section" class="bg-white p-6 rounded-xl shadow-sm border">
                         <h3 class="font-bold mb-4">Yeni Personel Ekle</h3>
                         <form onsubmit="handleAddPersonnel(event)" class="space-y-3">
                             <input type="text" id="p-name" placeholder="Ad Soyad" required class="w-full p-2 border rounded">
@@ -631,7 +631,7 @@
                             <button type="submit" class="w-full bg-red-600 text-white font-bold py-2 rounded mt-2">Personeli Ekle</button>
                         </form>
                     </div>
-                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border">
+                    <div id="personnel-table-section" class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border">
                         <h3 class="font-bold mb-4">Mevcut Personeller & Sertifika Yönetimi</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
@@ -1136,10 +1136,10 @@
                 });
                 switchTab('report');
             } else if (currentUser.role === 'Manager') {
-                // Bölge Yöneticisi: Sadece kendi bölgesini görür
+                // Bölge Yöneticisi: Kullanıcı Yönetimi ve Aktivite Yönetimi hariç tüm sekmelere erişir
                 adminTabs.forEach(id => {
                     if(document.getElementById(id)) {
-                        if (['btn-tab-users', 'btn-tab-activities', 'btn-tab-personnel'].includes(id)) {
+                        if (['btn-tab-users', 'btn-tab-activities'].includes(id)) {
                             document.getElementById(id).style.display = 'none';
                         } else {
                             document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
@@ -1159,14 +1159,28 @@
                 }
                 switchTab('overview');
             } else if (currentUser.role === 'Yönetici') {
-                adminTabs.forEach(id => {
+                // Yönetici: Admin gibi tüm sekmelere erişir, sadece Kullanıcı Yönetimi kapalı
+                const adminTabsYonetici = [
+                    'btn-tab-overview',
+                    'btn-tab-dashboard',
+                    'btn-tab-schedule',
+                    'btn-tab-activities',
+                    'btn-tab-personnel',
+                    'btn-tab-tasks',
+                    'sub-tasks-menu',
+                    'btn-tab-notifications',
+                    'btn-tab-reports'
+                ];
+                adminTabsYonetici.forEach(id => {
                     if(document.getElementById(id)) {
-                        if (id === 'btn-tab-users') document.getElementById(id).style.display = 'none';
-                        else document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
+                        document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
                     }
                 });
+                // Kullanıcı Yönetimi sekmesini gizle
+                if(document.getElementById('btn-tab-users')) document.getElementById('btn-tab-users').style.display = 'none';
                 switchTab('overview');
-            } else {
+            } else if (currentUser.role === 'Admin') {
+                // Admin: Tüm sekmelere tam erişim
                 adminTabs.forEach(id => {
                     if(document.getElementById(id)) document.getElementById(id).style.display = id === 'sub-tasks-menu' ? 'block' : 'flex';
                 });
@@ -2053,11 +2067,23 @@
         function renderPersonnelTable() {
             const tbody = document.getElementById('personnel-table-body');
             const isAdmin = currentUser && currentUser.role === 'Admin';
+            const isManager = currentUser && currentUser.role === 'Manager';
             
+            // Yeni personel ekleme formunu Manager için gizle, tabloyu tam genişlik yap
+            const formSection = document.getElementById('personnel-add-form-section');
+            const tableSection = document.getElementById('personnel-table-section');
+            if (isManager) {
+                if (formSection) formSection.classList.add('hidden');
+                if (tableSection) { tableSection.classList.remove('lg:col-span-2'); tableSection.classList.add('lg:col-span-3'); }
+            } else {
+                if (formSection) formSection.classList.remove('hidden');
+                if (tableSection) { tableSection.classList.add('lg:col-span-2'); tableSection.classList.remove('lg:col-span-3'); }
+            }
+
             let displayPersonnel = personeller;
-            // Manager ise sadece kendi bölgesini görebilsin
-            if (currentUser && currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
-                displayPersonnel = personeller.filter(p => p.region === currentUser.assignedRegions[0]);
+            // Manager ise sadece kendi atanmış bölgelerini görebilsin
+            if (isManager && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
+                displayPersonnel = personeller.filter(p => currentUser.assignedRegions.includes(p.region));
             }
 
             tbody.innerHTML = displayPersonnel.map(p => `
@@ -2106,6 +2132,12 @@
         async function updatePersonnelRegion(id, newRegion) {
             const p = personeller.find(x => x.id === id);
             if(p) {
+                // Manager sadece kendi bölgelerindeki personelin bölgesini değiştirebilir
+                if (currentUser.role === 'Manager' && currentUser.assignedRegions && !currentUser.assignedRegions.includes(p.region)) {
+                    showAlert("Sadece kendi bölgenizdeki personelin bilgilerini değiştirebilirsiniz.");
+                    renderPersonnelTable();
+                    return;
+                }
                 p.region = newRegion;
                 await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(id)), p);
                 renderPersonnelTable();

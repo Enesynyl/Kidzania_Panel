@@ -1431,7 +1431,7 @@
                 filterFn = p => p.shift === 'İzinli' || p.shift === 'Raporlu' || p.shift === 'Yıllık İzin' || p.shift === 'Ücretsiz İzin' || p.shift === 'Günü Değil';
             } else {
                 title = shiftType + ' Personeller';
-                const colorMap = { 'Sabahçı': 'yellow', 'Akşamçı': 'indigo', 'Full': 'orange', 'Raporlu': 'teal', 'Yıllık İzin': 'blue', 'Ücretsiz İzin': 'purple', 'Günü Değil': 'pink' };
+                const colorMap = { 'Sabahçı': 'yellow', 'Akşamcı': 'indigo', 'Full': 'orange', 'Raporlu': 'teal', 'Yıllık İzin': 'blue', 'Ücretsiz İzin': 'purple', 'Günü Değil': 'pink' };
                 color = colorMap[shiftType] || 'gray';
                 filterFn = p => p.shift === shiftType;
             }
@@ -1533,7 +1533,7 @@
             }));
 
             const sabahcilar = filteredPersonnel.filter(p => p.shift === 'Sabahçı');
-            const aksamcilar = filteredPersonnel.filter(p => p.shift === 'Akşamçı');
+            const aksamcilar = filteredPersonnel.filter(p => p.shift === 'Akşamcı');
             const fullcilar = filteredPersonnel.filter(p => p.shift === 'Full');
             const izinliler = filteredPersonnel.filter(p => p.shift === 'İzinli');
             const raporlular = filteredPersonnel.filter(p => p.shift === 'Raporlu');
@@ -1559,7 +1559,7 @@
             const regionRows = regions.map(region => {
                 const regionP = filteredPersonnel.filter(p => p.region === region);
                 const rSabah = regionP.filter(p => p.shift === 'Sabahçı').length;
-                const rAksam = regionP.filter(p => p.shift === 'Akşamçı').length;
+                const rAksam = regionP.filter(p => p.shift === 'Akşamcı').length;
                 const rFull = regionP.filter(p => p.shift === 'Full').length;
                 const rIzinli = regionP.filter(p => p.shift === 'İzinli').length;
                 const rRaporlu = regionP.filter(p => p.shift === 'Raporlu').length;

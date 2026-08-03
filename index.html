@@ -17,7 +17,7 @@
     <!-- FIREBASE SDK (Modüler Sürüm) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, getDoc, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDwoHZb5AHLNOYoNcZm1ODc81yyOlxyR3A",
@@ -33,7 +33,7 @@
         const db = getFirestore(app);
 
         window.db = db;
-        window.colDocs = { collection, getDocs, setDoc, doc, deleteDoc };
+        window.colDocs = { collection, getDocs, getDoc, setDoc, doc, deleteDoc };
         
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
@@ -402,16 +402,29 @@
 
             <!-- SEKMELER 4: DASHBOARD (GENEL ÖZET) -->
             <div id="tab-overview" class="tab-content hidden">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
                         <i class="fa-solid fa-chart-pie text-red-600"></i> Dashboard
-                    </div>
-                    <div id="dashboard-reset-btn-wrap" class="hidden">
-                        <button onclick="resetAllShifts()" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2">
-                            <i class="fa-solid fa-rotate-left"></i> Vardiyayı Sıfırla
+                    </h2>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <div class="flex items-center gap-2 bg-white p-2 border rounded-lg shadow-sm">
+                            <i class="fa-solid fa-calendar text-gray-400 text-sm"></i>
+                            <input type="date" id="overview-date-filter" onchange="renderOverview()" class="text-sm border-none outline-none bg-transparent font-medium">
+                        </div>
+                        <button onclick="clearOverviewDateFilter()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs font-bold px-3 py-2 rounded-lg transition">
+                            <i class="fa-solid fa-filter-circle-xmark"></i> Bugün
                         </button>
+                        <div id="dashboard-reset-btn-wrap" class="hidden">
+                            <button onclick="resetAllShifts()" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2">
+                                <i class="fa-solid fa-rotate-left"></i> Vardiyayı Sıfırla
+                            </button>
+                        </div>
                     </div>
-                </h2>
+                </div>
+                <div id="overview-date-label" class="hidden mb-3 text-sm font-semibold text-red-600 bg-red-50 border border-red-200 px-4 py-2 rounded-lg inline-flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <span id="overview-date-label-text"></span>
+                </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
                     <!-- SABAHÇI KARTI -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
@@ -1075,25 +1088,15 @@
             document.getElementById('splash-screen').classList.add('fade-out');
             document.getElementById('main-app').classList.remove('hidden');
 
-            // --- HER YENİ GÜNDE SIFIRLAMA ---
-            // Son kayıt tarihini kontrol et, yeni günse tüm personellerin shift bilgisi sıfırlansın
+            // Günlük vardiya verisini sıfırla (sadece lokal state, Firebase'e dokunma)
             assignments = {};
             dailyShifts = {};
-            
-            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD formatında bugünün tarihi
-            const lastResetDate = localStorage.getItem('kz_last_shift_reset');
-            
-            if (lastResetDate !== today) {
-                // Yeni gün, tüm personellerin shift bilgisi sıfırlanmalı
-                try {
-                    for (let p of personeller) {
-                        p.shift = 'Seçilmedi';
-                        await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
-                    }
-                    localStorage.setItem('kz_last_shift_reset', today);
-                } catch (e) {
-                    console.error("Günlük sıfırlama hatası:", e);
-                }
+
+            // Bugünün tarihini al ve Dashboard'daki tarih filtresini bugüne ayarla
+            const today = new Date().toISOString().split('T')[0];
+            const overviewFilter = document.getElementById('overview-date-filter');
+            if (overviewFilter && !overviewFilter.value) {
+                overviewFilter.value = today;
             }
             
             // Sidebar Kullanıcı Bilgilerini Güncelle
@@ -1179,25 +1182,23 @@
             renderUsersTable();
             renderReports();
             renderNotifications();
-            renderOverview();
+            await renderOverview();
         }
 
         // --- DASHBOARD SIFIRLAMA ---
         async function resetAllShifts() {
-            if (!confirm("TÜM personellerin vardiya bilgisini 'Seçilmedi' olarak sıfırlamak istediğinize emin misiniz?")) return;
+            const selectedDate = document.getElementById('overview-date-filter')?.value || new Date().toISOString().split('T')[0];
+            const dParts = selectedDate.split('-');
+            const formattedDate = dParts.length === 3 ? `${dParts[2]}.${dParts[1]}.${dParts[0]}` : selectedDate;
+
+            if (!confirm(`${formattedDate} tarihine ait TÜM personellerin vardiya bilgisini sıfırlamak istediğinize emin misiniz?`)) return;
 
             try {
-                for (let p of personeller) {
-                    p.shift = 'Seçilmedi';
-                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
-                }
+                // Seçili tarihin dailyShifts verisini Firebase'den sil
+                await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "dailyShifts", selectedDate));
 
-                // localStorage'daki sıfırlama tarihini de güncelle
-                const today = new Date().toISOString().split('T')[0];
-                localStorage.setItem('kz_last_shift_reset', today);
-
-                showAlert("Tüm personellerin vardiya bilgisi sıfırlandı!");
-                renderOverview();
+                showAlert(`${formattedDate} tarihli vardiya bilgisi sıfırlandı!`);
+                await renderOverview();
             } catch (e) {
                 console.error("Sıfırlama hatası:", e);
                 showAlert("Sıfırlama sırasında bir hata oluştu.");
@@ -1210,7 +1211,7 @@
             location.reload();
         }
 
-        function switchTab(tabId) {
+        async function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('bg-slate-700'));
             
@@ -1232,7 +1233,7 @@
             
             // Dashboard sekmesine geçildiğinde verileri render et
             if (tabId === 'overview') {
-                renderOverview();
+                await renderOverview();
             }
         }
 
@@ -1407,7 +1408,7 @@
         }
 
         // --- DASHBOARD PERSONEL GÖRÜNTÜLE MODAL ---
-        function showShiftPersonnel(shiftType) {
+        async function showShiftPersonnel(shiftType) {
             let title, color, filterFn;
 
             if (shiftType === 'izinli') {
@@ -1416,13 +1417,26 @@
                 filterFn = p => p.shift === 'İzinli' || p.shift === 'Raporlu' || p.shift === 'Yıllık İzin' || p.shift === 'Ücretsiz İzin' || p.shift === 'Günü Değil';
             } else {
                 title = shiftType + ' Personeller';
-                const colorMap = { 'Sabahçı': 'yellow', 'Akşamcı': 'indigo', 'Full': 'orange', 'Raporlu': 'teal', 'Yıllık İzin': 'blue', 'Ücretsiz İzin': 'purple', 'Günü Değil': 'pink' };
+                const colorMap = { 'Sabahçı': 'yellow', 'Akşamçı': 'indigo', 'Full': 'orange', 'Raporlu': 'teal', 'Yıllık İzin': 'blue', 'Ücretsiz İzin': 'purple', 'Günü Değil': 'pink' };
                 color = colorMap[shiftType] || 'gray';
                 filterFn = p => p.shift === shiftType;
             }
 
+            // Seçili tarihe göre Firebase'den vardiya verisini çek
+            const selectedDate = document.getElementById('overview-date-filter')?.value || new Date().toISOString().split('T')[0];
+            let overviewShifts = {};
+            try {
+                const shiftDoc = await window.colDocs.getDoc(window.colDocs.doc(window.db, "dailyShifts", selectedDate));
+                if (shiftDoc.exists()) overviewShifts = shiftDoc.data().shifts || {};
+            } catch(e) {}
+
+            const personnelWithShifts = personeller.map(p => ({
+                ...p,
+                shift: overviewShifts[p.id] !== undefined ? overviewShifts[p.id] : 'Seçilmedi'
+            }));
+
             // Tüm yöneticiler TÜM bölgelerin personellerini görür
-            const matched = personeller.filter(filterFn);
+            const matched = personnelWithShifts.filter(filterFn);
 
             const html = matched.length > 0
                 ? matched.map(p => `
@@ -1459,7 +1473,7 @@
         }
 
         // --- DASHBOARD (GENEL ÖZET) ---
-        function renderOverview() {
+        async function renderOverview() {
             // Sıfırla butonu sadece Admin ve Yönetici rollerinde görünsün
             const resetBtnWrap = document.getElementById('dashboard-reset-btn-wrap');
             if (resetBtnWrap) {
@@ -1470,11 +1484,42 @@
                 }
             }
 
-            // Tüm yöneticiler TÜM bölgelerin verilerini toplu görür
-            const filteredPersonnel = personeller;
+            // Seçili tarihe göre dailyShifts verisini Firebase'den çek
+            const selectedDate = document.getElementById('overview-date-filter')?.value || '';
+            const today = new Date().toISOString().split('T')[0];
+            const dateToLoad = selectedDate || today;
+
+            // Tarih etiketini güncelle
+            const dateLabelWrap = document.getElementById('overview-date-label');
+            const dateLabelText = document.getElementById('overview-date-label-text');
+            if (selectedDate && selectedDate !== today) {
+                const dParts = selectedDate.split('-');
+                const formattedDate = dParts.length === 3 ? `${dParts[2]}.${dParts[1]}.${dParts[0]}` : selectedDate;
+                dateLabelText.innerText = `Gösterilen Tarih: ${formattedDate}`;
+                dateLabelWrap.classList.remove('hidden');
+            } else {
+                dateLabelWrap.classList.add('hidden');
+            }
+
+            // Firebase'den seçili tarihin vardiya verisini çek
+            let overviewShifts = {};
+            try {
+                const shiftDoc = await window.colDocs.getDoc(window.colDocs.doc(window.db, "dailyShifts", dateToLoad));
+                if (shiftDoc.exists()) {
+                    overviewShifts = shiftDoc.data().shifts || {};
+                }
+            } catch (e) {
+                console.error("Dashboard vardiya yükleme hatası:", e);
+            }
+
+            // Personellerin görüntülenecek shift değerlerini seçili tarihe göre belirle
+            const filteredPersonnel = personeller.map(p => ({
+                ...p,
+                shift: overviewShifts[p.id] !== undefined ? overviewShifts[p.id] : 'Seçilmedi'
+            }));
 
             const sabahcilar = filteredPersonnel.filter(p => p.shift === 'Sabahçı');
-            const aksamcilar = filteredPersonnel.filter(p => p.shift === 'Akşamcı');
+            const aksamcilar = filteredPersonnel.filter(p => p.shift === 'Akşamçı');
             const fullcilar = filteredPersonnel.filter(p => p.shift === 'Full');
             const izinliler = filteredPersonnel.filter(p => p.shift === 'İzinli');
             const raporlular = filteredPersonnel.filter(p => p.shift === 'Raporlu');
@@ -1498,9 +1543,9 @@
             let totalSabah = 0, totalAksam = 0, totalFull = 0, totalIzinli = 0, totalRaporlu = 0, totalYillik = 0, totalUcretsiz = 0, totalGunudegil = 0, totalSecilmedi = 0;
 
             const regionRows = regions.map(region => {
-                const regionP = personeller.filter(p => p.region === region);
+                const regionP = filteredPersonnel.filter(p => p.region === region);
                 const rSabah = regionP.filter(p => p.shift === 'Sabahçı').length;
-                const rAksam = regionP.filter(p => p.shift === 'Akşamcı').length;
+                const rAksam = regionP.filter(p => p.shift === 'Akşamçı').length;
                 const rFull = regionP.filter(p => p.shift === 'Full').length;
                 const rIzinli = regionP.filter(p => p.shift === 'İzinli').length;
                 const rRaporlu = regionP.filter(p => p.shift === 'Raporlu').length;
@@ -1548,12 +1593,18 @@
             document.getElementById('dash-total-secilmedi').innerText = totalSecilmedi;
             document.getElementById('dash-total-all').innerText = totalSabah + totalAksam + totalFull + totalIzinli + totalRaporlu + totalYillik + totalUcretsiz + totalGunudegil + totalSecilmedi;
 
-            // Toplam çalışan kartı (Sabahçı + Akşamcı + Full)
+            // Toplam çalışan kartı (Sabahçı + Akşamçı + Full)
             const toplamCalisan = sabahcilar.length + aksamcilar.length + fullcilar.length;
             document.getElementById('dash-total-calisma-count').innerText = toplamCalisan;
             document.getElementById('dash-total-calisma-sabah').innerText = sabahcilar.length;
             document.getElementById('dash-total-calisma-aksam').innerText = aksamcilar.length;
             document.getElementById('dash-total-calisma-full').innerText = fullcilar.length;
+        }
+
+        function clearOverviewDateFilter() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('overview-date-filter').value = today;
+            renderOverview();
         }
 
         function renderDashboard() {
@@ -1838,9 +1889,9 @@
                 managerRegion = currentSchedRegion;
             }
 
+            // Dağıtım sekmesi için personel.shift'i geçici olarak güncelle (sadece lokal, Firebase'e yazmıyoruz)
             for (let p of personeller) {
                 if (managerRegion && p.region !== managerRegion) continue;
-                // Sadece dailyShifts'te verisi olan personeli güncelle
                 if (dailyShifts[p.id] !== undefined) {
                     p.shift = dailyShifts[p.id];
                 }
@@ -1922,23 +1973,17 @@
                 await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(reportId)), shiftReport);
                 savedReports.unshift(shiftReport);
 
-                // Ana personel listesindeki shift bilgisini güncelle
-                // mergedShifts (TÜM bölgelerin verisi) üzerinden güncelle
-                for (let p of personeller) {
-                    if (mergedShifts[p.id] !== undefined) {
-                        p.shift = mergedShifts[p.id];
-                        // Firebase'de de güncelle
-                        await window.colDocs.setDoc(window.colDocs.doc(window.db, "personnel", String(p.id)), p);
-                    }
-                }
-
-                // Yerel vardiya verisini ve tarih seçimini sıfırla (ama personellerin shift bilgisi korunuyor)
+                // Yerel vardiya verisini sıfırla (tarih seçimini koru, kullanıcı aynı güne tekrar bakabilsin)
                 dailyShifts = {};
-                document.getElementById('schedule-date-filter').value = '';
+
+                // Dashboard'daki tarih filtresini kaydedilen tarihe ayarla
+                const overviewFilter = document.getElementById('overview-date-filter');
+                if (overviewFilter) overviewFilter.value = date;
 
                 renderDashboard();
                 renderScheduleTable();
                 renderReports();
+                await renderOverview();
                 showAlert(`${date} tarihli vardiya planı kaydedildi ve raporlara eklendi.`);
 
                 if(goToDashboard) {

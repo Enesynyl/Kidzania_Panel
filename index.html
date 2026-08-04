@@ -5,14 +5,330 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KidZania İstanbul - Yönetim Paneli</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+        function downloadMolaExcel(rep) {
+            const data = [];
+            // Header
+            data.push(["KidZania İstanbul Mola Çizelgesi"]);
+            data.push(["Tarih:", rep.reportDate]);
+            data.push(["Bölge:", rep.region]);
+            data.push([]);
+            data.push(["Personel Adı", "Vardiya", "Mola 1", "Mola 2", "Mola 3", "Toplam Süre"]);
+
+            rep.data.forEach(p => {
+                const row = [p.name, p.shift];
+                let total = 0;
+                p.plans.forEach((m, idx) => {
+                    if (idx < 3) row.push(`${m.start} - ${m.end}`);
+                    total += m.duration;
+                });
+                while (row.length < 5) row.push("-");
+                row.push(total + " dk");
+                data.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Mola Çizelgesi");
+            XLSX.writeFile(wb, `Mola_Cizelgesi_${rep.date}.xlsx`);
+        }
+
+        function downloadMolaPDF(rep) {
+            const element = document.createElement('div');
+            element.style.padding = '20px';
+            element.style.width = '1000px';
+            element.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #dc2626; margin: 0;">KidZania İstanbul</h1>
+                    <h2 style="margin: 5px 0;">Mola Çizelgesi Raporu</h2>
+                    <p style="color: #666;">Tarih: ${rep.reportDate} | Bölge: ${rep.region}</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f3f4f6;">
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Personel Adı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Vardiya</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Mola Planı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Toplam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rep.data.map(p => {
+                            const total = p.plans.reduce((sum, m) => sum + m.duration, 0);
+                            return `
+                                <tr>
+                                    <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">${p.name}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">${p.shift}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">
+                                        ${p.plans.map(m => `${m.start}-${m.end}`).join(' | ')}
+                                    </td>
+                                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${total} dk</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; font-size: 10px; color: #999; text-align: center;">
+                    Bu rapor KidZania İstanbul Yönetim Paneli tarafından otomatik oluşturulmuştur.
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Mola_Cizelgesi_${rep.date}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    
+    </script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- jsPDF & html2pdf Kütüphaneleri -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+        function downloadMolaExcel(rep) {
+            const data = [];
+            // Header
+            data.push(["KidZania İstanbul Mola Çizelgesi"]);
+            data.push(["Tarih:", rep.reportDate]);
+            data.push(["Bölge:", rep.region]);
+            data.push([]);
+            data.push(["Personel Adı", "Vardiya", "Mola 1", "Mola 2", "Mola 3", "Toplam Süre"]);
+
+            rep.data.forEach(p => {
+                const row = [p.name, p.shift];
+                let total = 0;
+                p.plans.forEach((m, idx) => {
+                    if (idx < 3) row.push(`${m.start} - ${m.end}`);
+                    total += m.duration;
+                });
+                while (row.length < 5) row.push("-");
+                row.push(total + " dk");
+                data.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Mola Çizelgesi");
+            XLSX.writeFile(wb, `Mola_Cizelgesi_${rep.date}.xlsx`);
+        }
+
+        function downloadMolaPDF(rep) {
+            const element = document.createElement('div');
+            element.style.padding = '20px';
+            element.style.width = '1000px';
+            element.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #dc2626; margin: 0;">KidZania İstanbul</h1>
+                    <h2 style="margin: 5px 0;">Mola Çizelgesi Raporu</h2>
+                    <p style="color: #666;">Tarih: ${rep.reportDate} | Bölge: ${rep.region}</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f3f4f6;">
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Personel Adı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Vardiya</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Mola Planı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Toplam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rep.data.map(p => {
+                            const total = p.plans.reduce((sum, m) => sum + m.duration, 0);
+                            return `
+                                <tr>
+                                    <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">${p.name}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">${p.shift}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">
+                                        ${p.plans.map(m => `${m.start}-${m.end}`).join(' | ')}
+                                    </td>
+                                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${total} dk</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; font-size: 10px; color: #999; text-align: center;">
+                    Bu rapor KidZania İstanbul Yönetim Paneli tarafından otomatik oluşturulmuştur.
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Mola_Cizelgesi_${rep.date}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+        function downloadMolaExcel(rep) {
+            const data = [];
+            // Header
+            data.push(["KidZania İstanbul Mola Çizelgesi"]);
+            data.push(["Tarih:", rep.reportDate]);
+            data.push(["Bölge:", rep.region]);
+            data.push([]);
+            data.push(["Personel Adı", "Vardiya", "Mola 1", "Mola 2", "Mola 3", "Toplam Süre"]);
+
+            rep.data.forEach(p => {
+                const row = [p.name, p.shift];
+                let total = 0;
+                p.plans.forEach((m, idx) => {
+                    if (idx < 3) row.push(`${m.start} - ${m.end}`);
+                    total += m.duration;
+                });
+                while (row.length < 5) row.push("-");
+                row.push(total + " dk");
+                data.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Mola Çizelgesi");
+            XLSX.writeFile(wb, `Mola_Cizelgesi_${rep.date}.xlsx`);
+        }
+
+        function downloadMolaPDF(rep) {
+            const element = document.createElement('div');
+            element.style.padding = '20px';
+            element.style.width = '1000px';
+            element.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #dc2626; margin: 0;">KidZania İstanbul</h1>
+                    <h2 style="margin: 5px 0;">Mola Çizelgesi Raporu</h2>
+                    <p style="color: #666;">Tarih: ${rep.reportDate} | Bölge: ${rep.region}</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f3f4f6;">
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Personel Adı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Vardiya</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Mola Planı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Toplam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rep.data.map(p => {
+                            const total = p.plans.reduce((sum, m) => sum + m.duration, 0);
+                            return `
+                                <tr>
+                                    <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">${p.name}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">${p.shift}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">
+                                        ${p.plans.map(m => `${m.start}-${m.end}`).join(' | ')}
+                                    </td>
+                                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${total} dk</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; font-size: 10px; color: #999; text-align: center;">
+                    Bu rapor KidZania İstanbul Yönetim Paneli tarafından otomatik oluşturulmuştur.
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Mola_Cizelgesi_${rep.date}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    
+    </script>
     <!-- Stil Destekli Excel Kütüphanesi -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js">
+        function downloadMolaExcel(rep) {
+            const data = [];
+            // Header
+            data.push(["KidZania İstanbul Mola Çizelgesi"]);
+            data.push(["Tarih:", rep.reportDate]);
+            data.push(["Bölge:", rep.region]);
+            data.push([]);
+            data.push(["Personel Adı", "Vardiya", "Mola 1", "Mola 2", "Mola 3", "Toplam Süre"]);
+
+            rep.data.forEach(p => {
+                const row = [p.name, p.shift];
+                let total = 0;
+                p.plans.forEach((m, idx) => {
+                    if (idx < 3) row.push(`${m.start} - ${m.end}`);
+                    total += m.duration;
+                });
+                while (row.length < 5) row.push("-");
+                row.push(total + " dk");
+                data.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Mola Çizelgesi");
+            XLSX.writeFile(wb, `Mola_Cizelgesi_${rep.date}.xlsx`);
+        }
+
+        function downloadMolaPDF(rep) {
+            const element = document.createElement('div');
+            element.style.padding = '20px';
+            element.style.width = '1000px';
+            element.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #dc2626; margin: 0;">KidZania İstanbul</h1>
+                    <h2 style="margin: 5px 0;">Mola Çizelgesi Raporu</h2>
+                    <p style="color: #666;">Tarih: ${rep.reportDate} | Bölge: ${rep.region}</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f3f4f6;">
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Personel Adı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Vardiya</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Mola Planı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Toplam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rep.data.map(p => {
+                            const total = p.plans.reduce((sum, m) => sum + m.duration, 0);
+                            return `
+                                <tr>
+                                    <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">${p.name}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">${p.shift}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">
+                                        ${p.plans.map(m => `${m.start}-${m.end}`).join(' | ')}
+                                    </td>
+                                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${total} dk</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; font-size: 10px; color: #999; text-align: center;">
+                    Bu rapor KidZania İstanbul Yönetim Paneli tarafından otomatik oluşturulmuştur.
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Mola_Cizelgesi_${rep.date}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    
+    </script>
     
     <!-- FIREBASE SDK (Modüler Sürüm) -->
     <script type="module">
@@ -36,6 +352,85 @@
         window.colDocs = { collection, getDocs, getDoc, setDoc, doc, deleteDoc };
         
         window.dispatchEvent(new Event('firebase-ready'));
+    
+        function downloadMolaExcel(rep) {
+            const data = [];
+            // Header
+            data.push(["KidZania İstanbul Mola Çizelgesi"]);
+            data.push(["Tarih:", rep.reportDate]);
+            data.push(["Bölge:", rep.region]);
+            data.push([]);
+            data.push(["Personel Adı", "Vardiya", "Mola 1", "Mola 2", "Mola 3", "Toplam Süre"]);
+
+            rep.data.forEach(p => {
+                const row = [p.name, p.shift];
+                let total = 0;
+                p.plans.forEach((m, idx) => {
+                    if (idx < 3) row.push(`${m.start} - ${m.end}`);
+                    total += m.duration;
+                });
+                while (row.length < 5) row.push("-");
+                row.push(total + " dk");
+                data.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Mola Çizelgesi");
+            XLSX.writeFile(wb, `Mola_Cizelgesi_${rep.date}.xlsx`);
+        }
+
+        function downloadMolaPDF(rep) {
+            const element = document.createElement('div');
+            element.style.padding = '20px';
+            element.style.width = '1000px';
+            element.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #dc2626; margin: 0;">KidZania İstanbul</h1>
+                    <h2 style="margin: 5px 0;">Mola Çizelgesi Raporu</h2>
+                    <p style="color: #666;">Tarih: ${rep.reportDate} | Bölge: ${rep.region}</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f3f4f6;">
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Personel Adı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Vardiya</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Mola Planı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Toplam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rep.data.map(p => {
+                            const total = p.plans.reduce((sum, m) => sum + m.duration, 0);
+                            return `
+                                <tr>
+                                    <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">${p.name}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">${p.shift}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">
+                                        ${p.plans.map(m => `${m.start}-${m.end}`).join(' | ')}
+                                    </td>
+                                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${total} dk</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; font-size: 10px; color: #999; text-align: center;">
+                    Bu rapor KidZania İstanbul Yönetim Paneli tarafından otomatik oluşturulmuştur.
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Mola_Cizelgesi_${rep.date}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    
     </script>
 
     <style>
@@ -49,6 +444,9 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Yeni Eklenen: 24 Sütunlu Grid Sistemi */
+        .grid-cols-48 { grid-template-columns: repeat(24, minmax(0, 1fr)); }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased text-gray-800">
@@ -201,7 +599,7 @@
             <div id="tab-dashboard" class="tab-content">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Aktivite Dağıtımı & Vardiya Masası</h2>
+                        <h2 class="text-2xl font-bold text-gray-800">Aktivite Dağıtımı & Vardiya Masası</h2><div class="flex items-center gap-2 mt-2"><label class="text-xs font-bold text-gray-600">Tarih Seçin:</label><input type="date" id="dashboard-date-filter" onchange="changeDashboardDate(this.value)" class="text-xs border rounded px-2 py-1 outline-none focus:ring-1 focus:ring-red-500"></div>
                         <p class="text-xs text-gray-500">Personelleri sertifika şartlarına göre aktivitelere dilediğiniz sayıda atayın.</p>
                     </div>
                     <div class="flex items-center gap-2">
@@ -260,6 +658,110 @@
                                 <div id="molacilar-assigned-tags" class="flex flex-wrap gap-2">
                                     <!-- JS İle Doldurulacak -->
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- YENİ: MOLA ZAMAN ÇİZELGESİ (00:00 - 24:00) -->
+                <div class="mt-8 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex items-center justify-between mb-4 border-b pb-3">
+                        <h3 class="font-bold text-gray-800 flex items-center gap-2 text-lg">
+                            <i class="fa-solid fa-clock-rotate-left text-red-600"></i> Mola Planlama Zaman Çizelgesi
+                        </h3>
+                        <div class="flex items-center gap-4">
+                            <span class="text-xs text-gray-500 italic">* Toplam mola hakkı 1 saattir (60 dk). Parçalı olarak ekleyebilirsiniz.</span>
+                            <button onclick="clearAllMola()" class="text-red-600 hover:text-red-800 text-xs font-bold transition flex items-center gap-1">
+                                <i class="fa-solid fa-trash-can"></i> Tüm Molaları Temizle</button><button onclick="saveMolaReport()" class="bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold px-3 py-1 rounded shadow transition flex items-center gap-1.5 ml-4"><i class="fa-solid fa-floppy-disk"></i> Kaydet ve Raporlara Ekle
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mola Filtreleri ve Otomatik Atama -->
+                    <div class="mb-6 p-4 bg-red-50 rounded-xl border border-red-100">
+                        <div class="flex flex-wrap items-center gap-6">
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-bold text-gray-700">Dönem Seçimi:</span>
+                                <div class="flex bg-white rounded-lg p-1 shadow-sm border">
+                                    <button onclick="setMolaPeriod('yaz')" id="btn-period-yaz" class="px-4 py-1.5 rounded-md text-xs font-bold transition bg-red-600 text-white">Yaz Dönemi</button>
+                                    <button onclick="setMolaPeriod('okul')" id="btn-period-okul" class="px-4 py-1.5 rounded-md text-xs font-bold transition text-gray-600 hover:bg-gray-100">Okul Dönemi</button>
+                                </div>
+                            </div>
+                            
+                            <div id="okul-sub-filters" class="hidden flex items-center gap-3">
+                                <span class="text-sm font-bold text-gray-700">Gün Tipi:</span>
+                                <div class="flex bg-white rounded-lg p-1 shadow-sm border">
+                                    <button onclick="setOkulType('hafta-ici')" id="btn-okul-ici" class="px-4 py-1.5 rounded-md text-xs font-bold transition bg-slate-700 text-white">Hafta İçi</button>
+                                    <button onclick="setOkulType('hafta-sonu')" id="btn-okul-sonu" class="px-4 py-1.5 rounded-md text-xs font-bold transition text-gray-600 hover:bg-gray-100">Hafta Sonu</button>
+                                </div>
+                            </div>
+
+                            <button onclick="runAutoMolaAssignment()" class="ml-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg text-sm transition flex items-center gap-2 shadow-md">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Otomatik Mola Dağıtımı Yap
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mola Ekleme Kontrolleri -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300">
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Personel Seç</label>
+                            <select id="mola-person-select" class="w-full p-2 text-sm border rounded bg-white outline-none focus:ring-2 focus:ring-red-500">
+                                <option value="">Aktif Personel Seçin...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Başlangıç Saati</label>
+                            <input type="time" id="mola-start-time" class="w-full p-2 text-sm border rounded bg-white outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Bitiş Saati</label>
+                            <input type="time" id="mola-end-time" class="w-full p-2 text-sm border rounded bg-white outline-none focus:ring-2 focus:ring-red-500">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="addMolaToTimeline()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded text-sm transition flex items-center justify-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-plus"></i> Çizelgeye Mola Ekle
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Görsel Timeline Çizelgesi -->
+                    <div class="overflow-x-auto border border-gray-200 rounded-xl bg-gray-50 shadow-inner">
+                        <div class="min-w-[1200px]">
+                            <!-- Saat Başlıkları -->
+                            <div class="flex border-b bg-white">
+                                <div class="w-56 p-3 border-r font-bold text-[11px] text-gray-600 uppercase flex items-center bg-gray-100">Personel Adı</div>
+                                <div class="flex-1 grid grid-cols-48" id="timeline-header-hours">
+                                    <!-- Saatler JS ile basılacak veya statik eklenecek. Hata düzeltildi: -->
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">00:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">01:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">02:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">03:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">04:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">05:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">06:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">07:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">08:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">09:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">10:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">11:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">12:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">13:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">14:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">15:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">16:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">17:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">18:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">19:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">20:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">21:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">22:00</div>
+                                    <div class="border-r border-gray-100 p-2 text-center text-[10px] font-bold text-gray-500 bg-white">23:00</div>
+                                </div>
+                            </div>
+                            <!-- Personel Satırları -->
+                            <div id="mola-timeline-rows" class="divide-y divide-gray-100 bg-white">
+                                <div class="p-8 text-center text-gray-400 text-xs italic">Henüz bir mola planlaması yapılmadı.</div>
                             </div>
                         </div>
                     </div>
@@ -760,6 +1262,9 @@
                     <button onclick="switchReportSubTab('shift')" id="btn-subtab-shift" class="report-subtab-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
                         <i class="fa-solid fa-clock"></i> Vardiya Raporları
                     </button>
+                    <button onclick="switchReportSubTab('mola')" id="btn-subtab-mola" class="report-subtab-btn bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-mug-hot"></i> Mola Çizelgesi Raporları
+                    </button>
                 </div>
 
                 <!-- DAĞITIM RAPORLARI ALT SEKME -->
@@ -791,21 +1296,39 @@
                     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
                         <div>
                             <h3 class="text-lg font-bold text-gray-700">Vardiya Raporları</h3>
-                            <p class="text-xs text-gray-500">Vardiya planı raporlarını tarihe göre filtreleyin.</p>
+                            <p class="text-xs text-gray-500">Personel vardiya kayıtlarını tarihe göre filtreleyin.</p>
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="flex items-center gap-2 bg-white p-2 border rounded-lg shadow-sm">
                                 <i class="fa-solid fa-calendar text-gray-400 text-sm"></i>
                                 <input type="date" id="shift-date-filter" onchange="renderShiftReports()" class="text-sm border-none outline-none bg-transparent font-medium">
                             </div>
-                            <button onclick="clearShiftDateFilter()" class="bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs font-bold px-3 py-2 rounded-lg transition">
-                                <i class="fa-solid fa-filter-circle-xmark"></i> Filtreyi Temizle
-                            </button>
                         </div>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-sm border">
-                        <div id="shift-reports-list" class="space-y-3">
+                        <div id="shift-reports-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div class="text-gray-400">Henüz kaydedilmiş vardiya raporu bulunmuyor.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MOLA RAPORLARI ALT SEKME -->
+                <div id="subtab-mola" class="report-subtab hidden">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-700">Mola Çizelgesi Raporları</h3>
+                            <p class="text-xs text-gray-500">Mola planlama kayıtlarını tarihe göre filtreleyin.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-2 bg-white p-2 border rounded-lg shadow-sm">
+                                <i class="fa-solid fa-calendar text-gray-400 text-sm"></i>
+                                <input type="date" id="mola-date-filter" onchange="renderMolaReports()" class="text-sm border-none outline-none bg-transparent font-medium">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                        <div id="mola-reports-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="text-gray-400">Henüz kaydedilmiş mola raporu bulunmuyor.</div>
                         </div>
                     </div>
                 </div>
@@ -884,6 +1407,11 @@
         let currentDistRegion = 'Tümü';
         let currentSchedRegion = 'Tümü';
         let targetKadro = 122; // Kadro hedef global değişken
+        
+        // YENİ: Mola Takvimi Global Verisi
+        let molaSchedules = {}; // { personelId: [ {start: '10:00', end: '10:30', duration: 30}, ... ] }
+        let currentMolaPeriod = 'yaz'; // 'yaz' veya 'okul'
+        let currentOkulType = 'hafta-ici'; // 'hafta-ici' veya 'hafta-sonu'
 
         function showAlert(msg) {
             const box = document.getElementById('alert-box');
@@ -945,6 +1473,13 @@
                             return foundP ? foundP.name : item;
                         });
                     }
+                });
+
+                // YENİ: Mola Verilerini Yükle
+                const molaSnapshot = await getDocs(collection(db, "molaSchedules"));
+                molaSchedules = {};
+                molaSnapshot.forEach(doc => {
+                    molaSchedules[doc.id] = doc.data().list || [];
                 });
 
                 const taskSnapshot = await getDocs(collection(db, "tasks"));
@@ -1052,7 +1587,6 @@
                 adminTabs.forEach(id => {
                     if(document.getElementById(id)) document.getElementById(id).style.display = 'none';
                 });
-                // Personel direkt profil sekmesine yönlendirilir (Artık bildirim sekmesi yok)
                 switchTab('profile');
             } else if (currentUser.role === 'Manager') {
                 adminTabs.forEach(id => {
@@ -1141,7 +1675,7 @@
             const targetBtn = document.getElementById(`btn-tab-${tabId}`);
             if (targetBtn) targetBtn.classList.add('bg-slate-700');
 
-            if (tabId === 'reports') renderDistributionReports();
+            if (tabId === 'reports') { renderDistributionReports(); renderShiftReports(); renderMolaReports(); }
             if (tabId === 'profile') loadProfileInfo();
             if (tabId === 'overview') await renderOverview();
         }
@@ -1666,7 +2200,389 @@
                     </span>
                 `).join('') || '<span class="text-xs text-gray-400 italic mt-1">Şu an molada kimse yok.</span>';
             }
+            
+            // YENİ: Mola dropdown ve timeline güncellemesi
+            updateMolaPersonSelect(filteredActive);
+            renderMolaTimeline();
         }
+
+        // YENİ MOLA FONKSİYONLARI
+        function updateMolaPersonSelect(activePersonnel) {
+            const select = document.getElementById('mola-person-select');
+            if(!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">Aktif Personel Seçin...</option>' + 
+                activePersonnel.map(p => `<option value="${p.id}">${p.name} (${p.shift})</option>`).join('');
+            select.value = currentVal;
+        }
+
+        async function addMolaToTimeline() {
+            const pId = document.getElementById('mola-person-select').value;
+            const start = document.getElementById('mola-start-time').value;
+            const end = document.getElementById('mola-end-time').value;
+
+            if(!pId || !start || !end) {
+                showAlert("Lütfen personel ve saat aralıklarını seçin!");
+                return;
+            }
+
+            const startMin = timeToMinutes(start);
+            const endMin = timeToMinutes(end);
+            const duration = endMin - startMin;
+
+            if(duration <= 0) {
+                showAlert("Hata: Bitiş saati başlangıç saatinden sonra olmalıdır!");
+                return;
+            }
+
+            // Toplam mola kontrolü (60 dk limit)
+            let currentTotal = (molaSchedules[pId] || []).reduce((sum, m) => sum + m.duration, 0);
+            if(currentTotal + duration > 60) {
+                showAlert(`Hata: Personelin toplam mola süresi 60 dakikayı geçemez! (Mevcut: ${currentTotal} dk, Eklenen: ${duration} dk)`);
+                return;
+            }
+
+            if(!molaSchedules[pId]) molaSchedules[pId] = [];
+            molaSchedules[pId].push({ start, end, duration, startMin, endMin });
+
+            // Firebase'e kaydet
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "molaSchedules", String(pId)), { list: molaSchedules[pId] });
+            
+            renderMolaTimeline();
+            showAlert("Mola çizelgeye başarıyla eklendi.");
+        }
+
+        async function removeMola(pId, index) {
+            if(confirm("Bu molayı silmek istediğinize emin misiniz?")) {
+                molaSchedules[pId].splice(index, 1);
+                if(molaSchedules[pId].length === 0) {
+                    delete molaSchedules[pId];
+                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "molaSchedules", String(pId)));
+                } else {
+                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "molaSchedules", String(pId)), { list: molaSchedules[pId] });
+                }
+                renderMolaTimeline();
+            }
+        }
+
+        function timeToMinutes(t) {
+            const [h, m] = t.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function setMolaPeriod(period) {
+            currentMolaPeriod = period;
+            const btnYaz = document.getElementById('btn-period-yaz');
+            const btnOkul = document.getElementById('btn-period-okul');
+            const okulSub = document.getElementById('okul-sub-filters');
+
+            if (period === 'yaz') {
+                btnYaz.className = "px-4 py-1.5 rounded-md text-xs font-bold transition bg-red-600 text-white";
+                btnOkul.className = "px-4 py-1.5 rounded-md text-xs font-bold transition text-gray-600 hover:bg-gray-100";
+                okulSub.classList.add('hidden');
+            } else {
+                btnYaz.className = "px-4 py-1.5 rounded-md text-xs font-bold transition text-gray-600 hover:bg-gray-100";
+                btnOkul.className = "px-4 py-1.5 rounded-md text-xs font-bold transition bg-red-600 text-white";
+                okulSub.classList.remove('hidden');
+            }
+        }
+
+        function setOkulType(type) {
+            currentOkulType = type;
+            const btnIci = document.getElementById('btn-okul-ici');
+            const btnSonu = document.getElementById('btn-okul-sonu');
+
+            if (type === 'hafta-ici') {
+                btnIci.className = "px-4 py-1.5 rounded-md text-xs font-bold transition bg-slate-700 text-white";
+                btnSonu.className = "px-4 py-1.5 rounded-md text-xs font-bold transition text-gray-600 hover:bg-gray-100";
+            } else {
+                btnIci.className = "px-4 py-1.5 rounded-md text-xs font-bold transition text-gray-600 hover:bg-gray-100";
+                btnSonu.className = "px-4 py-1.5 rounded-md text-xs font-bold transition bg-slate-700 text-white";
+            }
+        }
+
+        async function clearAllMola() {
+            if(confirm("Tüm mola planlamasını silmek istediğinize emin misiniz?")) {
+                const ids = Object.keys(molaSchedules);
+                for(let id of ids) {
+                    await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "molaSchedules", String(id)));
+                }
+                molaSchedules = {};
+                renderMolaTimeline();
+                showAlert("Tüm mola çizelgesi temizlendi.");
+            }
+        }
+
+        function renderMolaTimeline() {
+            const container = document.getElementById('mola-timeline-rows');
+            const scheduledIds = Object.keys(molaSchedules);
+
+            if(scheduledIds.length === 0) {
+                container.innerHTML = '<div class="p-8 text-center text-gray-400 text-xs italic">Henüz bir mola planlaması yapılmadı.</div>';
+                return;
+            }
+
+            container.innerHTML = scheduledIds.map(pId => {
+                const person = personeller.find(p => String(p.id) === String(pId));
+                if(!person) return '';
+                
+                const plans = molaSchedules[pId];
+                const totalUsed = plans.reduce((sum, m) => sum + m.duration, 0);
+                const maxMola = (person.type && person.type.toLowerCase().includes('full time')) ? 90 : 60;
+
+                // Hangi aktiviteye atandığını bul
+                let assignedActivityName = "Atanmadı";
+                for (let actId in assignments) {
+                    if (actId !== 'molacilar' && assignments[actId].includes(person.name)) {
+                        const act = activities.find(a => String(a.id) === String(actId));
+                        if (act) assignedActivityName = act.name;
+                        break;
+                    }
+                }
+
+                return `
+                    <div class="flex items-stretch group hover:bg-gray-50 transition-colors">
+                        <div class="w-56 p-3 border-r bg-gray-50 flex flex-col justify-center">
+                            <div class="flex justify-between items-start">
+                                <span class="font-bold text-xs text-gray-800">${person.name}</span>
+                                <span class="text-[8px] bg-blue-100 text-blue-700 px-1 rounded font-bold">${assignedActivityName}</span>
+                            </div>
+                            <span class="text-[9px] text-gray-500 italic mb-1">${person.shift}</span>
+                            <span class="text-[10px] ${totalUsed > maxMola ? 'text-red-600' : 'text-green-600'} font-bold">Mola: ${totalUsed}/${maxMola} dk</span>
+                        </div>
+                        <div class="flex-1 relative h-14 bg-white grid grid-cols-48" ondragover="event.preventDefault()" ondrop="handleMolaDrop(event, '${pId}')">
+                            <!-- Arka plan saat çizgileri -->
+                            ${Array.from({length: 48}).map((_, i) => `<div class="border-r ${i % 2 === 0 ? 'border-gray-200' : 'border-gray-100 border-dashed'} h-full ${i >= 18 && i <= 38 ? 'bg-blue-50/10' : ''}"></div>`).join('')}
+                            
+                            <!-- Mola Blokları -->
+                            ${plans.map((m, idx) => {
+                                const leftPercent = (m.startMin / 1440) * 100;
+                                const widthPercent = (m.duration / 1440) * 100;
+                                return `
+                                    <div class="absolute top-2 bottom-2 bg-red-500/90 rounded border border-red-700 shadow-sm flex items-center justify-center text-[9px] text-white font-black pointer-events-auto cursor-move group/mola" draggable="true" ondragstart="handleMolaDragStart(event, '${pId}', ${idx})" ondblclick="handleMolaDoubleClick('${pId}', ${idx})"
+                                         style="left: ${leftPercent}%; width: ${widthPercent}%; min-width: 20px;"
+                                         title="${m.start} - ${m.end} (${m.duration} dk)">
+                                        <span class="truncate px-1">${m.duration}m</span>
+                                        <button onclick="removeMola('${pId}', ${idx})" class="ml-1 text-[11px] opacity-0 group-hover/mola:opacity-100 hover:text-black transition-opacity">×</button>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function runAutoMolaAssignment() {
+            const activeShifts = ['Sabahçı', 'Akşamcı', 'Full'];
+            let staff = personeller.filter(p => activeShifts.includes(p.shift));
+            
+            if (staff.length === 0) {
+                showAlert("Atama yapılacak aktif personel bulunamadı!");
+                return;
+            }
+
+            if (!confirm(`${currentMolaPeriod === 'yaz' ? 'Yaz Dönemi' : 'Okul Dönemi'} için otomatik mola dağıtımı yapılsın mı? Mevcut çizelge üzerine eklenecektir.`)) return;
+
+            const newSchedules = { ...molaSchedules };
+            const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0];
+
+            function addMola(pId, startH, startM, duration) {
+                if (!newSchedules[pId]) newSchedules[pId] = [];
+                const startMin = startH * 60 + startM;
+                const endMin = startMin + duration;
+                const startStr = `${String(startH).padStart(2,'0')}:${String(startM).padStart(2,'0')}`;
+                const endH = Math.floor(endMin / 60);
+                const endM = endMin % 60;
+                const endStr = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+                
+                newSchedules[pId].push({
+                    start: startStr,
+                    end: endStr,
+                    duration: duration,
+                    startMin: startMin,
+                    endMin: endMin
+                });
+            }
+
+            const morningAndFull = staff.filter(p => p.shift === 'Sabahçı' || p.shift === 'Full');
+            const evening = staff.filter(p => p.shift === 'Akşamcı');
+            const fullStaff = staff.filter(p => p.shift === 'Full');
+
+            let currentMin = 11 * 60; // Başlangıç saati 11:00
+            const breakDuration = 30; // Her mola 30 dakika
+            const maxSimultaneous = 3;
+
+            function scheduleGroup(group) {
+                for (let i = 0; i < group.length; i += maxSimultaneous) {
+                    const batch = group.slice(i, i + maxSimultaneous);
+                    batch.forEach(p => {
+                        addMola(p.id, Math.floor(currentMin / 60), currentMin % 60, breakDuration);
+                    });
+                    currentMin += breakDuration;
+                }
+            }
+
+            // 1. Molalar: Sabahçı ve Full (Max 3 kişi)
+            scheduleGroup(morningAndFull);
+
+            // 1. Molalar: Akşamcı (Sabahçılar bitince başlar, Max 3 kişi)
+            scheduleGroup(evening);
+
+            // 2. Molalar: Sabahçı ve Full (1. molalar bitince başlar, Max 3 kişi)
+            scheduleGroup(morningAndFull);
+
+            // 2. Molalar: Akşamcı (Sabahçılar bitince başlar, Max 3 kişi)
+            scheduleGroup(evening);
+
+            // 3. Molalar: Sadece Full (2. molalar bitince başlar, Sırayla/Batch Max 3 kişi)
+            scheduleGroup(fullStaff);
+
+            // Firebase'e kaydet
+            for (let pId in newSchedules) {
+                molaSchedules[pId] = newSchedules[pId];
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "molaSchedules", `${date}_${pId}`), { 
+                    list: molaSchedules[pId],
+                    date: date
+                });
+            }
+            
+            renderMolaTimeline();
+            showAlert("Otomatik mola dağıtımı başarıyla tamamlandı.");
+        }
+        // MOLA FONKSİYONLARI SONU
+        // --- YENİ EKLENEN MOLA VE PERSISTENCE FONKSİYONLARI ---
+        function handleMolaDragStart(e, pId, index) {
+            e.dataTransfer.setData("pId", pId);
+            e.dataTransfer.setData("index", index);
+        }
+
+        async function handleMolaDrop(e, targetPId) {
+            e.preventDefault();
+            const sourcePId = e.dataTransfer.getData("pId");
+            const index = parseInt(e.dataTransfer.getData("index"));
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const newStartMin = Math.round((x / rect.width) * 1440 / 30) * 30;
+            
+            if (molaSchedules[sourcePId] && molaSchedules[sourcePId][index]) {
+                const mola = molaSchedules[sourcePId][index];
+                const duration = mola.duration;
+                if (sourcePId !== targetPId) {
+                    if (!molaSchedules[targetPId]) molaSchedules[targetPId] = [];
+                    molaSchedules[targetPId].push({...mola, startMin: newStartMin, start: minutesToTime(newStartMin), endMin: newStartMin + duration, end: minutesToTime(newStartMin + duration)});
+                    molaSchedules[sourcePId].splice(index, 1);
+                    if (molaSchedules[sourcePId].length === 0) delete molaSchedules[sourcePId];
+                } else {
+                    mola.startMin = newStartMin; mola.start = minutesToTime(newStartMin);
+                    mola.endMin = newStartMin + duration; mola.end = minutesToTime(newStartMin + duration);
+                }
+                await saveMolaToFirebase(); renderMolaTimeline();
+            }
+        }
+
+        function minutesToTime(min) {
+            const h = Math.floor(min / 60); const m = min % 60;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        }
+
+        async function handleMolaDoubleClick(pId, index) {
+            const mola = molaSchedules[pId][index];
+            const newDuration = prompt("Mola süresini giriniz (dakika):", mola.duration);
+            if (newDuration === null) return;
+            const duration = parseInt(newDuration);
+            if (isNaN(duration) || duration <= 0) return showAlert("Geçersiz süre!");
+            
+            const person = personeller.find(p => String(p.id) === String(pId));
+            const maxMola = (person.type && person.type.toLowerCase().includes('full time')) ? 90 : 60;
+            
+            mola.duration = duration; mola.endMin = mola.startMin + duration; mola.end = minutesToTime(mola.endMin);
+            const plans = molaSchedules[pId];
+            if (plans.length > 1) {
+                const otherIndex = index === 0 ? 1 : 0;
+                const otherMola = plans[otherIndex];
+                const remaining = maxMola - duration;
+                if (remaining > 0) { otherMola.duration = remaining; otherMola.endMin = otherMola.startMin + remaining; otherMola.end = minutesToTime(otherMola.endMin); }
+            }
+            await saveMolaToFirebase(); renderMolaTimeline();
+        }
+
+        async function saveMolaToFirebase() {
+            const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0];
+            for (let pId in molaSchedules) {
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "molaSchedules", `${date}_${pId}`), { list: molaSchedules[pId], date: date });
+            }
+        }
+
+        async function changeDashboardDate(date) {
+            if (!date) return;
+            const shiftDoc = await window.colDocs.getDoc(window.colDocs.doc(window.db, "dailyShifts", date));
+            if (shiftDoc.exists()) {
+                const data = shiftDoc.data().shifts || {};
+                personeller.forEach(p => { p.shift = data[p.id] || 'Seçilmedi'; });
+            } else { personeller.forEach(p => p.shift = 'Seçilmedi'); }
+            
+            const assignSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, `dailyAssignments/${date}/activities`));
+            assignments = {};
+            assignSnapshot.forEach(doc => { assignments[doc.id] = doc.data().list.map(id => { const p = personeller.find(x => String(x.id) === String(id)); return p ? p.name : id; }); });
+            
+            const molaSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "molaSchedules"));
+            molaSchedules = {};
+            molaSnapshot.forEach(doc => { const d = doc.data(); if (d.date === date) { const pId = doc.id.replace(`${date}_`, ''); molaSchedules[pId] = d.list; } });
+            renderDashboard(); renderMolaTimeline();
+        }
+
+        async function saveMolaReport() {
+            const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0];
+            const dParts = date.split('-'); 
+            const formattedDate = `${dParts[2]}.${dParts[1]}.${dParts[0]}`;
+            
+            let regionName = "Tümü";
+            if (currentUser.role === 'Manager' && currentUser.assignedRegions?.length > 0) regionName = currentUser.assignedRegions[0];
+            
+            const reportId = Date.now();
+            const molaReport = { 
+                id: reportId, 
+                type: 'Mola Raporu', 
+                title: `KidZania İstanbul ${regionName} Mola Çizelgesi (${formattedDate})`, 
+                date: date, 
+                reportDate: formattedDate, 
+                region: regionName, 
+                createdAt: new Date().toLocaleString(), 
+                data: Object.keys(molaSchedules).map(pId => { 
+                    const p = personeller.find(x => String(x.id) === String(pId)); 
+                    return { 
+                        name: p ? p.name : pId, 
+                        shift: p ? p.shift : '-',
+                        plans: molaSchedules[pId] 
+                    }; 
+                }) 
+            };
+            
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(reportId)), molaReport);
+            savedReports.unshift(molaReport); 
+            renderReports(); 
+            showAlert("Mola raporu kaydedildi ve raporlara eklendi.");
+        }
+
+        function renderMolaReports() {
+            const list = document.getElementById('mola-reports-list'); if (!list) return;
+            const filterVal = document.getElementById('distribution-date-filter')?.value || '';
+            let molaReps = savedReports.filter(r => r.type === 'Mola Raporu');
+            if (currentUser.role === 'Manager' && currentUser.assignedRegions?.length > 0) molaReps = molaReps.filter(r => r.region === currentUser.assignedRegions[0]);
+            if (filterVal) molaReps = molaReps.filter(r => r.date === filterVal);
+            list.innerHTML = molaReps.length > 0 ? molaReps.map(r => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="p-2 bg-orange-100 text-orange-600 rounded-lg"><i class="fa-solid fa-clock-rotate-left text-lg"></i></div>
+                        <div class="flex gap-1"><button onclick="openReportModal('${r.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"><i class="fa-solid fa-eye"></i></button><button onclick="deleteReport('${r.id}')" class="text-red-600 hover:bg-red-50 p-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button></div>
+                    </div>
+                    <h4 class="font-bold text-gray-800 text-sm mb-1 truncate">${r.title}</h4>
+                    <p class="text-[10px] text-gray-500 mb-3"><i class="fa-solid fa-calendar-day mr-1"></i> ${r.createdAt}</p>
+                    <button onclick="openReportModal('${r.id}')" class="w-full bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold py-2 rounded-lg transition border border-gray-200">Detayları Gör</button>
+                </div>`).join('') : '<div class="col-span-full p-8 text-center text-gray-400 text-sm italic">Kayıtlı mola raporu bulunamadı.</div>';
+        }
+
 
         async function assignMolaci(selectElement) {
             const pName = selectElement.value;
@@ -1731,7 +2647,7 @@
                     const found = personeller.find(x => x.name === name);
                     return found ? found.id : name;
                 });
-                await window.colDocs.setDoc(window.colDocs.doc(window.db, "assignments", String(actId)), { list: pIds });
+                const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0]; await window.colDocs.setDoc(window.colDocs.doc(window.db, `dailyAssignments/${date}/activities`, String(actId)), { list: pIds });
             }
 
             selectElement.value = "";
@@ -1746,7 +2662,7 @@
                     const found = personeller.find(x => x.name === name);
                     return found ? found.id : name;
                 });
-                await window.colDocs.setDoc(window.colDocs.doc(window.db, "assignments", String(actId)), { list: pIds });
+                const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0]; await window.colDocs.setDoc(window.colDocs.doc(window.db, `dailyAssignments/${date}/activities`, String(actId)), { list: pIds });
                 
                 renderDashboard();
             }
@@ -1842,7 +2758,7 @@
                 filteredPersonnel = personeller.filter(p => p.region === managerRegion);
                 currentSchedRegion = managerRegion;
             } else if (currentSchedRegion !== 'Tümü') {
-                filteredPersonnel = personeller.filter(p => p.region === currentSchedRegion);
+                filteredPersonnel = personeller.filter(p => personeller.filter(p => p.region === currentSchedRegion));
             }
 
             tbody.innerHTML = filteredPersonnel.map(p => {
@@ -2150,7 +3066,7 @@
                                         const found = personeller.find(x => x.name === name);
                                         return found ? found.id : name;
                                     });
-                                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "assignments", String(actId)), { list: pIds });
+                                    const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0]; await window.colDocs.setDoc(window.colDocs.doc(window.db, `dailyAssignments/${date}/activities`, String(actId)), { list: pIds });
                                 }
                             }
                         }
@@ -2199,7 +3115,7 @@
                         const found = personeller.find(x => x.name === name);
                         return found ? found.id : name;
                     });
-                    await window.colDocs.setDoc(window.colDocs.doc(window.db, "assignments", String(actId)), { list: pIds });
+                    const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0]; await window.colDocs.setDoc(window.colDocs.doc(window.db, `dailyAssignments/${date}/activities`, String(actId)), { list: pIds });
                 }
             });
             
@@ -2314,151 +3230,156 @@
 
             if (tabName === 'distribution') {
                 renderDistributionReports();
-            } else {
+            } else if (tabName === 'shift') {
                 renderShiftReports();
+            } else if (tabName === 'mola') {
+                renderMolaReports();
             }
+        }
+
+
+        function switchReportTab(tab) {
+            const tabs = ['distribution', 'shift', 'mola'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`btn-report-${t}`);
+                const list = document.getElementById(`${t}-reports-list`);
+                if (btn) btn.className = 'pb-2 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-bold text-sm';
+                if (list) list.classList.add('hidden');
+            });
+
+            const activeBtn = document.getElementById(`btn-report-${tab}`);
+            const activeList = document.getElementById(`${tab}-reports-list`);
+            if (activeBtn) activeBtn.className = 'pb-2 px-1 border-b-2 border-red-600 text-red-600 font-bold text-sm';
+            if (activeList) activeList.classList.remove('hidden');
+
+            if (tab === 'distribution') renderDistributionReports();
+            else if (tab === 'shift') renderShiftReports();
+            else if (tab === 'mola') renderMolaReports();
         }
 
         function renderDistributionReports() {
             const list = document.getElementById('distribution-reports-list');
-            const isAdmin = currentUser && currentUser.role === 'Admin';
-            const isAuthorized = currentUser && ['Admin', 'Yönetici', 'Manager'].includes(currentUser.role);
-            const filterVal = document.getElementById('distribution-date-filter') ? document.getElementById('distribution-date-filter').value : '';
-
-            let distributionReps = savedReports.filter(r => r.type && r.type.includes('Dağıtım Raporu'));
-
-            if (currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
-                distributionReps = distributionReps.filter(r => r.type.includes(currentUser.assignedRegions[0]));
+            if (!list) return;
+            const filterVal = document.getElementById('distribution-date-filter').value;
+            
+            let distReps = savedReports.filter(r => r.type === 'Dağıtım Raporu' || !r.type);
+            
+            if (currentUser.role === 'Manager' && currentUser.assignedRegions?.length > 0) {
+                const region = currentUser.assignedRegions[0];
+                distReps = distReps.filter(r => r.region === region || (r.title && r.title.includes(region)));
             }
 
             if (filterVal) {
-                distributionReps = distributionReps.filter(r => {
-                    const repDate = r.reportDate || parseTurkishDate(r.date);
-                    if (!repDate) return false;
-                    const parts = repDate.split('.');
-                    if (parts.length === 3) {
-                        return `${parts[2]}-${parts[1]}-${parts[0]}` === filterVal;
-                    }
-                    return repDate === filterVal;
-                });
+                distReps = distReps.filter(r => r.date === filterVal);
             }
 
-            if (distributionReps.length === 0) {
-                list.innerHTML = filterVal
-                    ? '<div class="text-gray-400 italic">Seçilen tarihe ait dağıtım raporu bulunamadı.</div>'
-                    : '<div class="text-gray-400">Henüz kaydedilmiş dağıtım raporu bulunmuyor.</div>';
+            if (distReps.length === 0) {
+                list.innerHTML = '<div class="col-span-full p-8 text-center text-gray-400 text-sm italic">Kayıtlı dağıtım raporu bulunamadı.</div>';
                 return;
             }
 
-            list.innerHTML = distributionReps.map(rep => {
-                const reportDate = rep.reportDate || rep.date;
-                const reportTitle = rep.title || (rep.type ? `${reportDate} tarihli ${rep.type}` : `${reportDate} tarihli aktivite dağılım raporu`);
-                return `
-                <div class="flex items-center justify-between p-4 bg-gray-50 border rounded-lg hover:bg-gray-100 transition">
-                    <div>
-                        <div class="font-bold text-sm text-gray-800">
-                            <i class="fa-solid fa-file-contract text-red-600 mr-1"></i> 
-                            ${reportTitle}
+            list.innerHTML = distReps.map(rep => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="p-2 bg-red-50 text-red-600 rounded-lg"><i class="fa-solid fa-file-lines text-lg"></i></div>
+                        <div class="flex gap-1">
+                            <button onclick="openReportModal(${rep.id})" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="deleteReport(${rep.id})" class="text-red-600 hover:bg-red-50 p-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <div class="text-xs text-gray-500 mt-0.5">Kayıt: ${rep.date}</div>
                     </div>
-                    <div class="flex gap-2">
-                        ${isAuthorized ? `<button onclick="openReportModal(${rep.id})" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded text-xs font-bold transition">Görüntüle</button>` : ''}
-                        ${isAdmin ? `<button onclick="deleteReport(${rep.id})" class="bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button>` : ''}
-                    </div>
+                    <h4 class="font-bold text-gray-800 text-sm mb-1 truncate">${rep.title || rep.date + ' Raporu'}</h4>
+                    <p class="text-[10px] text-gray-500 mb-3"><i class="fa-solid fa-calendar-day mr-1"></i> ${rep.reportDate || rep.date}</p>
+                    <button onclick="openReportModal(${rep.id})" class="w-full bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold py-2 rounded-lg transition border border-gray-200">Detayları Gör</button>
                 </div>
-            `}).join('');
+            `).join('');
         }
 
         function renderShiftReports() {
             const list = document.getElementById('shift-reports-list');
-            const isAdmin = currentUser && currentUser.role === 'Admin';
-            const isAuthorized = currentUser && ['Admin', 'Yönetici', 'Manager'].includes(currentUser.role);
-            const filterVal = document.getElementById('shift-date-filter') ? document.getElementById('shift-date-filter').value : '';
-
+            if (!list) return;
+            const filterVal = document.getElementById('shift-date-filter').value;
+            
             let shiftReps = savedReports.filter(r => r.type && r.type.includes('Vardiya Raporu'));
-
-            if (currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
-                shiftReps = shiftReps.filter(r => r.type.includes(currentUser.assignedRegions[0]));
+            
+            if (currentUser.role === 'Manager' && currentUser.assignedRegions?.length > 0) {
+                const region = currentUser.assignedRegions[0];
+                shiftReps = shiftReps.filter(r => r.region === region || (r.title && r.title.includes(region)));
             }
 
             if (filterVal) {
-                shiftReps = shiftReps.filter(r => {
-                    if (r.date === filterVal) return true;
-                    if (r.reportDate) {
-                        const parts = r.reportDate.split('.');
-                        if (parts.length === 3) {
-                            return `${parts[2]}-${parts[1]}-${parts[0]}` === filterVal;
-                        }
-                    }
-                    return false;
-                });
+                shiftReps = shiftReps.filter(r => r.date === filterVal);
             }
 
             if (shiftReps.length === 0) {
-                list.innerHTML = filterVal
-                    ? '<div class="text-gray-400 italic">Seçilen tarihe ait vardiya raporu bulunamadı.</div>'
-                    : '<div class="text-gray-400">Henüz kaydedilmiş vardiya raporu bulunmuyor.</div>';
+                list.innerHTML = '<div class="col-span-full p-8 text-center text-gray-400 text-sm italic">Kayıtlı vardiya raporu bulunamadı.</div>';
                 return;
             }
 
-            function formatDateTurkish(dateStr) {
-                if (!dateStr) return '';
-                const parts = dateStr.split('-');
-                if (parts.length === 3) {
-                    return `${parts[2]}.${parts[1]}.${parts[0]}`;
-                }
-                return dateStr;
+            list.innerHTML = shiftReps.map(rep => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i class="fa-solid fa-clipboard-user text-lg"></i></div>
+                        <div class="flex gap-1">
+                            <button onclick="openReportModal(${rep.id})" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="deleteReport(${rep.id})" class="text-red-600 hover:bg-red-50 p-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <h4 class="font-bold text-gray-800 text-sm mb-1 truncate">${rep.title}</h4>
+                    <p class="text-[10px] text-gray-500 mb-3"><i class="fa-solid fa-calendar-day mr-1"></i> ${rep.reportDate || rep.date}</p>
+                    <button onclick="openReportModal(${rep.id})" class="w-full bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold py-2 rounded-lg transition border border-gray-200">Detayları Gör</button>
+                </div>
+            `).join('');
+        }
+
+        function renderMolaReports() {
+            const list = document.getElementById('mola-reports-list');
+            if (!list) return;
+            const filterVal = document.getElementById('distribution-date-filter')?.value || '';
+            
+            let molaReps = savedReports.filter(r => r.type === 'Mola Raporu');
+            
+            if (currentUser.role === 'Manager' && currentUser.assignedRegions?.length > 0) {
+                const region = currentUser.assignedRegions[0];
+                molaReps = molaReps.filter(r => r.region === region);
             }
 
-            list.innerHTML = shiftReps.map(rep => {
-                const formattedDate = rep.reportDate || formatDateTurkish(rep.date);
-                const reportTitle = rep.title || (rep.type ? `${formattedDate} tarihli ${rep.type}` : `${formattedDate} tarihli vardiya raporu`);
-                return `
-                <div class="flex items-center justify-between p-4 bg-gray-50 border rounded-lg hover:bg-gray-100 transition">
-                    <div>
-                        <div class="font-bold text-sm text-gray-800">
-                            <i class="fa-solid fa-clock text-blue-600 mr-1"></i> 
-                            ${reportTitle}
+            if (filterVal) {
+                molaReps = molaReps.filter(r => r.date === filterVal);
+            }
+
+            if (molaReps.length === 0) {
+                list.innerHTML = '<div class="col-span-full p-8 text-center text-gray-400 text-sm italic">Kayıtlı mola raporu bulunamadı.</div>';
+                return;
+            }
+
+            list.innerHTML = molaReps.map(r => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="p-2 bg-orange-100 text-orange-600 rounded-lg"><i class="fa-solid fa-clock-rotate-left text-lg"></i></div>
+                        <div class="flex gap-1">
+                            <button onclick="openReportModal(${r.id})" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="deleteReport(${r.id})" class="text-red-600 hover:bg-red-50 p-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <div class="text-xs text-gray-500 mt-0.5">Kayıt: ${rep.date}</div>
                     </div>
-                    <div class="flex gap-2">
-                        ${isAuthorized ? `<button onclick="openReportModal(${rep.id})" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded text-xs font-bold transition">Görüntüle</button>` : ''}
-                        ${isAdmin ? `<button onclick="deleteReport(${rep.id})" class="bg-red-100 hover:bg-red-200 text-red-600 px-2 py-1.5 rounded transition"><i class="fa-solid fa-trash"></i></button>` : ''}
-                    </div>
+                    <h4 class="font-bold text-gray-800 text-sm mb-1 truncate">${r.title}</h4>
+                    <p class="text-[10px] text-gray-500 mb-3"><i class="fa-solid fa-calendar-day mr-1"></i> ${r.reportDate || r.date}</p>
+                    <button onclick="openReportModal(${r.id})" class="w-full bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold py-2 rounded-lg transition border border-gray-200">Detayları Gör</button>
                 </div>
-            `}).join('');
-        }
-
-        function clearDistributionDateFilter() {
-            document.getElementById('distribution-date-filter').value = '';
-            renderDistributionReports();
-        }
-
-        function clearShiftDateFilter() {
-            document.getElementById('shift-date-filter').value = '';
-            renderShiftReports();
+            `).join('');
         }
 
         function renderReports() {
             renderDistributionReports();
             renderShiftReports();
+            renderMolaReports();
         }
 
         async function deleteReport(id) {
-            if (currentUser.role !== 'Admin') {
-                showAlert("Bu işlemi yapmak için Admin yetkiniz olmalıdır.");
-                return;
-            }
-            const rep = savedReports.find(r => r.id === id);
-            const reportName = rep && rep.type === 'Vardiya Raporu' ? 'Vardiya Raporunu' : 'Dağıtım Raporunu';
-            
-            if(confirm(`${reportName} silmek istediğinize emin misiniz?`)) {
+            if(confirm('Raporu silmek istediğinize emin misiniz?')) {
                 savedReports = savedReports.filter(r => r.id !== id);
                 await window.colDocs.deleteDoc(window.colDocs.doc(window.db, "savedReports", String(id)));
                 renderReports();
-                showAlert(`${reportName} silindi.`);
+                showAlert("Rapor silindi.");
             }
         }
 
@@ -2467,78 +3388,72 @@
             if(!rep) return;
 
             const isShiftReport = rep.type && rep.type.includes('Vardiya Raporu');
+            const isMolaReport = rep.type === 'Mola Raporu';
             const modalDate = rep.reportDate || rep.date;
-            document.getElementById('modal-title').innerText = rep.title || (isShiftReport ? `Vardiya Raporu: ${modalDate}` : `Dağıtım Raporu: ${modalDate}`);
+            
+            document.getElementById('modal-title').innerText = rep.title || (isMolaReport ? `Mola Raporu: ${modalDate}` : (isShiftReport ? `Vardiya Raporu: ${modalDate}` : `Dağıtım Raporu: ${modalDate}`));
             
             const content = document.getElementById('modal-content');
-            if (isShiftReport) {
+            const excelBtn = document.getElementById('modal-excel-btn');
+            const pdfBtn = document.getElementById('modal-pdf-btn');
+
+            if (isMolaReport) {
+                excelBtn.classList.remove('hidden');
+                excelBtn.onclick = () => downloadMolaExcel(rep);
+                pdfBtn.onclick = () => downloadMolaPDF(rep);
+                
                 content.innerHTML = `
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-[10px] border-collapse border border-gray-300">
+                    <div class="overflow-x-auto col-span-full">
+                        <table class="w-full text-left text-[11px] border-collapse border border-gray-300">
                             <thead>
-                                <tr class="bg-red-600 text-white">
-                                    <th class="p-2 border border-gray-300">Personel</th>
-                                    <th class="p-2 border border-gray-300">Giriş</th>
-                                    <th class="p-2 border border-gray-300">1. Mola</th>
-                                    <th class="p-2 border border-gray-300">Dönüş</th>
-                                    <th class="p-2 border border-gray-300">2. Mola</th>
-                                    <th class="p-2 border border-gray-300">Dönüş</th>
-                                    <th class="p-2 border border-gray-300">3. Mola</th>
-                                    <th class="p-2 border border-gray-300">Dönüş</th>
-                                    <th class="p-2 border border-gray-300">Çıkış</th>
-                                    <th class="p-2 border border-gray-300">İmza</th>
+                                <tr class="bg-gray-100">
+                                    <th class="border p-2">Personel</th>
+                                    <th class="border p-2">Vardiya</th>
+                                    <th class="border p-2">Molalar</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${rep.data.filter(item => item.shift === 'Sabahçı' || item.shift === 'Akşamcı').map(item => `
-                                    <tr class="border-b">
-                                        <td class="p-2 border border-gray-300">
-                                            <div class="font-bold">${item.name}</div>
-                                            <div class="text-[8px] text-gray-500">${item.type || ''} | ${item.shift}</div>
+                                ${rep.data.map(item => `
+                                    <tr>
+                                        <td class="border p-2 font-bold">${item.name}</td>
+                                        <td class="border p-2">${item.shift}</td>
+                                        <td class="border p-2">
+                                            ${item.plans.map(p => `<span class="inline-block bg-orange-50 text-orange-700 px-2 py-0.5 rounded border border-orange-200 mr-1 mb-1">${p.start} - ${p.end} (${p.duration} dk)</span>`).join('')}
                                         </td>
-                                        <td class="p-2 border border-gray-300"></td>
-                                        <td class="p-2 border border-gray-300"></td>
-                                        <td class="p-2 border border-gray-300"></td>
-                                        <td class="p-2 border border-gray-300"></td>
-                                        <td class="p-2 border border-gray-300"></td>
-                                        <td class="p-2 border border-gray-300"></td>
-                                        <td class="p-2 border border-gray-300"></td>
-                                        <td class="p-2 border border-gray-300"></td>
-                                        <td class="p-2 border border-gray-300"></td>
                                     </tr>
                                 `).join('')}
                             </tbody>
                         </table>
-                        <div class="mt-2 text-[9px] text-gray-400 italic">* Sadece Sabahçı ve Akşamcı personeller listelenmiştir.</div>
+                    </div>
+                `;
+            } else if (isShiftReport) {
+                excelBtn.classList.remove('hidden');
+                excelBtn.onclick = () => generateVardiyaExcel(rep);
+                pdfBtn.onclick = () => generateHorizontalPDF(rep);
+                content.innerHTML = `
+                    <div class="col-span-full text-center p-4 italic text-gray-500">
+                        Vardiya raporu detayları Excel veya PDF olarak indirilebilir.
                     </div>
                 `;
             } else {
+                excelBtn.classList.add('hidden');
+                pdfBtn.onclick = () => generateHorizontalPDF(rep);
                 content.innerHTML = rep.data.map(item => `
-                    <div class="p-2 border rounded bg-gray-50">
-                        <div class="font-bold text-gray-800 mb-1 border-b pb-1">${item.activityName}</div>
-                        <div class="text-red-700 font-medium">${item.assigned}</div>
+                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                        <div class="font-bold text-gray-800 border-b pb-1 mb-2">${item.activityName}</div>
+                        <div class="text-red-600 font-semibold">${item.assigned}</div>
                     </div>
                 `).join('');
             }
-
-            const excelBtn = document.getElementById('modal-excel-btn');
-            if (isShiftReport) {
-                excelBtn.classList.remove('hidden');
-                excelBtn.onclick = () => generateVardiyaExcel(rep);
-            } else {
-                excelBtn.classList.add('hidden');
-            }
-
-            document.getElementById('modal-pdf-btn').onclick = () => generateHorizontalPDF(rep);
+            
             document.getElementById('report-modal').classList.remove('hidden');
         }
 
         async function generateVardiyaExcel(reportData) {
             try {
                 const workbook = XLSX.utils.book_new();
-                
                 const headers = ["Personel Adı", "Giriş", "1. Mola", "Mola Dönüş", "2. Mola", "Mola Dönüş", "3. Mola", "Mola Dönüş", "Çıkış", "İmza"];
-                const activeStaff = reportData.data.filter(item => item.shift === 'Sabahçı' || item.shift === 'Akşamcı');
+                const activeStaff = reportData.data.filter(item => item.shift === 'Sabahçı' || item.shift === 'Akşamcı' || item.shift === 'Full');
 
                 const rows = activeStaff.map(item => {
                     const foundP = personeller.find(p => p.name === item.name);
@@ -2562,79 +3477,11 @@
                 const formattedDate = reportData.reportDate || reportData.date;
                 const excelTitle = `KidZania İstanbul ${regionName} Vardiya Takip Çizelgesi (${formattedDate})`.replace(/\s+/g, ' ').replace("-", "").trim();
 
-                const worksheetData = [
-                    [excelTitle],
-                    [],
-                    headers,
-                    ...rows
-                ];
-
+                const worksheetData = [[excelTitle], [], headers, ...rows];
                 const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-                const titleStyle = {
-                    font: { bold: true, size: 14, color: { rgb: "DC2626" } },
-                    alignment: { horizontal: "center", vertical: "center" }
-                };
-
-                const headerStyle = {
-                    fill: { fgColor: { rgb: "DC2626" } },
-                    font: { bold: true, color: { rgb: "FFFFFF" } },
-                    alignment: { horizontal: "center", vertical: "center" },
-                    border: {
-                        top: { style: "thin", color: { rgb: "000000" } },
-                        bottom: { style: "thin", color: { rgb: "000000" } },
-                        left: { style: "thin", color: { rgb: "000000" } },
-                        right: { style: "thin", color: { rgb: "000000" } }
-                    }
-                };
-
-                const cellStyle = {
-                    alignment: { vertical: "center", wrapText: true },
-                    border: {
-                        top: { style: "thin", color: { rgb: "000000" } },
-                        bottom: { style: "thin", color: { rgb: "000000" } },
-                        left: { style: "thin", color: { rgb: "000000" } },
-                        right: { style: "thin", color: { rgb: "000000" } }
-                    }
-                };
-
-                const range = XLSX.utils.decode_range(worksheet['!ref']);
-                for (let R = range.s.r; R <= range.e.r; ++R) {
-                    for (let C = range.s.c; C <= range.e.c; ++C) {
-                        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                        if (!worksheet[cellRef]) continue;
-
-                        if (R === 0) {
-                            worksheet[cellRef].s = titleStyle;
-                        } else if (R === 2) {
-                            worksheet[cellRef].s = headerStyle;
-                        } else if (R > 2) {
-                            worksheet[cellRef].s = cellStyle;
-                            if (C === 0) {
-                                worksheet[cellRef].s = { 
-                                    ...cellStyle, 
-                                    font: { bold: true, size: 9 },
-                                    alignment: { vertical: "top", wrapText: true }
-                                };
-                            }
-                        }
-                    }
-                }
-
-                worksheet['!merges'] = [
-                    { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }
-                ];
-
-                worksheet['!cols'] = [
-                    { wch: 30 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, 
-                    { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 15 }
-                ];
-
-                worksheet['!rows'] = worksheetData.map((r, i) => i === 0 ? { hpt: 30 } : (i > 2 ? { hpt: 45 } : { hpt: 25 }));
-
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Vardiya Listesi");
-                XLSX.writeFile(workbook, `KidZania_Vardiya_${reportData.reportDate || 'Rapor'}.xlsx`);
-                showAlert("Kurumsal Excel başarıyla oluşturuldu.");
+                XLSX.writeFile(workbook, `KidZania_Vardiya_${formattedDate}.xlsx`);
+                showAlert("Excel başarıyla oluşturuldu.");
             } catch (error) {
                 console.error("Excel Hatası:", error);
                 showAlert("Excel oluşturulurken bir hata oluştu.");
@@ -2649,24 +3496,52 @@
             const template = document.getElementById('pdf-template');
             const grid = document.getElementById('pdf-grid');
             const dateEl = document.getElementById('pdf-date');
-            const isShiftReport = reportData.type === 'Vardiya Raporu';
+            const isShiftReport = reportData.type && reportData.type.includes('Vardiya Raporu');
+            const isMolaReport = reportData.type === 'Mola Raporu';
             
             const titleEl = template.querySelector('h1');
             const subtitleEl = template.querySelector('p');
             
             if (reportData.title) {
                 titleEl.innerText = reportData.title.split(' (')[0];
-                subtitleEl.innerText = reportData.title.includes('Vardiya') ? "Personel Mola Giriş Çıkış Takip Listesi" : "Aktivite Dağıtım Raporu";
+                if (isMolaReport) subtitleEl.innerText = "Personel Mola Planlama Çizelgesi";
+                else subtitleEl.innerText = reportData.title.includes('Vardiya') ? "Personel Mola Giriş Çıkış Takip Listesi" : "Aktivite Dağıtım Raporu";
             } else {
                 titleEl.innerText = "KidZania İstanbul";
-                subtitleEl.innerText = isShiftReport ? "Personel Mola Giriş Çıkış Takip Listesi" : "Aktivite Dağıtım Raporu";
+                subtitleEl.innerText = isMolaReport ? "Personel Mola Planlama Çizelgesi" : (isShiftReport ? "Personel Mola Giriş Çıkış Takip Listesi" : "Aktivite Dağıtım Raporu");
             }
 
-            dateEl.innerText = `Tarih: ${reportData.date}`;
+            dateEl.innerText = `Tarih: ${reportData.reportDate || reportData.date}`;
             
-            if (isShiftReport) {
+            if (isMolaReport) {
                 grid.style.display = 'block';
-                const activeStaff = reportData.data.filter(item => item.shift === 'Sabahçı' || item.shift === 'Akşamcı');
+                grid.innerHTML = `
+                    <table style="width: 100%; border-collapse: collapse; font-family: sans-serif; margin-top: 5px;">
+                        <thead>
+                            <tr style="background: #ea580c; color: white; border: 1px solid #000;">
+                                <th style="padding: 8px; text-align: left; font-size: 10px; border: 1px solid #000;">Personel</th>
+                                <th style="padding: 8px; text-align: left; font-size: 10px; border: 1px solid #000;">Mola Detayları</th>
+                                <th style="padding: 8px; text-align: center; font-size: 10px; border: 1px solid #000;">Toplam</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${reportData.data.map(item => {
+                                const total = item.plans.reduce((s, m) => s + m.duration, 0);
+                                return `
+                                <tr style="border: 1px solid #000;">
+                                    <td style="padding: 6px; font-size: 9px; font-weight: bold; border: 1px solid #000;">${item.name}</td>
+                                    <td style="padding: 6px; font-size: 9px; border: 1px solid #000;">
+                                        ${item.plans.map(m => `<span style="background: #fee2e2; color: #b91c1c; padding: 2px 4px; border-radius: 4px; margin-right: 4px;">${m.start}-${m.end} (${m.duration}dk)</span>`).join('')}
+                                    </td>
+                                    <td style="padding: 6px; font-size: 9px; text-align: center; border: 1px solid #000;">${total} dk</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else if (isShiftReport) {
+                grid.style.display = 'block';
+                const activeStaff = reportData.data.filter(item => item.shift === 'Sabahçı' || item.shift === 'Akşamcı' || item.shift === 'Full');
                 const rowPadding = activeStaff.length > 25 ? '2px 4px' : '4px 6px';
                 const fontSize = activeStaff.length > 30 ? '7px' : '9px';
 
@@ -2706,7 +3581,6 @@
                             `).join('')}
                         </tbody>
                     </table>
-                    <div style="margin-top: 5px; font-size: 8px; color: #666; font-style: italic;">* Sadece aktif vardiyadaki personeller listelenmiştir.</div>
                 `;
             } else {
                 grid.style.display = 'grid';
@@ -2728,20 +3602,10 @@
 
             const opt = {
                 margin:       [5, 5],
-                filename:     isShiftReport ? `KidZania_MolaTakip_${reportData.date}.pdf` : `KidZania_Dagitim_${reportData.id}.pdf`,
+                filename:     isMolaReport ? `KidZania_Mola_${reportData.date}.pdf` : (isShiftReport ? `KidZania_MolaTakip_${reportData.date}.pdf` : `KidZania_Dagitim_${reportData.id}.pdf`),
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { 
-                    scale: 2, 
-                    useCORS: true, 
-                    letterRendering: true,
-                    logging: false
-                },
-                jsPDF:        { 
-                    unit: 'mm', 
-                    format: 'a4', 
-                    orientation: 'landscape',
-                    compress: true 
-                },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
                 pagebreak:    { mode: 'avoid-all' }
             };
 
@@ -2774,6 +3638,197 @@
             return null;
         }
 
+        function handleMolaDragStart(e, pId, index) {
+            e.dataTransfer.setData("pId", pId);
+            e.dataTransfer.setData("index", index);
+        }
+
+        async function handleMolaDrop(e, targetPId) {
+            e.preventDefault();
+            const sourcePId = e.dataTransfer.getData("pId");
+            const index = parseInt(e.dataTransfer.getData("index"));
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const newStartMin = Math.round((x / rect.width) * 1440 / 30) * 30;
+            
+            if (molaSchedules[sourcePId] && molaSchedules[sourcePId][index]) {
+                const mola = molaSchedules[sourcePId][index];
+                const duration = mola.duration;
+                if (sourcePId !== targetPId) {
+                    if (!molaSchedules[targetPId]) molaSchedules[targetPId] = [];
+                    molaSchedules[targetPId].push({...mola, startMin: newStartMin, start: minutesToTime(newStartMin), endMin: newStartMin + duration, end: minutesToTime(newStartMin + duration)});
+                    molaSchedules[sourcePId].splice(index, 1);
+                    if (molaSchedules[sourcePId].length === 0) delete molaSchedules[sourcePId];
+                } else {
+                    mola.startMin = newStartMin; mola.start = minutesToTime(newStartMin);
+                    mola.endMin = newStartMin + duration; mola.end = minutesToTime(newStartMin + duration);
+                }
+                await saveMolaToFirebase(); renderMolaTimeline();
+            }
+        }
+
+        function minutesToTime(min) {
+            const h = Math.floor(min / 60); const m = min % 60;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        }
+
+        async function handleMolaDoubleClick(pId, index) {
+            const mola = molaSchedules[pId][index];
+            const newDuration = prompt("Mola süresini giriniz (dakika):", mola.duration);
+            if (newDuration === null) return;
+            const duration = parseInt(newDuration);
+            if (isNaN(duration) || duration <= 0) return showAlert("Geçersiz süre!");
+            
+            const person = personeller.find(p => String(p.id) === String(pId));
+            const maxMola = (person.type && person.type.toLowerCase().includes('full time')) ? 90 : 60;
+            
+            mola.duration = duration; mola.endMin = mola.startMin + duration; mola.end = minutesToTime(mola.endMin);
+            const plans = molaSchedules[pId];
+            if (plans.length > 1) {
+                const otherIndex = index === 0 ? 1 : 0;
+                const otherMola = plans[otherIndex];
+                const remaining = maxMola - duration;
+                if (remaining > 0) { otherMola.duration = remaining; otherMola.endMin = otherMola.startMin + remaining; otherMola.end = minutesToTime(otherMola.endMin); }
+            }
+            await saveMolaToFirebase(); renderMolaTimeline();
+        }
+
+        async function saveMolaToFirebase() {
+            const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0];
+            for (let pId in molaSchedules) {
+                await window.colDocs.setDoc(window.colDocs.doc(window.db, "molaSchedules", `${date}_${pId}`), { list: molaSchedules[pId], date: date });
+            }
+        }
+
+        async function changeDashboardDate(date) {
+            if (!date) return;
+            const shiftDoc = await window.colDocs.getDoc(window.colDocs.doc(window.db, "dailyShifts", date));
+            if (shiftDoc.exists()) {
+                const data = shiftDoc.data().shifts || {};
+                personeller.forEach(p => { p.shift = data[p.id] || 'Seçilmedi'; });
+            } else { personeller.forEach(p => p.shift = 'Seçilmedi'); }
+            
+            const assignSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, `dailyAssignments/${date}/activities`));
+            assignments = {};
+            assignSnapshot.forEach(doc => { assignments[doc.id] = doc.data().list.map(id => { const p = personeller.find(x => String(x.id) === String(id)); return p ? p.name : id; }); });
+            
+            const molaSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, "molaSchedules"));
+            molaSchedules = {};
+            molaSnapshot.forEach(doc => { const d = doc.data(); if (d.date === date) { const pId = doc.id.replace(`${date}_`, ''); molaSchedules[pId] = d.list; } });
+            renderDashboard(); renderMolaTimeline();
+        }
+
+        async function saveMolaReport() {
+            const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0];
+            const dParts = date.split('-'); 
+            const formattedDate = `${dParts[2]}.${dParts[1]}.${dParts[0]}`;
+            
+            let regionName = "Tümü";
+            if (currentUser.role === 'Manager' && currentUser.assignedRegions?.length > 0) regionName = currentUser.assignedRegions[0];
+            
+            const reportId = Date.now();
+            const molaReport = { 
+                id: reportId, 
+                type: 'Mola Raporu', 
+                title: `KidZania İstanbul ${regionName} Mola Çizelgesi (${formattedDate})`, 
+                date: date, 
+                reportDate: formattedDate, 
+                region: regionName, 
+                createdAt: new Date().toLocaleString(), 
+                data: Object.keys(molaSchedules).map(pId => { 
+                    const p = personeller.find(x => String(x.id) === String(pId)); 
+                    return { 
+                        name: p ? p.name : pId, 
+                        shift: p ? p.shift : '-',
+                        plans: molaSchedules[pId] 
+                    }; 
+                }) 
+            };
+            
+            await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(reportId)), molaReport);
+            savedReports.unshift(molaReport); 
+            renderReports(); 
+            showAlert("Mola raporu kaydedildi ve raporlara eklendi.");
+        }
+    
+        function downloadMolaExcel(rep) {
+            const data = [];
+            // Header
+            data.push(["KidZania İstanbul Mola Çizelgesi"]);
+            data.push(["Tarih:", rep.reportDate]);
+            data.push(["Bölge:", rep.region]);
+            data.push([]);
+            data.push(["Personel Adı", "Vardiya", "Mola 1", "Mola 2", "Mola 3", "Toplam Süre"]);
+
+            rep.data.forEach(p => {
+                const row = [p.name, p.shift];
+                let total = 0;
+                p.plans.forEach((m, idx) => {
+                    if (idx < 3) row.push(`${m.start} - ${m.end}`);
+                    total += m.duration;
+                });
+                while (row.length < 5) row.push("-");
+                row.push(total + " dk");
+                data.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Mola Çizelgesi");
+            XLSX.writeFile(wb, `Mola_Cizelgesi_${rep.date}.xlsx`);
+        }
+
+        function downloadMolaPDF(rep) {
+            const element = document.createElement('div');
+            element.style.padding = '20px';
+            element.style.width = '1000px';
+            element.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h1 style="color: #dc2626; margin: 0;">KidZania İstanbul</h1>
+                    <h2 style="margin: 5px 0;">Mola Çizelgesi Raporu</h2>
+                    <p style="color: #666;">Tarih: ${rep.reportDate} | Bölge: ${rep.region}</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f3f4f6;">
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Personel Adı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Vardiya</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: left;">Mola Planı</th>
+                            <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">Toplam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rep.data.map(p => {
+                            const total = p.plans.reduce((sum, m) => sum + m.duration, 0);
+                            return `
+                                <tr>
+                                    <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">${p.name}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">${p.shift}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">
+                                        ${p.plans.map(m => `${m.start}-${m.end}`).join(' | ')}
+                                    </td>
+                                    <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">${total} dk</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                <div style="margin-top: 20px; font-size: 10px; color: #999; text-align: center;">
+                    Bu rapor KidZania İstanbul Yönetim Paneli tarafından otomatik oluşturulmuştur.
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `Mola_Cizelgesi_${rep.date}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+    
     </script>
 </body>
 </html>

@@ -3886,6 +3886,410 @@
             html2pdf().set(opt).from(element).save();
         }
     
+        // RAPOR CIKTILARI VE OKUL DONEMI MOLA DUZELTMESI
+            function escapeReportHtml(value) {
+                return String(value ?? '').replace(/[&<>'"]/g, character => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                })[character]);
+            }
+
+            function createCorporatePdfSurface({ title, subtitle, date, accentColor, body, rowCount }) {
+                const compact = rowCount > 35;
+                const surface = document.createElement('div');
+                surface.style.cssText = 'width:1120px; box-sizing:border-box; padding:24px 28px; background:#ffffff; color:#172033; font-family:Arial, Helvetica, sans-serif;';
+                surface.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:24px; border-bottom:3px solid ${accentColor}; padding-bottom:12px; margin-bottom:14px;">
+                        <div>
+                            <div style="font-size:${compact ? '20px' : '24px'}; font-weight:700; color:${accentColor}; line-height:1.15;">KidZania İstanbul</div>
+                            <div style="font-size:${compact ? '12px' : '14px'}; font-weight:700; color:#172033; margin-top:4px;">${escapeReportHtml(subtitle)}</div>
+                        </div>
+                        <div style="text-align:right; color:#667085; font-size:${compact ? '10px' : '12px'}; line-height:1.5;">
+                            <div style="font-weight:700; color:#344054;">${escapeReportHtml(title)}</div>
+                            <div>Tarih: ${escapeReportHtml(date)}</div>
+                            <div>Yönetim Paneli Çıktısı</div>
+                        </div>
+                    </div>
+                    ${body}
+                    <div style="margin-top:12px; padding-top:8px; border-top:1px solid #d0d5dd; color:#98a2b3; font-size:8px; text-align:center;">KidZania İstanbul Yönetim Paneli tarafından otomatik oluşturulmuştur.</div>
+                `;
+                document.body.appendChild(surface);
+                return surface;
+            }
+
+            async function exportAsSingleLandscapePdf(surface, filename, rowCount) {
+                try {
+                    if (!window.jspdf || !window.jspdf.jsPDF || typeof html2canvas !== 'function') {
+                        throw new Error('PDF kutuphaneleri yuklenemedi.');
+                    }
+
+                    const canvas = await html2canvas(surface, {
+                        scale: rowCount > 70 ? 1.5 : 2,
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        logging: false,
+                        windowWidth: surface.scrollWidth,
+                        windowHeight: surface.scrollHeight
+                    });
+                    const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const margin = 4;
+                    const availableWidth = pageWidth - (margin * 2);
+                    const availableHeight = pageHeight - (margin * 2);
+                    const imageScale = Math.min(availableWidth / canvas.width, availableHeight / canvas.height);
+                    const imageWidth = canvas.width * imageScale;
+                    const imageHeight = canvas.height * imageScale;
+
+                    pdf.addImage(
+                        canvas.toDataURL('image/jpeg', 0.98),
+                        'JPEG',
+                        (pageWidth - imageWidth) / 2,
+                        (pageHeight - imageHeight) / 2,
+                        imageWidth,
+                        imageHeight,
+                        undefined,
+                        'FAST'
+                    );
+                    pdf.save(filename);
+                } finally {
+                    surface.remove();
+                }
+            }
+
+            function ensureSheetCell(sheet, row, column) {
+                const address = XLSX.utils.encode_cell({ r: row, c: column });
+                if (!sheet[address]) sheet[address] = { t: 's', v: '' };
+                return sheet[address];
+            }
+
+            function applyCorporateSheetStyle(sheet, { columnWidths, headerRow, lastRow, accentColor, metaMerges = [], titleEndColumn }) {
+                const columnCount = columnWidths.length;
+                const border = {
+                    top: { style: 'thin', color: { rgb: 'D0D5DD' } },
+                    bottom: { style: 'thin', color: { rgb: 'D0D5DD' } },
+                    left: { style: 'thin', color: { rgb: 'D0D5DD' } },
+                    right: { style: 'thin', color: { rgb: 'D0D5DD' } }
+                };
+                const titleStyle = {
+                    font: { name: 'Arial', sz: 16, bold: true, color: { rgb: 'FFFFFF' } },
+                    fill: { fgColor: { rgb: accentColor } },
+                    alignment: { horizontal: 'center', vertical: 'center' }
+                };
+                const metaStyle = {
+                    font: { name: 'Arial', sz: 10, bold: true, color: { rgb: '344054' } },
+                    fill: { fgColor: { rgb: 'F2F4F7' } },
+                    alignment: { vertical: 'center' }
+                };
+                const headerStyle = {
+                    font: { name: 'Arial', sz: 10, bold: true, color: { rgb: 'FFFFFF' } },
+                    fill: { fgColor: { rgb: accentColor } },
+                    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+                    border
+                };
+
+                for (let column = 0; column <= titleEndColumn; column++) ensureSheetCell(sheet, 0, column).s = titleStyle;
+                for (let column = 0; column < columnCount; column++) {
+                    ensureSheetCell(sheet, 1, column).s = metaStyle;
+                    ensureSheetCell(sheet, headerRow, column).s = headerStyle;
+                }
+                for (let row = headerRow + 1; row <= lastRow; row++) {
+                    for (let column = 0; column < columnCount; column++) {
+                        const cell = ensureSheetCell(sheet, row, column);
+                        cell.s = {
+                            font: { name: 'Arial', sz: 9, bold: column === 0, color: { rgb: '1D2939' } },
+                            fill: { fgColor: { rgb: row % 2 === 0 ? 'FFFFFF' : 'F9FAFB' } },
+                            alignment: { horizontal: column === 0 ? 'left' : 'center', vertical: 'center', wrapText: true },
+                            border
+                        };
+                    }
+                }
+
+                sheet['!merges'] = [
+                    { s: { r: 0, c: 0 }, e: { r: 0, c: titleEndColumn } },
+                    ...metaMerges
+                ];
+                sheet['!cols'] = columnWidths.map(width => ({ wch: width }));
+                sheet['!rows'] = Array.from({ length: lastRow + 1 }, (_, row) => ({
+                    hpt: row === 0 ? 28 : (row === headerRow ? 24 : (row > headerRow ? 28 : 18))
+                }));
+                sheet['!autofilter'] = { ref: `A${headerRow + 1}:${XLSX.utils.encode_col(columnCount - 1)}${lastRow + 1}` };
+                sheet['!margins'] = { left: 0.2, right: 0.2, top: 0.3, bottom: 0.3, header: 0.1, footer: 0.1 };
+                sheet['!pageSetup'] = {
+                    orientation: 'landscape',
+                    paperSize: 9,
+                    fitToWidth: 1,
+                    fitToHeight: 1,
+                    horizontalCentered: true,
+                    verticalCentered: false
+                };
+                sheet['!printOptions'] = { gridLines: false, headings: false };
+                sheet['!sheetViews'] = [{ showGridLines: false }];
+            }
+
+            async function generateVardiyaExcel(reportData) {
+                try {
+                    const headers = ['Personel ve Görev Bilgisi', 'Giriş', '1. Mola', 'Mola Dönüş', '2. Mola', 'Mola Dönüş', '3. Mola', 'Mola Dönüş', 'Çıkış', 'İmza'];
+                    const activeStaff = (Array.isArray(reportData.data) ? reportData.data : []).filter(item =>
+                        item && (item.shift === 'Sabahçı' || item.shift === 'Akşamcı' || item.shift === 'Full')
+                    );
+                    const formattedDate = reportData.reportDate || reportData.date || '-';
+                    const title = (reportData.title || `KidZania İstanbul Vardiya Takip Çizelgesi (${formattedDate})`).replace(/\s+/g, ' ').trim();
+                    const rows = activeStaff.map(item => [
+                        `${item.name || '-'}\n${item.type || 'Belirtilmedi'} | ${item.shift || '-'}`,
+                        '', '', '', '', '', '', '', '', ''
+                    ]);
+                    const worksheet = XLSX.utils.aoa_to_sheet([[title], [`Tarih: ${formattedDate}`], [], headers, ...rows]);
+                    applyCorporateSheetStyle(worksheet, {
+                        columnWidths: [35, 11, 12, 12, 12, 12, 12, 12, 11, 16],
+                        headerRow: 3,
+                        lastRow: Math.max(4, rows.length + 3),
+                        accentColor: 'E31E24',
+                        titleEndColumn: 9
+                    });
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Vardiya Listesi');
+                    XLSX.writeFile(workbook, `KidZania_Vardiya_${formattedDate}.xlsx`);
+                    showAlert('Kurumsal vardiya Excel dosyası hazırlandı.');
+                } catch (error) {
+                    console.error('Excel Hatasi:', error);
+                    showAlert('Excel olusturulurken bir hata olustu.');
+                }
+            }
+
+            function downloadMolaExcel(report) {
+                try {
+                    const reportData = Array.isArray(report.data) ? report.data : [];
+                    const formattedDate = report.reportDate || report.date || '-';
+                    const rows = reportData.map(person => {
+                        const plans = Array.isArray(person.plans) ? person.plans : [];
+                        const total = plans.reduce((sum, plan) => sum + Number(plan.duration || 0), 0);
+                        const breaks = plans.slice(0, 3).map(plan => `${plan.start || '-'} - ${plan.end || '-'}`);
+                        while (breaks.length < 3) breaks.push('-');
+                        return [person.name || '-', person.shift || '-', ...breaks, `${total} dk`];
+                    });
+                    const worksheet = XLSX.utils.aoa_to_sheet([
+                        ['KidZania İstanbul Mola Çizelgesi'],
+                        [`Tarih: ${formattedDate}`, '', '', '', `Bölge: ${report.region || 'Tümü'}`, ''],
+                        [],
+                        ['Personel Adı', 'Vardiya', 'Mola 1', 'Mola 2', 'Mola 3', 'Toplam Süre'],
+                        ...rows
+                    ]);
+                    applyCorporateSheetStyle(worksheet, {
+                        columnWidths: [30, 15, 19, 19, 19, 15],
+                        headerRow: 3,
+                        lastRow: Math.max(4, rows.length + 3),
+                        accentColor: 'EA580C',
+                        titleEndColumn: 5,
+                        metaMerges: [
+                            { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+                            { s: { r: 1, c: 3 }, e: { r: 1, c: 5 } }
+                        ]
+                    });
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Mola Cizelgesi');
+                    XLSX.writeFile(workbook, `KidZania_Mola_Cizelgesi_${formattedDate}.xlsx`);
+                    showAlert('Kurumsal mola Excel dosyası hazırlandı.');
+                } catch (error) {
+                    console.error('Mola Excel Hatasi:', error);
+                    showAlert('Mola Excel dosyasi olusturulurken bir hata olustu.');
+                }
+            }
+
+            async function generateHorizontalPDF(reportData) {
+                const isShiftReport = reportData.type && reportData.type.includes('Vardiya Raporu');
+                const isMolaReport = reportData.type === 'Mola Raporu';
+                const reportRows = Array.isArray(reportData.data) ? reportData.data : [];
+                const date = reportData.reportDate || reportData.date || '-';
+                let body = '';
+                let subtitle = 'Aktivite Dağıtım Raporu';
+                let accentColor = '#E31E24';
+                let rowCount = reportRows.length;
+
+                if (isShiftReport) {
+                    subtitle = 'Personel Vardiya Takip Çizelgesi';
+                    const activeStaff = reportRows.filter(item => item && (item.shift === 'Sabahçı' || item.shift === 'Akşamcı' || item.shift === 'Full'));
+                    rowCount = activeStaff.length;
+                    const fontSize = activeStaff.length > 45 ? '5.5px' : (activeStaff.length > 30 ? '6.5px' : '8px');
+                    const padding = activeStaff.length > 45 ? '3px 4px' : '5px 6px';
+                    body = `
+                        <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:${fontSize};">
+                            <thead><tr style="background:#E31E24; color:#fff;">
+                                <th style="width:21%; padding:${padding}; text-align:left; border:1px solid #981B1E;">Personel</th>
+                                ${['Giriş', '1. Mola', 'Dönüş', '2. Mola', 'Dönüş', '3. Mola', 'Dönüş', 'Çıkış', 'İmza'].map(label => `<th style="padding:${padding}; text-align:center; border:1px solid #981B1E;">${label}</th>`).join('')}
+                            </tr></thead>
+                            <tbody>${activeStaff.map((item, index) => `
+                                <tr style="background:${index % 2 ? '#F9FAFB' : '#FFFFFF'};">
+                                    <td style="padding:${padding}; font-weight:700; border:1px solid #98A2B3;">${escapeReportHtml(item.name)}<div style="font-size:80%; color:#667085; font-weight:400; margin-top:1px;">${escapeReportHtml(item.type || '')} | ${escapeReportHtml(item.shift || '')}</div></td>
+                                    ${Array.from({ length: 9 }).map(() => `<td style="padding:${padding}; border:1px solid #98A2B3; height:${activeStaff.length > 45 ? '10px' : '14px'};"></td>`).join('')}
+                                </tr>
+                            `).join('')}</tbody>
+                        </table>`;
+                } else if (isMolaReport) {
+                    subtitle = 'Personel Mola Planlama Çizelgesi';
+                    accentColor = '#EA580C';
+                    const fontSize = reportRows.length > 45 ? '6px' : '8px';
+                    body = `
+                        <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:${fontSize};">
+                            <thead><tr style="background:#EA580C; color:#fff;">
+                                <th style="width:25%; padding:6px; text-align:left; border:1px solid #9A3412;">Personel</th>
+                                <th style="width:15%; padding:6px; text-align:left; border:1px solid #9A3412;">Vardiya</th>
+                                <th style="width:45%; padding:6px; text-align:left; border:1px solid #9A3412;">Mola Planı</th>
+                                <th style="width:15%; padding:6px; text-align:center; border:1px solid #9A3412;">Toplam</th>
+                            </tr></thead>
+                            <tbody>${reportRows.map((item, index) => {
+                                const plans = Array.isArray(item.plans) ? item.plans : [];
+                                const total = plans.reduce((sum, plan) => sum + Number(plan.duration || 0), 0);
+                                return `<tr style="background:${index % 2 ? '#FFF7ED' : '#FFFFFF'};">
+                                    <td style="padding:5px 6px; font-weight:700; border:1px solid #FED7AA;">${escapeReportHtml(item.name)}</td>
+                                    <td style="padding:5px 6px; border:1px solid #FED7AA;">${escapeReportHtml(item.shift)}</td>
+                                    <td style="padding:5px 6px; border:1px solid #FED7AA;">${plans.map(plan => escapeReportHtml(`${plan.start}-${plan.end} (${plan.duration} dk)`)).join('  |  ') || '-'}</td>
+                                    <td style="padding:5px 6px; text-align:center; border:1px solid #FED7AA; font-weight:700;">${total} dk</td>
+                                </tr>`;
+                            }).join('')}</tbody>
+                        </table>`;
+                } else {
+                    const fontSize = reportRows.length > 30 ? '7px' : '9px';
+                    body = `
+                        <table style="width:100%; border-collapse:collapse; font-size:${fontSize};">
+                            <thead><tr style="background:#E31E24; color:#fff;"><th style="padding:7px; text-align:left; border:1px solid #981B1E;">Aktivite</th><th style="padding:7px; text-align:left; border:1px solid #981B1E;">Atanan Personeller</th></tr></thead>
+                            <tbody>${reportRows.map((item, index) => `<tr style="background:${index % 2 ? '#F9FAFB' : '#FFFFFF'};"><td style="width:28%; padding:7px; font-weight:700; border:1px solid #D0D5DD;">${escapeReportHtml(item.activityName)}</td><td style="padding:7px; border:1px solid #D0D5DD;">${escapeReportHtml(item.assigned)}</td></tr>`).join('')}</tbody>
+                        </table>`;
+                }
+
+                const surface = createCorporatePdfSurface({
+                    title: reportData.title || 'KidZania İstanbul',
+                    subtitle,
+                    date,
+                    accentColor,
+                    body,
+                    rowCount
+                });
+                const filename = isMolaReport ? `KidZania_Mola_${reportData.date}.pdf` : (isShiftReport ? `KidZania_VardiyaTakip_${reportData.date}.pdf` : `KidZania_Dagitim_${reportData.id}.pdf`);
+                try {
+                    await exportAsSingleLandscapePdf(surface, filename, rowCount);
+                } catch (error) {
+                    console.error('PDF Hatasi:', error);
+                    showAlert('PDF olusturulurken bir hata olustu.');
+                }
+            }
+
+            async function downloadMolaPDF(report) {
+                const reportRows = Array.isArray(report.data) ? report.data : [];
+                const body = `
+                    <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:${reportRows.length > 45 ? '6px' : '8px'};">
+                        <thead><tr style="background:#EA580C; color:#fff;">
+                            <th style="width:25%; padding:6px; text-align:left; border:1px solid #9A3412;">Personel Adı</th>
+                            <th style="width:15%; padding:6px; text-align:left; border:1px solid #9A3412;">Vardiya</th>
+                            <th style="width:45%; padding:6px; text-align:left; border:1px solid #9A3412;">Mola Planı</th>
+                            <th style="width:15%; padding:6px; text-align:center; border:1px solid #9A3412;">Toplam</th>
+                        </tr></thead>
+                        <tbody>${reportRows.map((person, index) => {
+                            const plans = Array.isArray(person.plans) ? person.plans : [];
+                            const total = plans.reduce((sum, plan) => sum + Number(plan.duration || 0), 0);
+                            return `<tr style="background:${index % 2 ? '#FFF7ED' : '#FFFFFF'};">
+                                <td style="padding:5px 6px; font-weight:700; border:1px solid #FED7AA;">${escapeReportHtml(person.name)}</td>
+                                <td style="padding:5px 6px; border:1px solid #FED7AA;">${escapeReportHtml(person.shift)}</td>
+                                <td style="padding:5px 6px; border:1px solid #FED7AA;">${plans.map(plan => escapeReportHtml(`${plan.start}-${plan.end} (${plan.duration} dk)`)).join('  |  ') || '-'}</td>
+                                <td style="padding:5px 6px; text-align:center; border:1px solid #FED7AA; font-weight:700;">${total} dk</td>
+                            </tr>`;
+                        }).join('')}</tbody>
+                    </table>`;
+                const surface = createCorporatePdfSurface({
+                    title: report.title || 'KidZania İstanbul Mola Çizelgesi',
+                    subtitle: 'Mola Çizelgesi Raporu',
+                    date: `${report.reportDate || report.date || '-'} | Bölge: ${report.region || 'Tümü'}`,
+                    accentColor: '#EA580C',
+                    body,
+                    rowCount: reportRows.length
+                });
+                try {
+                    await exportAsSingleLandscapePdf(surface, `KidZania_Mola_Cizelgesi_${report.date}.pdf`, reportRows.length);
+                } catch (error) {
+                    console.error('Mola PDF Hatasi:', error);
+                    showAlert('Mola PDF olusturulurken bir hata olustu.');
+                }
+            }
+
+            async function runAutoMolaAssignment() {
+                const activeShifts = ['Sabahçı', 'Akşamcı', 'Full'];
+                const staff = personeller.filter(person => activeShifts.includes(person.shift));
+                if (staff.length === 0) {
+                    showAlert('Atama yapilacak aktif personel bulunamadi.');
+                    return;
+                }
+                if (!confirm(`${currentMolaPeriod === 'yaz' ? 'Yaz Donemi' : 'Okul Donemi'} icin otomatik mola dagitimi yapilsin mi? Mevcut cizelge uzerine eklenecektir.`)) return;
+
+                const newSchedules = Object.fromEntries(Object.entries(molaSchedules).map(([personId, plans]) => [personId, Array.isArray(plans) ? [...plans] : []]));
+                const date = document.getElementById('dashboard-date-filter')?.value || new Date().toISOString().split('T')[0];
+                const breakDuration = 30;
+                const minimumBatchSize = 3;
+                let expandedBatchSize = false;
+
+                function addMola(personId, startMinute) {
+                    if (!newSchedules[personId]) newSchedules[personId] = [];
+                    const endMinute = startMinute + breakDuration;
+                    newSchedules[personId].push({
+                        start: minutesToTime(startMinute),
+                        end: minutesToTime(endMinute),
+                        duration: breakDuration,
+                        startMin: startMinute,
+                        endMin: endMinute
+                    });
+                }
+
+                function scheduleGroup(group, startMinute, endMinute = null) {
+                    if (group.length === 0) return startMinute;
+                    const availableSlots = endMinute ? Math.max(1, Math.floor((endMinute - startMinute) / breakDuration)) : Infinity;
+                    const batchSize = endMinute ? Math.max(minimumBatchSize, Math.ceil(group.length / availableSlots)) : minimumBatchSize;
+                    if (batchSize > minimumBatchSize) expandedBatchSize = true;
+                    let scheduledMinute = startMinute;
+                    for (let index = 0; index < group.length; index += batchSize) {
+                        group.slice(index, index + batchSize).forEach(person => addMola(person.id, scheduledMinute));
+                        scheduledMinute += breakDuration;
+                    }
+                    return scheduledMinute;
+                }
+
+                const morningAndFull = staff.filter(person => person.shift === 'Sabahçı' || person.shift === 'Full');
+                const evening = staff.filter(person => person.shift === 'Akşamcı');
+                const orderedStaff = [...morningAndFull, ...evening];
+                const fullStaff = staff.filter(person => person.shift === 'Full');
+
+                if (currentMolaPeriod === 'okul' && currentOkulType === 'hafta-ici') {
+                    // 1. molalar 10:00'da baslar ve 13:00'u gecmez.
+                    scheduleGroup(orderedStaff, 10 * 60, 13 * 60);
+                    // 2. molalar tam 13:00'da baslar ve 16:00'yi gecmez.
+                    scheduleGroup(orderedStaff, 13 * 60, 16 * 60);
+                    // Full-time personelin ucuncu molasi, ikinci mola penceresinden sonra devam eder.
+                    scheduleGroup(fullStaff, 16 * 60);
+                } else {
+                    let currentMinute = 11 * 60;
+                    currentMinute = scheduleGroup(morningAndFull, currentMinute);
+                    currentMinute = scheduleGroup(evening, currentMinute);
+                    currentMinute = scheduleGroup(morningAndFull, currentMinute);
+                    currentMinute = scheduleGroup(evening, currentMinute);
+                    scheduleGroup(fullStaff, currentMinute);
+                }
+
+                for (const personId in newSchedules) {
+                    molaSchedules[personId] = newSchedules[personId];
+                    await window.colDocs.setDoc(window.colDocs.doc(window.db, 'molaSchedules', `${date}_${personId}`), {
+                        list: molaSchedules[personId],
+                        date
+                    });
+                }
+
+                renderMolaTimeline();
+                showAlert(expandedBatchSize
+                    ? 'Otomatik mola dagitimi tamamlandi. Saat araligini korumak icin ayni anda mola yapan kisi sayisi artirildi.'
+                    : 'Otomatik mola dagitimi basariyla tamamlandi.');
+            }
     </script>
 </body>
 </html>

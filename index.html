@@ -3457,7 +3457,8 @@
             if (isMolaReport) {
                 excelBtn.classList.remove('hidden');
                 excelBtn.onclick = () => downloadMolaExcel(rep);
-                pdfBtn.onclick = () => downloadMolaPDF(rep);
+                pdfBtn.classList.add('hidden');
+                pdfBtn.onclick = null;
                 
                 content.innerHTML = `
                     <div class="overflow-x-auto col-span-full">
@@ -3486,7 +3487,8 @@
             } else if (isShiftReport) {
                 excelBtn.classList.remove('hidden');
                 excelBtn.onclick = () => generateVardiyaExcel(rep);
-                pdfBtn.onclick = () => generateHorizontalPDF(rep);
+                pdfBtn.classList.add('hidden');
+                pdfBtn.onclick = null;
                 content.innerHTML = renderShiftReportPreview(rep); /* Eski indirme mesaji kaldirildi.
                     <div class="col-span-full text-center p-4 italic text-gray-500">
                         Vardiya raporu detayları Excel veya PDF olarak indirilebilir.
@@ -3494,6 +3496,7 @@
                 */
             } else {
                 excelBtn.classList.add('hidden');
+                pdfBtn.classList.remove('hidden');
                 pdfBtn.onclick = () => generateHorizontalPDF(rep);
                 content.innerHTML = rep.data.map(item => `
                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
@@ -3922,19 +3925,27 @@
 
             async function exportAsSingleLandscapePdf(surface, filename, rowCount) {
                 try {
-                    if (!window.jspdf || !window.jspdf.jsPDF || typeof html2canvas !== 'function') {
+                    const JsPdf = window.jspdf?.jsPDF || window.jsPDF;
+                    if (!JsPdf || typeof html2pdf !== 'function') {
                         throw new Error('PDF kutuphaneleri yuklenemedi.');
                     }
 
-                    const canvas = await html2canvas(surface, {
-                        scale: rowCount > 70 ? 1.5 : 2,
-                        useCORS: true,
-                        backgroundColor: '#ffffff',
-                        logging: false,
-                        windowWidth: surface.scrollWidth,
-                        windowHeight: surface.scrollHeight
-                    });
-                    const pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+                    // html2pdf paketi html2canvas'i kendi icinde tasir; bazi tarayicilarda
+                    // html2canvas global degiskeni olmadigi icin dogrudan cagri hata veriyordu.
+                    const pdfWorker = html2pdf().set({
+                        html2canvas: {
+                            scale: rowCount > 70 ? 1.5 : 2,
+                            useCORS: true,
+                            backgroundColor: '#ffffff',
+                            logging: false,
+                            windowWidth: surface.scrollWidth,
+                            windowHeight: surface.scrollHeight
+                        }
+                    }).from(surface).toCanvas();
+                    await pdfWorker;
+                    const canvas = await pdfWorker.get('canvas');
+                    if (!canvas) throw new Error('PDF goruntusu olusturulamadi.');
+                    const pdf = new JsPdf({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
                     const pageWidth = pdf.internal.pageSize.getWidth();
                     const pageHeight = pdf.internal.pageSize.getHeight();
                     const margin = 4;
@@ -4289,6 +4300,148 @@
                 showAlert(expandedBatchSize
                     ? 'Otomatik mola dagitimi tamamlandi. Saat araligini korumak icin ayni anda mola yapan kisi sayisi artirildi.'
                     : 'Otomatik mola dagitimi basariyla tamamlandi.');
+            }
+            // Excel yazdirma ayarlarini xlsx dosyasinin XML'ine yazar. Bu sayede
+            // Excel/Microsoft Print to PDF tarafinda yatay yonlendirme korunur.
+            function loadJsZipForPrintSettings() {
+                if (window.JSZip) return Promise.resolve(window.JSZip);
+                if (window.__kidzaniaJsZipPromise) return window.__kidzaniaJsZipPromise;
+
+                window.__kidzaniaJsZipPromise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+                    script.onload = () => window.JSZip ? resolve(window.JSZip) : reject(new Error('JSZip yuklenemedi.'));
+                    script.onerror = () => reject(new Error('JSZip kutuphanesi yuklenemedi.'));
+                    document.head.appendChild(script);
+                });
+                return window.__kidzaniaJsZipPromise;
+            }
+
+            function applyLandscapePageSettings(sheetXml) {
+                let xml = sheetXml
+                    .replace(/<pageMargins\b[^>]*\/>/g, '')
+                    .replace(/<pageSetup\b[^>]*\/>/g, '');
+
+                if (/<sheetPr\b[^>]*\/>/.test(xml)) {
+                    xml = xml.replace(/<sheetPr([^>]*)\/>/, '<sheetPr$1><pageSetUpPr fitToPage="1"/></sheetPr>');
+                } else if (/<sheetPr\b[^>]*>/.test(xml) && !/<pageSetUpPr\b/.test(xml)) {
+                    xml = xml.replace(/<sheetPr([^>]*)>/, '<sheetPr$1><pageSetUpPr fitToPage="1"/></sheetPr>');
+                } else if (!/<pageSetUpPr\b/.test(xml)) {
+                    xml = xml.replace(/(<worksheet[^>]*>)/, '$1<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>');
+                }
+
+                return xml.replace('</worksheet>',
+                    '<pageMargins left="0.2" right="0.2" top="0.3" bottom="0.3" header="0.1" footer="0.1"/>' +
+                    '<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="1" horizontalCentered="1"/>' +
+                    '</worksheet>'
+                );
+            }
+
+            async function downloadLandscapeWorkbook(workbook, filename) {
+                const JSZipConstructor = await loadJsZipForPrintSettings();
+                const xlsxBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array', compression: true });
+                const zip = await JSZipConstructor.loadAsync(xlsxBuffer);
+                const worksheetFile = zip.file('xl/worksheets/sheet1.xml');
+                if (!worksheetFile) throw new Error('Excel sayfasi bulunamadi.');
+
+                const worksheetXml = await worksheetFile.async('string');
+                zip.file('xl/worksheets/sheet1.xml', applyLandscapePageSettings(worksheetXml));
+
+                const blob = await zip.generateAsync({
+                    type: 'blob',
+                    compression: 'DEFLATE',
+                    compressionOptions: { level: 6 }
+                });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(url);
+            }
+
+            async function downloadMolaExcel(report) {
+                try {
+                    const reportData = Array.isArray(report.data) ? report.data : [];
+                    const formattedDate = report.reportDate || report.date || '-';
+                    const rows = reportData.map(person => {
+                        const plans = Array.isArray(person.plans) ? person.plans : [];
+                        const total = plans.reduce((sum, plan) => sum + Number(plan.duration || 0), 0);
+                        const breaks = plans.slice(0, 3).map(plan => `${plan.start || '-'} - ${plan.end || '-'}`);
+                        while (breaks.length < 3) breaks.push('-');
+                        return [person.name || '-', person.shift || '-', ...breaks, `${total} dk`];
+                    });
+                    const worksheet = XLSX.utils.aoa_to_sheet([
+                        ['KidZania İstanbul Mola Çizelgesi'],
+                        [`Tarih: ${formattedDate}`, '', '', '', `Bölge: ${report.region || 'Tümü'}`, ''],
+                        [],
+                        ['Personel Adı', 'Vardiya', 'Mola 1', 'Mola 2', 'Mola 3', 'Toplam Süre'],
+                        ...rows
+                    ]);
+                    applyCorporateSheetStyle(worksheet, {
+                        columnWidths: [30, 15, 19, 19, 19, 15],
+                        headerRow: 3,
+                        lastRow: Math.max(4, rows.length + 3),
+                        accentColor: 'EA580C',
+                        titleEndColumn: 5,
+                        metaMerges: [
+                            { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+                            { s: { r: 1, c: 3 }, e: { r: 1, c: 5 } }
+                        ]
+                    });
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Mola Çizelgesi');
+                    await downloadLandscapeWorkbook(workbook, `KidZania_Mola_Cizelgesi_${formattedDate}.xlsx`);
+                    showAlert('Mola Excel dosyasi yatay yazdirma ayariyla hazirlandi.');
+                } catch (error) {
+                    console.error('Mola Excel Hatasi:', error);
+                    showAlert('Mola Excel dosyasi olusturulurken bir hata olustu.');
+                }
+            }
+            // Mola Excel'indeki veri, dosyaya dogrudan yazilir. Bu yol Excel'in
+            // tum surumlerinde icerigin bosalmasini engeller.
+            function downloadMolaExcel(report) {
+                try {
+                    const reportData = Array.isArray(report.data) ? report.data : [];
+                    const formattedDate = report.reportDate || report.date || '-';
+                    const rows = reportData.map(person => {
+                        const plans = Array.isArray(person.plans) ? person.plans : [];
+                        const total = plans.reduce((sum, plan) => sum + Number(plan.duration || 0), 0);
+                        const breaks = plans.slice(0, 3).map(plan => `${plan.start || '-'} - ${plan.end || '-'}`);
+                        while (breaks.length < 3) breaks.push('-');
+                        return [person.name || '-', person.shift || '-', ...breaks, `${total} dk`];
+                    });
+
+                    const worksheet = XLSX.utils.aoa_to_sheet([
+                        ['KidZania İstanbul Mola Çizelgesi'],
+                        [`Tarih: ${formattedDate}`, '', '', '', `Bölge: ${report.region || 'Tümü'}`, ''],
+                        [],
+                        ['Personel Adı', 'Vardiya', 'Mola 1', 'Mola 2', 'Mola 3', 'Toplam Süre'],
+                        ...rows
+                    ]);
+                    applyCorporateSheetStyle(worksheet, {
+                        columnWidths: [30, 15, 19, 19, 19, 15],
+                        headerRow: 3,
+                        lastRow: Math.max(4, rows.length + 3),
+                        accentColor: 'EA580C',
+                        titleEndColumn: 5,
+                        metaMerges: [
+                            { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
+                            { s: { r: 1, c: 3 }, e: { r: 1, c: 5 } }
+                        ]
+                    });
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Mola Çizelgesi');
+                    XLSX.writeFile(workbook, `KidZania_Mola_Cizelgesi_${formattedDate}.xlsx`);
+                    showAlert('Mola Excel dosyasi veriyle birlikte hazirlandi.');
+                } catch (error) {
+                    console.error('Mola Excel Hatasi:', error);
+                    showAlert('Mola Excel dosyasi olusturulurken bir hata olustu.');
+                }
             }
     </script>
 </body>

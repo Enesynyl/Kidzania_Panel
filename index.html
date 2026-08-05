@@ -3520,9 +3520,10 @@
                     </div>
                 */
             } else {
-                excelBtn.classList.add('hidden');
-                pdfBtn.classList.remove('hidden');
-                pdfBtn.onclick = () => generateDistributionCardsPDF(rep);
+                excelBtn.classList.remove('hidden');
+                excelBtn.onclick = () => downloadDistributionExcel(rep);
+                pdfBtn.classList.add('hidden');
+                pdfBtn.onclick = null;
                 content.innerHTML = rep.data.map(item => `
                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
                         <div class="font-bold text-gray-800 border-b pb-1 mb-2">${item.activityName}</div>
@@ -4740,6 +4741,121 @@
                     showAlert('Dağıtım PDF dosyası oluşturulurken bir hata oluştu.');
                 } finally {
                     page.remove();
+                }
+            }
+
+            // Dağıtım raporları PDF yerine Excel olarak indiriliyor.
+            // Her aktivite, rapor ekranındaki gibi kendi kutusunda gösterilir.
+            function downloadDistributionExcel(report) {
+                try {
+                    if (!window.XLSX) throw new Error('Excel kütüphanesi yüklenemedi.');
+
+                    const reportRows = Array.isArray(report?.data) ? report.data : [];
+                    const fallbackRows = reportRows.length ? reportRows : [{
+                        activityName: 'Aktivite ataması bulunmuyor',
+                        assigned: 'Atama Yok'
+                    }];
+                    const worksheet = XLSX.utils.aoa_to_sheet([]);
+                    const merges = [];
+                    const lastColumn = 7;
+                    const thinBorder = { style: 'thin', color: { rgb: 'D0D5DD' } };
+                    const boxBorder = {
+                        top: thinBorder,
+                        bottom: thinBorder,
+                        left: thinBorder,
+                        right: thinBorder
+                    };
+                    const titleStyle = {
+                        font: { name: 'Arial', sz: 16, bold: true, color: { rgb: 'E31E24' } },
+                        alignment: { horizontal: 'center', vertical: 'center' },
+                        fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFF' } }
+                    };
+                    const infoStyle = {
+                        font: { name: 'Arial', sz: 10, color: { rgb: '475467' } },
+                        alignment: { horizontal: 'center', vertical: 'center' },
+                        fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFF' } }
+                    };
+                    const activityStyle = {
+                        font: { name: 'Arial', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
+                        alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+                        fill: { patternType: 'solid', fgColor: { rgb: 'E31E24' } },
+                        border: boxBorder
+                    };
+                    const assignedStyle = {
+                        font: { name: 'Arial', sz: 10, bold: true, color: { rgb: '344054' } },
+                        alignment: { horizontal: 'left', vertical: 'center', wrapText: true },
+                        fill: { patternType: 'solid', fgColor: { rgb: 'F8FAFC' } },
+                        border: boxBorder
+                    };
+
+                    const setCellRange = (row, firstColumn, lastColumnInRange, value, style) => {
+                        for (let column = firstColumn; column <= lastColumnInRange; column += 1) {
+                            const address = XLSX.utils.encode_cell({ r: row, c: column });
+                            worksheet[address] = {
+                                t: 's',
+                                v: column === firstColumn ? String(value ?? '') : '',
+                                s: style
+                            };
+                        }
+                    };
+
+                    const reportDate = report?.reportDate || report?.date || '-';
+                    const region = report?.region || 'Tümü';
+                    setCellRange(0, 0, lastColumn, report?.title || 'KidZania İstanbul Aktivite Dağıtım Raporu', titleStyle);
+                    merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: lastColumn } });
+                    setCellRange(1, 0, lastColumn, `Tarih: ${reportDate}  |  Bölge: ${region}`, infoStyle);
+                    merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: lastColumn } });
+
+                    let row = 4;
+                    fallbackRows.forEach((item, index) => {
+                        const cardColumn = index % 2 === 0 ? 0 : 4;
+                        if (index > 0 && index % 2 === 0) row += 3;
+
+                        const fallbackName = activities?.[index]?.name || `Aktivite ${index + 1}`;
+                        const activityName = item?.activityName || item?.name || item?.activity || item?.title || fallbackName;
+                        const rawAssigned = Array.isArray(item?.assigned)
+                            ? item.assigned.join(', ')
+                            : item?.assigned;
+                        const assignedPeople = rawAssigned || 'Atama Yok';
+
+                        setCellRange(row, cardColumn, cardColumn + 3, activityName, activityStyle);
+                        merges.push({ s: { r: row, c: cardColumn }, e: { r: row, c: cardColumn + 3 } });
+                        setCellRange(row + 1, cardColumn, cardColumn + 3, `Atanan personeller: ${assignedPeople}`, assignedStyle);
+                        merges.push({ s: { r: row + 1, c: cardColumn }, e: { r: row + 1, c: cardColumn + 3 } });
+                    });
+
+                    worksheet['!merges'] = merges;
+                    worksheet['!cols'] = Array.from({ length: 8 }, () => ({ wch: 15 }));
+                    worksheet['!rows'] = [
+                        { hpt: 28 },
+                        { hpt: 20 },
+                        { hpt: 8 },
+                        { hpt: 8 }
+                    ];
+                    for (let itemRow = 4; itemRow <= row + 1; itemRow += 1) {
+                        worksheet['!rows'][itemRow] = { hpt: itemRow % 3 === 2 ? 36 : 22 };
+                    }
+                    worksheet['!ref'] = `A1:H${row + 2}`;
+                    worksheet['!pageSetup'] = {
+                        orientation: 'landscape',
+                        paperSize: 9,
+                        fitToWidth: 1,
+                        fitToHeight: 1,
+                        horizontalCentered: true,
+                        verticalCentered: false
+                    };
+                    worksheet['!sheetPr'] = { pageSetUpPr: { fitToPage: true } };
+                    worksheet['!margins'] = { left: 0.2, right: 0.2, top: 0.35, bottom: 0.35, header: 0.1, footer: 0.1 };
+                    worksheet['!printOptions'] = { gridLines: false, headings: false };
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, 'Dağıtım Raporu');
+                    const safeDate = String(reportDate).replace(/[\\/:*?"<>|]/g, '-');
+                    XLSX.writeFile(workbook, `KidZania_Dagitim_${safeDate}.xlsx`);
+                    showAlert('Dağıtım raporu kutucuklu Excel olarak indirildi.', 'success');
+                } catch (error) {
+                    console.error('Dağıtım Excel Hatası:', error);
+                    showAlert('Dağıtım Excel dosyası oluşturulurken bir hata oluştu.');
                 }
             }
     </script>

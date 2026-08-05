@@ -3171,10 +3171,12 @@
         async function saveDistributionReport() {
             const id = Date.now();
             const now = new Date();
-            // Filtre alaninin bekledigi YYYY-MM-DD formatini sakla.
-            const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const selectedWorkDate = document.getElementById('dashboard-date-filter')?.value;
+            // Rapor, kaydetme gunune degil vardiya/dağıtım ekranında seçili güne ait olur.
+            const date = selectedWorkDate || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
             const createdAt = now.toLocaleString('tr-TR');
-            const today = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
+            const [reportYear, reportMonth, reportDay] = date.split('-');
+            const today = `${reportDay}.${reportMonth}.${reportYear}`;
             
             let regionName = '';
             if (currentUser.role === 'Manager' && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
@@ -3210,7 +3212,8 @@
                 data: dataArr,
                 reportDate: today,
                 region: regionName || 'Tümü',
-                createdAt
+                createdAt,
+                category: 'distribution'
             };
             savedReports.unshift(newReport);
             
@@ -3279,7 +3282,7 @@
             // standart dağıtım raporları gibi listelenir.
             distReps = savedReports.filter(report => {
                 const reportType = String(report.type || '');
-                return !reportType || reportType.includes('Dağıtım Raporu');
+                return report.category === 'distribution' || !reportType || reportType.includes('Dağıtım Raporu');
             });
 
             if (currentUser.role === 'Manager' && currentUser.assignedRegions?.length > 0) {
@@ -3288,7 +3291,11 @@
             }
 
             if (filterVal) {
-                distReps = distReps.filter(r => r.date === filterVal);
+                distReps = distReps.filter(report =>
+                    report.date === filterVal ||
+                    parseTurkishDate(report.reportDate) === filterVal ||
+                    parseTurkishDate(report.date) === filterVal
+                );
             }
 
             if (distReps.length === 0) {

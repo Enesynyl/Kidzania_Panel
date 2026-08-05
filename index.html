@@ -3522,7 +3522,7 @@
             } else {
                 excelBtn.classList.add('hidden');
                 pdfBtn.classList.remove('hidden');
-                pdfBtn.onclick = () => generateHorizontalPDF(rep);
+                pdfBtn.onclick = () => generateDistributionCardsPDF(rep);
                 content.innerHTML = rep.data.map(item => `
                     <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
                         <div class="font-bold text-gray-800 border-b pb-1 mb-2">${item.activityName}</div>
@@ -4600,6 +4600,45 @@
                 } catch (error) {
                     console.error('Dağıtım raporu kayıt hatası:', error);
                     showAlert('Dağıtım raporu kaydedilemedi. Lütfen internet bağlantısını ve Firebase yetkilerini kontrol edin.');
+                }
+            }
+            // Dağıtım raporları için yalnızca kutucuklu PDF şablonu.
+            // Genel PDF işleyicilerinden bağımsızdır; eski tablo tasarımını çağırmaz.
+            async function generateDistributionCardsPDF(report) {
+                const reportRows = Array.isArray(report.data) ? report.data : [];
+                const cards = reportRows.map((item, index) => {
+                    const fallbackName = activities[index]?.name || `Aktivite ${index + 1}`;
+                    const activityName = item?.activityName || item?.name || item?.activity || item?.title || fallbackName;
+                    const assignedPeople = Array.isArray(item?.assigned)
+                        ? item.assigned.join(', ')
+                        : (item?.assigned || 'Atama Yok');
+
+                    return `
+                        <div style="border:1px solid #D0D5DD; border-radius:8px; overflow:hidden; background:#FFFFFF; min-height:70px;">
+                            <div style="background:#E31E24; color:#FFFFFF; padding:8px 10px; font-weight:700; font-size:9px; line-height:1.25;">
+                                ${escapeReportHtml(activityName)}
+                            </div>
+                            <div style="padding:9px 10px; color:#344054; font-size:8px; line-height:1.4;">
+                                <div style="font-size:7px; color:#98A2B3; font-weight:700; text-transform:uppercase; margin-bottom:4px;">Atanan Personeller</div>
+                                <div style="font-weight:600;">${escapeReportHtml(assignedPeople)}</div>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                const surface = createCorporatePdfSurface({
+                    title: report.title || 'KidZania İstanbul Dağıtım Raporu',
+                    subtitle: 'Aktivite Dağıtım Raporu',
+                    date: report.reportDate || report.date || '-',
+                    accentColor: '#E31E24',
+                    body: `<div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px;">${cards || '<div style="color:#667085; font-size:10px;">Bu raporda aktivite kaydı bulunmuyor.</div>'}</div>`,
+                    rowCount: reportRows.length
+                });
+
+                try {
+                    await exportAsSingleLandscapePdf(surface, `KidZania_Dagitim_${report.id}.pdf`, reportRows.length);
+                } catch (error) {
+                    console.error('Dağıtım PDF Hatası:', error);
+                    showAlert('Dağıtım PDF dosyası oluşturulurken bir hata oluştu.');
                 }
             }
     </script>

@@ -4641,6 +4641,107 @@
                     showAlert('Dağıtım PDF dosyası oluşturulurken bir hata oluştu.');
                 }
             }
+            // Dağıtım PDF'si için konumdan bağımsız, tek sayfalık yazdırma alanı.
+            async function generateDistributionCardsPDF(report) {
+                const reportRows = Array.isArray(report.data) ? report.data : [];
+                const page = document.createElement('div');
+                page.style.cssText = [
+                    'position:fixed',
+                    'left:0',
+                    'top:0',
+                    'z-index:-1',
+                    'width:1080px',
+                    'max-width:none',
+                    'box-sizing:border-box',
+                    'margin:0',
+                    'padding:24px 26px',
+                    'background:#FFFFFF',
+                    'color:#172033',
+                    'font-family:Arial, Helvetica, sans-serif',
+                    'overflow:visible'
+                ].join(';');
+
+                const cards = reportRows.map((item, index) => {
+                    const fallbackName = activities[index]?.name || `Aktivite ${index + 1}`;
+                    const activityName = item?.activityName || item?.name || item?.activity || item?.title || fallbackName;
+                    const assignedPeople = Array.isArray(item?.assigned)
+                        ? item.assigned.join(', ')
+                        : (item?.assigned || 'Atama Yok');
+                    return `
+                        <div style="box-sizing:border-box; border:1px solid #D0D5DD; border-radius:8px; overflow:hidden; background:#FFFFFF; min-height:66px;">
+                            <div style="box-sizing:border-box; background:#E31E24; color:#FFFFFF; padding:7px 9px; font-weight:700; font-size:9px; line-height:1.25; min-height:27px;">
+                                ${escapeReportHtml(activityName)}
+                            </div>
+                            <div style="box-sizing:border-box; padding:8px 9px; color:#344054; font-size:8px; line-height:1.35; min-height:38px;">
+                                <div style="font-size:7px; color:#98A2B3; font-weight:700; text-transform:uppercase; margin-bottom:3px;">Atanan Personeller</div>
+                                <div style="font-weight:600; overflow-wrap:anywhere;">${escapeReportHtml(assignedPeople)}</div>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                page.innerHTML = `
+                    <div style="border-bottom:3px solid #E31E24; padding-bottom:10px; margin-bottom:12px; display:flex; justify-content:space-between; gap:20px;">
+                        <div>
+                            <div style="font-size:20px; font-weight:700; color:#E31E24;">KidZania İstanbul</div>
+                            <div style="font-size:12px; font-weight:700; margin-top:3px;">Aktivite Dağıtım Raporu</div>
+                        </div>
+                        <div style="font-size:9px; color:#667085; text-align:right; line-height:1.45;">
+                            <div style="font-weight:700; color:#344054;">${escapeReportHtml(report.title || '')}</div>
+                            <div>Tarih: ${escapeReportHtml(report.reportDate || report.date || '-')}</div>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:9px;">
+                        ${cards || '<div style="font-size:10px; color:#667085;">Bu raporda aktivite kaydı bulunmuyor.</div>'}
+                    </div>
+                    <div style="margin-top:10px; padding-top:7px; border-top:1px solid #D0D5DD; text-align:center; color:#98A2B3; font-size:7px;">KidZania İstanbul Yönetim Paneli tarafından otomatik oluşturulmuştur.</div>
+                `;
+                document.body.appendChild(page);
+
+                try {
+                    const JsPdf = window.jspdf?.jsPDF || window.jsPDF;
+                    if (!JsPdf || typeof html2pdf !== 'function') throw new Error('PDF kütüphaneleri yüklenemedi.');
+
+                    const worker = html2pdf().set({
+                        html2canvas: {
+                            scale: 2,
+                            useCORS: true,
+                            backgroundColor: '#FFFFFF',
+                            logging: false,
+                            scrollX: 0,
+                            scrollY: 0,
+                            windowWidth: 1080,
+                            windowHeight: page.scrollHeight
+                        }
+                    }).from(page).toCanvas();
+                    await worker;
+                    const canvas = await worker.get('canvas');
+                    if (!canvas) throw new Error('PDF görüntüsü oluşturulamadı.');
+
+                    const pdf = new JsPdf({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const margin = 4;
+                    const scale = Math.min((pageWidth - margin * 2) / canvas.width, (pageHeight - margin * 2) / canvas.height);
+                    const imageWidth = canvas.width * scale;
+                    const imageHeight = canvas.height * scale;
+                    pdf.addImage(
+                        canvas.toDataURL('image/jpeg', 0.98),
+                        'JPEG',
+                        (pageWidth - imageWidth) / 2,
+                        (pageHeight - imageHeight) / 2,
+                        imageWidth,
+                        imageHeight,
+                        undefined,
+                        'FAST'
+                    );
+                    pdf.save(`KidZania_Dagitim_${report.id}.pdf`);
+                } catch (error) {
+                    console.error('Dağıtım PDF Hatası:', error);
+                    showAlert('Dağıtım PDF dosyası oluşturulurken bir hata oluştu.');
+                } finally {
+                    page.remove();
+                }
+            }
     </script>
 </body>
 </html>

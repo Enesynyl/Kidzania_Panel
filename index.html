@@ -457,6 +457,27 @@
         <span id="alert-message" class="font-semibold text-sm"></span>
     </div>
 
+    <!-- PERSONEL GEÇMİŞİ MODALI -->
+    <div id="personnel-history-modal" class="fixed inset-0 bg-black/50 z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between gap-4 p-5 border-b bg-gradient-to-r from-slate-800 to-slate-700 text-white">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">Personel Profili</p>
+                    <h3 id="personnel-history-title" class="font-bold text-lg">Personel Geçmişi</h3>
+                </div>
+                <button type="button" onclick="closePersonnelHistory()" class="w-9 h-9 rounded-lg bg-white/10 hover:bg-white/20 transition" aria-label="Kapat">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="personnel-history-content" class="p-5 overflow-y-auto text-sm">
+                <div class="py-12 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Geçmiş bilgileri yükleniyor...</div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 flex justify-end">
+                <button type="button" onclick="closePersonnelHistory()" class="px-4 py-2 text-xs font-bold rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 transition">Kapat</button>
+            </div>
+        </div>
+    </div>
+
     <!-- RAPOR DETAY MODALI -->
     <div id="report-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative">
@@ -1128,7 +1149,54 @@
                         </form>
                     </div>
                     <div id="personnel-table-section" class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border">
-                        <h3 class="font-bold mb-4">Mevcut Personeller & Sertifika Yönetimi</h3>
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                            <h3 class="font-bold">Mevcut Personeller & Sertifika Yönetimi</h3>
+                            <span id="personnel-filter-result-count" class="text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">0 personel</span>
+                        </div>
+                        <div class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                                <label class="relative block sm:col-span-2 xl:col-span-1">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                                    <input id="personnel-search-filter" type="search" oninput="renderPersonnelTable()" placeholder="Personel adı veya ünvan ara..." class="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-red-300">
+                                </label>
+                                <select id="personnel-region-filter" onchange="renderPersonnelTable()" class="w-full px-2 py-2 text-xs border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-red-300">
+                                    <option value="">Tüm Bölgeler</option>
+                                    <option value="1. Bölge">1. Bölge</option>
+                                    <option value="2. Bölge">2. Bölge</option>
+                                    <option value="3. Bölge">3. Bölge</option>
+                                    <option value="4. Bölge">4. Bölge</option>
+                                </select>
+                                <select id="personnel-title-filter" onchange="renderPersonnelTable()" class="w-full px-2 py-2 text-xs border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-red-300">
+                                    <option value="">Tüm Ünvanlar</option>
+                                </select>
+                                <select id="personnel-shift-filter" onchange="renderPersonnelTable()" class="w-full px-2 py-2 text-xs border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-red-300">
+                                    <option value="">Tüm Vardiyalar</option>
+                                    <option value="Sabahçı">Sabahçı</option>
+                                    <option value="Akşamcı">Akşamcı</option>
+                                    <option value="Full">Full</option>
+                                    <option value="Seçilmedi">Seçilmedi</option>
+                                </select>
+                                <select id="personnel-certificate-filter" onchange="renderPersonnelTable()" class="w-full px-2 py-2 text-xs border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-red-300">
+                                    <option value="">Tüm Sertifikalar</option>
+                                    <option value="hygiene">Hijyen Sertifikası</option>
+                                    <option value="height">Yükseklik Sertifikası</option>
+                                    <option value="both">İki Sertifika</option>
+                                    <option value="none">Sertifika Yok</option>
+                                </select>
+                                <select id="personnel-leave-filter" onchange="renderPersonnelTable()" class="w-full px-2 py-2 text-xs border border-gray-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-red-300">
+                                    <option value="">Tüm İzin Durumları</option>
+                                    <option value="active">Çalışıyor</option>
+                                    <option value="İzinli">İzinli</option>
+                                    <option value="Raporlu">Raporlu</option>
+                                    <option value="Yıllık İzin">Yıllık İzin</option>
+                                    <option value="Ücretsiz İzin">Ücretsiz İzin</option>
+                                    <option value="Günü Değil">Günü Değil</option>
+                                </select>
+                                <button type="button" onclick="clearPersonnelFilters()" class="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-bold text-gray-600 border border-gray-200 rounded-lg bg-white hover:bg-gray-100 transition">
+                                    <i class="fa-solid fa-filter-circle-xmark"></i> Temizle
+                                </button>
+                            </div>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
                                 <thead>
@@ -2991,6 +3059,66 @@
             showAlert("Aktivite silindi.");
         }
 
+        function escapePersonnelHistoryHtml(value) {
+            return String(value ?? '').replace(/[&<>'"]/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            })[character]);
+        }
+
+        function populatePersonnelTitleFilter() {
+            const select = document.getElementById('personnel-title-filter');
+            if (!select) return;
+            const selectedValue = select.value;
+            const titles = [...new Set(personeller.map(person => String(person.title || '').trim()).filter(Boolean))]
+                .sort((first, second) => first.localeCompare(second, 'tr'));
+            select.innerHTML = `<option value="">Tüm Ünvanlar</option>${titles.map(title =>
+                `<option value="${escapePersonnelHistoryHtml(title)}">${escapePersonnelHistoryHtml(title)}</option>`
+            ).join('')}`;
+            if (titles.includes(selectedValue)) select.value = selectedValue;
+        }
+
+        function getPersonnelFilters() {
+            return {
+                search: document.getElementById('personnel-search-filter')?.value.trim().toLocaleLowerCase('tr-TR') || '',
+                region: document.getElementById('personnel-region-filter')?.value || '',
+                title: document.getElementById('personnel-title-filter')?.value || '',
+                shift: document.getElementById('personnel-shift-filter')?.value || '',
+                certificate: document.getElementById('personnel-certificate-filter')?.value || '',
+                leave: document.getElementById('personnel-leave-filter')?.value || ''
+            };
+        }
+
+        function clearPersonnelFilters() {
+            ['personnel-search-filter', 'personnel-region-filter', 'personnel-title-filter', 'personnel-shift-filter', 'personnel-certificate-filter', 'personnel-leave-filter']
+                .forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) element.value = '';
+                });
+            renderPersonnelTable();
+        }
+
+        function isPersonnelMatchingFilters(person, filters) {
+            const shift = person.shift || 'Seçilmedi';
+            const searchText = `${person.name || ''} ${person.title || ''} ${person.region || ''} ${person.type || ''}`.toLocaleLowerCase('tr-TR');
+            const activeShift = ['Sabahçı', 'Akşamcı', 'Full'].includes(shift);
+
+            if (filters.search && !searchText.includes(filters.search)) return false;
+            if (filters.region && person.region !== filters.region) return false;
+            if (filters.title && person.title !== filters.title) return false;
+            if (filters.shift && shift !== filters.shift) return false;
+            if (filters.certificate === 'hygiene' && !person.certHygiene) return false;
+            if (filters.certificate === 'height' && !person.certHeight) return false;
+            if (filters.certificate === 'both' && !(person.certHygiene && person.certHeight)) return false;
+            if (filters.certificate === 'none' && (person.certHygiene || person.certHeight)) return false;
+            if (filters.leave === 'active' && !activeShift) return false;
+            if (filters.leave && filters.leave !== 'active' && shift !== filters.leave) return false;
+            return true;
+        }
+
         function renderPersonnelTable() {
             const tbody = document.getElementById('personnel-table-body');
             const isAdmin = currentUser && currentUser.role === 'Admin';
@@ -3006,12 +3134,18 @@
                 if (tableSection) { tableSection.classList.add('lg:col-span-2'); tableSection.classList.remove('lg:col-span-3'); }
             }
 
+            populatePersonnelTitleFilter();
+            const filters = getPersonnelFilters();
             let displayPersonnel = personeller;
             if (isManager && currentUser.assignedRegions && currentUser.assignedRegions.length > 0) {
                 displayPersonnel = personeller.filter(p => currentUser.assignedRegions.includes(p.region));
             }
+            const accessiblePersonnelCount = displayPersonnel.length;
+            displayPersonnel = displayPersonnel.filter(person => isPersonnelMatchingFilters(person, filters));
+            const resultCount = document.getElementById('personnel-filter-result-count');
+            if (resultCount) resultCount.textContent = `${displayPersonnel.length} / ${accessiblePersonnelCount} personel`;
 
-            tbody.innerHTML = displayPersonnel.map(p => `
+            tbody.innerHTML = displayPersonnel.length ? displayPersonnel.map(p => `
                 <tr class="border-b">
                     <td class="p-3">
                         <div class="font-medium">${p.name}</div>
@@ -3048,10 +3182,185 @@
                         </label>
                     </td>
                     <td class="p-3 text-right">
-                        ${isAdmin ? `<button onclick="deletePersonnel(${p.id})" class="text-red-500 hover:text-red-700 text-sm"><i class="fa-solid fa-trash"></i></button>` : '<span class="text-gray-300 text-xs italic">Yetki Yok</span>'}
+                        <div class="flex items-center justify-end gap-2">
+                            <button type="button" onclick="openPersonnelHistory(${p.id})" class="text-blue-600 hover:text-blue-800 text-sm" title="Personel geçmişini görüntüle"><i class="fa-solid fa-clock-rotate-left"></i></button>
+                            ${isAdmin ? `<button onclick="deletePersonnel(${p.id})" class="text-red-500 hover:text-red-700 text-sm" title="Personeli sil"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        </div>
                     </td>
                 </tr>
-            `).join('');
+            `).join('') : '<tr><td colspan="6" class="p-8 text-center text-sm italic text-gray-400">Seçtiğiniz filtrelere uygun personel bulunamadı.</td></tr>';
+        }
+
+        function formatPersonnelHistoryDate(date) {
+            const value = String(date || '');
+            if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                const [year, month, day] = value.split('-');
+                return `${day}.${month}.${year}`;
+            }
+            return value || '-';
+        }
+
+        function formatPersonnelHistoryMinutes(minutes) {
+            const total = Math.max(0, Number(minutes) || 0);
+            const hours = Math.floor(total / 60);
+            const remainingMinutes = total % 60;
+            return hours ? `${hours} sa ${remainingMinutes} dk` : `${remainingMinutes} dk`;
+        }
+
+        function personnelHistoryShiftClass(shift) {
+            const classMap = {
+                'Sabahçı': 'bg-yellow-100 text-yellow-800',
+                'Akşamcı': 'bg-indigo-100 text-indigo-800',
+                'Full': 'bg-orange-100 text-orange-800',
+                'İzinli': 'bg-green-100 text-green-800',
+                'Raporlu': 'bg-teal-100 text-teal-800',
+                'Yıllık İzin': 'bg-blue-100 text-blue-800',
+                'Ücretsiz İzin': 'bg-purple-100 text-purple-800',
+                'Günü Değil': 'bg-pink-100 text-pink-800'
+            };
+            return classMap[shift] || 'bg-gray-100 text-gray-600';
+        }
+
+        function closePersonnelHistory() {
+            document.getElementById('personnel-history-modal')?.classList.add('hidden');
+        }
+
+        async function openPersonnelHistory(id) {
+            const person = personeller.find(item => String(item.id) === String(id));
+            if (!person) {
+                showAlert('Personel bilgisi bulunamadı.');
+                return;
+            }
+            if (currentUser?.role === 'Manager' && currentUser.assignedRegions?.length && !currentUser.assignedRegions.includes(person.region)) {
+                showAlert('Sadece sorumlu olduğunuz bölgedeki personellerin geçmişini görebilirsiniz.');
+                return;
+            }
+
+            const modal = document.getElementById('personnel-history-modal');
+            const title = document.getElementById('personnel-history-title');
+            const content = document.getElementById('personnel-history-content');
+            if (!modal || !title || !content) return;
+
+            title.textContent = `${person.name} · Personel Geçmişi`;
+            content.innerHTML = '<div class="py-12 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Geçmiş bilgileri yükleniyor...</div>';
+            modal.classList.remove('hidden');
+
+            try {
+                const personId = String(person.id);
+                const [shiftSnapshot, molaSnapshot] = await Promise.all([
+                    window.colDocs.getDocs(window.colDocs.collection(window.db, 'dailyShifts')),
+                    window.colDocs.getDocs(window.colDocs.collection(window.db, 'molaSchedules'))
+                ]);
+
+                const knownDates = new Set();
+                const shiftHistory = [];
+                shiftSnapshot.forEach(shiftDocument => {
+                    const data = shiftDocument.data() || {};
+                    const date = String(data.date || shiftDocument.id || '');
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) knownDates.add(date);
+                    const shifts = data.shifts || {};
+                    const shift = shifts[personId] !== undefined ? shifts[personId] : shifts[person.id];
+                    if (shift !== undefined && shift !== null) {
+                        shiftHistory.push({ date, shift: String(shift) });
+                    }
+                });
+
+                const molaHistory = [];
+                molaSnapshot.forEach(molaDocument => {
+                    const data = molaDocument.data() || {};
+                    const documentId = String(molaDocument.id || '');
+                    const belongsToPerson = documentId.endsWith(`_${personId}`) || String(data.personId || '') === personId;
+                    if (!belongsToPerson) return;
+                    const date = String(data.date || documentId.slice(0, 10) || '');
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) knownDates.add(date);
+                    const plans = Array.isArray(data.list) ? data.list : [];
+                    const minutes = plans.reduce((sum, plan) => {
+                        const duration = Number(plan?.duration);
+                        const calculatedDuration = Number(plan?.endMin) - Number(plan?.startMin);
+                        return sum + (Number.isFinite(duration) && duration > 0 ? duration : (Number.isFinite(calculatedDuration) && calculatedDuration > 0 ? calculatedDuration : 0));
+                    }, 0);
+                    molaHistory.push({ date, minutes, plans });
+                });
+
+                // Dağıtım raporu kaydedilmiş günler, vardiya kaydı olmasa bile
+                // aktivite geçmişi taramasına dahil edilir.
+                savedReports.forEach(report => {
+                    const reportDate = String(report?.date || '');
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(reportDate)) knownDates.add(reportDate);
+                });
+                const currentDate = document.getElementById('dashboard-date-filter')?.value;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(currentDate || '')) knownDates.add(currentDate);
+                const dates = [...knownDates].sort((first, second) => second.localeCompare(first));
+                const activityHistory = [];
+
+                await Promise.all(dates.map(async date => {
+                    try {
+                        const assignmentSnapshot = await window.colDocs.getDocs(
+                            window.colDocs.collection(window.db, `dailyAssignments/${date}/activities`)
+                        );
+                        assignmentSnapshot.forEach(assignmentDocument => {
+                            const data = assignmentDocument.data() || {};
+                            const assignedIds = Array.isArray(data.list) ? data.list : [];
+                            if (!assignedIds.some(assignedId => String(assignedId) === personId)) return;
+                            const activity = activities.find(item => String(item.id) === String(assignmentDocument.id));
+                            activityHistory.push({
+                                date,
+                                activityName: activity?.name || data.activityName || `Aktivite #${assignmentDocument.id}`
+                            });
+                        });
+                    } catch (assignmentError) {
+                        console.warn(`${date} tarihli aktivite geçmişi okunamadı:`, assignmentError);
+                    }
+                }));
+
+                shiftHistory.sort((first, second) => second.date.localeCompare(first.date));
+                molaHistory.sort((first, second) => second.date.localeCompare(first.date));
+                activityHistory.sort((first, second) => second.date.localeCompare(first.date));
+
+                const activeShiftCount = shiftHistory.filter(item => ['Sabahçı', 'Akşamcı', 'Full'].includes(item.shift)).length;
+                const leaveHistory = shiftHistory.filter(item => !['Sabahçı', 'Akşamcı', 'Full', 'Seçilmedi'].includes(item.shift));
+                const totalBreakMinutes = molaHistory.reduce((sum, item) => sum + item.minutes, 0);
+                const certificateBadges = [
+                    person.certHygiene ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-[11px] font-bold"><i class="fa-solid fa-shield-heart mr-1"></i> Hijyen</span>' : '',
+                    person.certHeight ? '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-[11px] font-bold"><i class="fa-solid fa-arrow-up-right-dots mr-1"></i> Yükseklik</span>' : ''
+                ].filter(Boolean).join('') || '<span class="bg-gray-100 text-gray-500 px-2 py-1 rounded-full text-[11px] font-bold">Sertifika kaydı yok</span>';
+
+                const emptyState = message => `<div class="py-7 text-center text-xs italic text-gray-400">${message}</div>`;
+                content.innerHTML = `
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-5 border-b">
+                        <div>
+                            <h4 class="text-xl font-bold text-gray-800">${escapePersonnelHistoryHtml(person.name)}</h4>
+                            <p class="text-sm text-gray-500 mt-1">${escapePersonnelHistoryHtml(person.title || 'Ünvan belirtilmedi')} · ${escapePersonnelHistoryHtml(person.type || 'Çalışma tipi belirtilmedi')} · ${escapePersonnelHistoryHtml(person.region || 'Bölge belirtilmedi')}</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">${certificateBadges}</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 my-5">
+                        <div class="p-3 rounded-xl bg-yellow-50 border border-yellow-100"><div class="text-[10px] font-bold uppercase text-yellow-700">Çalışılan vardiya</div><div class="mt-1 text-2xl font-black text-yellow-800">${activeShiftCount}</div><div class="text-[10px] text-yellow-700">gün</div></div>
+                        <div class="p-3 rounded-xl bg-green-50 border border-green-100"><div class="text-[10px] font-bold uppercase text-green-700">İzin / rapor</div><div class="mt-1 text-2xl font-black text-green-800">${leaveHistory.length}</div><div class="text-[10px] text-green-700">kayıt</div></div>
+                        <div class="p-3 rounded-xl bg-red-50 border border-red-100"><div class="text-[10px] font-bold uppercase text-red-700">Aktivite ataması</div><div class="mt-1 text-2xl font-black text-red-800">${activityHistory.length}</div><div class="text-[10px] text-red-700">kayıt</div></div>
+                        <div class="p-3 rounded-xl bg-indigo-50 border border-indigo-100"><div class="text-[10px] font-bold uppercase text-indigo-700">Toplam mola</div><div class="mt-1 text-2xl font-black text-indigo-800">${formatPersonnelHistoryMinutes(totalBreakMinutes)}</div><div class="text-[10px] text-indigo-700">tüm kayıtlar</div></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                        <section class="border rounded-xl overflow-hidden">
+                            <div class="px-4 py-3 bg-slate-50 border-b font-bold text-gray-800"><i class="fa-solid fa-calendar-days text-slate-600 mr-2"></i>Vardiya & İzin Geçmişi</div>
+                            <div class="max-h-72 overflow-y-auto divide-y">${shiftHistory.length ? shiftHistory.map(item => `<div class="p-3 flex items-center justify-between gap-2"><span class="text-xs font-semibold text-gray-600">${formatPersonnelHistoryDate(item.date)}</span><span class="px-2 py-1 rounded-full text-[10px] font-bold ${personnelHistoryShiftClass(item.shift)}">${escapePersonnelHistoryHtml(item.shift)}</span></div>`).join('') : emptyState('Henüz vardiya veya izin kaydı yok.')}</div>
+                        </section>
+                        <section class="border rounded-xl overflow-hidden">
+                            <div class="px-4 py-3 bg-slate-50 border-b font-bold text-gray-800"><i class="fa-solid fa-shapes text-red-600 mr-2"></i>Çalışılan Aktiviteler</div>
+                            <div class="max-h-72 overflow-y-auto divide-y">${activityHistory.length ? activityHistory.map(item => `<div class="p-3"><div class="text-xs font-bold text-gray-800">${escapePersonnelHistoryHtml(item.activityName)}</div><div class="mt-1 text-[10px] text-gray-500"><i class="fa-regular fa-calendar mr-1"></i>${formatPersonnelHistoryDate(item.date)}</div></div>`).join('') : emptyState('Henüz aktivite ataması kaydı yok.')}</div>
+                        </section>
+                        <section class="border rounded-xl overflow-hidden">
+                            <div class="px-4 py-3 bg-slate-50 border-b font-bold text-gray-800"><i class="fa-solid fa-mug-hot text-indigo-600 mr-2"></i>Mola Geçmişi</div>
+                            <div class="max-h-72 overflow-y-auto divide-y">${molaHistory.length ? molaHistory.map(item => `<div class="p-3"><div class="flex items-center justify-between gap-2"><span class="text-xs font-semibold text-gray-600">${formatPersonnelHistoryDate(item.date)}</span><span class="text-xs font-black text-indigo-700">${formatPersonnelHistoryMinutes(item.minutes)}</span></div><div class="mt-1 text-[10px] text-gray-500">${item.plans.map(plan => `${escapePersonnelHistoryHtml(plan.start || '--:--')} - ${escapePersonnelHistoryHtml(plan.end || '--:--')}`).join(' · ') || 'Mola saati belirtilmedi'}</div></div>`).join('') : emptyState('Henüz mola kaydı yok.')}</div>
+                        </section>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Personel geçmişi yükleme hatası:', error);
+                content.innerHTML = '<div class="py-12 text-center text-sm text-red-600"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Personel geçmişi yüklenirken bir hata oluştu.</div>';
+            }
         }
 
         async function updatePersonnelRegion(id, newRegion) {

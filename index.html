@@ -4468,6 +4468,129 @@
                     showAlert('Mola Excel dosyasi olusturulurken bir hata olustu.');
                 }
             }
+            // Dağıtım raporunu seçili vardiya tarihine zorunlu olarak bağlar ve
+            // kaydın Firebase'e yazıldığını doğrulamadan başarılı saymaz.
+            function distributionReportDate(report) {
+                if (typeof report?.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(report.date)) return report.date;
+                const displayDate = String(report?.reportDate || report?.date || '').split(' ')[0];
+                const parts = displayDate.split('.');
+                if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                return '';
+            }
+
+            function isDistributionReport(report) {
+                const type = String(report?.type || '');
+                const title = String(report?.title || '');
+                return report?.category === 'distribution' || !type || type.includes('Dağıtım Raporu') || title.includes('Dağıtım Takip');
+            }
+
+            function renderDistributionReports() {
+                const list = document.getElementById('distribution-reports-list');
+                if (!list) return;
+                const filterDate = document.getElementById('distribution-date-filter')?.value || '';
+                let reports = savedReports.filter(isDistributionReport);
+
+                if (currentUser?.role === 'Manager' && currentUser.assignedRegions?.length) {
+                    const managerRegion = currentUser.assignedRegions[0];
+                    reports = reports.filter(report =>
+                        report.region === managerRegion ||
+                        String(report.type || '').includes(managerRegion) ||
+                        String(report.title || '').includes(managerRegion)
+                    );
+                }
+                if (filterDate) reports = reports.filter(report => distributionReportDate(report) === filterDate);
+
+                reports.sort((first, second) => Number(second.id || 0) - Number(first.id || 0));
+                if (reports.length === 0) {
+                    list.innerHTML = '<div class="p-8 text-center text-gray-400 text-sm italic">Seçili tarih ve bölge için kayıtlı dağıtım raporu bulunamadı.</div>';
+                    return;
+                }
+
+                list.innerHTML = reports.map(report => `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="p-2 bg-red-50 text-red-600 rounded-lg"><i class="fa-solid fa-file-lines text-lg"></i></div>
+                            <div class="flex gap-1">
+                                <button onclick="openReportModal(${report.id})" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition" title="Raporu görüntüle"><i class="fa-solid fa-eye"></i></button>
+                                <button onclick="deleteReport(${report.id})" class="text-red-600 hover:bg-red-50 p-1.5 rounded transition" title="Raporu sil"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-sm mb-1">${report.title || `${distributionReportDate(report)} Dağıtım Raporu`}</h4>
+                        <p class="text-[10px] text-gray-500 mb-3"><i class="fa-solid fa-calendar-day mr-1"></i> ${report.reportDate || distributionReportDate(report)}</p>
+                        <button onclick="openReportModal(${report.id})" class="w-full bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-bold py-2 rounded-lg transition border border-gray-200">Detayları Gör</button>
+                    </div>
+                `).join('');
+            }
+
+            async function saveDistributionReport() {
+                const selectedDate = document.getElementById('dashboard-date-filter')?.value;
+                if (!selectedDate) {
+                    showAlert('Raporu kaydetmeden önce vardiya/dağıtım ekranından bir tarih seçmelisiniz.');
+                    return;
+                }
+
+                try {
+                    const [year, month, day] = selectedDate.split('-');
+                    const reportDate = `${day}.${month}.${year}`;
+                    const reportId = Date.now();
+                    const createdAt = new Date().toLocaleString('tr-TR');
+                    let region = currentDistRegion === 'Tümü' ? 'Tümü' : currentDistRegion;
+                    if (currentUser?.role === 'Manager' && currentUser.assignedRegions?.length) region = currentUser.assignedRegions[0];
+
+                    // Atama yapılan günün kalıcı kayıtlarını oku. Ekrandaki veri henüz
+                    // yenilenmemiş olsa bile rapora doğru dağıtım bilgisi gelir.
+                    const assignmentSnapshot = await window.colDocs.getDocs(
+                        window.colDocs.collection(window.db, `dailyAssignments/${selectedDate}/activities`)
+                    );
+                    const savedAssignments = {};
+                    assignmentSnapshot.forEach(assignmentDoc => {
+                        const ids = Array.isArray(assignmentDoc.data().list) ? assignmentDoc.data().list : [];
+                        savedAssignments[assignmentDoc.id] = ids.map(id => {
+                            const person = personeller.find(item => String(item.id) === String(id));
+                            return person ? person.name : String(id);
+                        });
+                    });
+                    const reportAssignments = Object.keys(savedAssignments).length ? savedAssignments : assignments;
+                    const reportData = activities.map(activity => {
+                        const people = Array.isArray(reportAssignments[activity.id]) ? reportAssignments[activity.id] : [];
+                        return {
+                            activityName: activity.name,
+                            assigned: people.length ? people.join(', ') : 'Atama Yok'
+                        };
+                    });
+                    const molacilar = Array.isArray(reportAssignments.molacilar) ? reportAssignments.molacilar : [];
+                    if (molacilar.length) reportData.push({ activityName: 'MOLACILAR', assigned: molacilar.join(', ') });
+
+                    const report = {
+                        id: reportId,
+                        category: 'distribution',
+                        type: 'Dağıtım Raporu',
+                        date: selectedDate,
+                        reportDate,
+                        createdAt,
+                        region,
+                        title: `KidZania İstanbul ${region} Dağıtım Takip Çizelgesi (${reportDate})`.replace(/\s+/g, ' '),
+                        data: reportData
+                    };
+
+                    const reportReference = window.colDocs.doc(window.db, 'savedReports', String(reportId));
+                    await window.colDocs.setDoc(reportReference, report);
+                    const verification = await window.colDocs.getDoc(reportReference);
+                    if (!verification.exists()) throw new Error('Rapor Firebase üzerinde doğrulanamadı.');
+
+                    // Listeyi Firebase'den yeniden yüklemek, sayfa/sekme değişse de
+                    // raporun anında görünmesini garanti eder.
+                    const reportsSnapshot = await window.colDocs.getDocs(window.colDocs.collection(window.db, 'savedReports'));
+                    savedReports = reportsSnapshot.docs.map(reportDoc => reportDoc.data());
+                    assignments = {};
+                    renderDashboard();
+                    renderReports();
+                    showAlert(`${reportDate} tarihli dağıtım raporu kaydedildi ve raporlara eklendi.`);
+                } catch (error) {
+                    console.error('Dağıtım raporu kayıt hatası:', error);
+                    showAlert('Dağıtım raporu kaydedilemedi. Lütfen internet bağlantısını ve Firebase yetkilerini kontrol edin.');
+                }
+            }
     </script>
 </body>
 </html>

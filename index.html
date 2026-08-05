@@ -2728,6 +2728,38 @@
             renderScheduleTable();
         }
 
+        const scheduleShiftOptions = [
+            { value: 'Sabahçı', label: 'Sabahçı', icon: 'fa-sun', classes: 'bg-yellow-50 text-yellow-800 border-yellow-200 hover:bg-yellow-100' },
+            { value: 'Akşamcı', label: 'Akşamcı', icon: 'fa-moon', classes: 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100' },
+            { value: 'Full', label: 'Full', icon: 'fa-briefcase', classes: 'bg-orange-50 text-orange-800 border-orange-200 hover:bg-orange-100' },
+            { value: 'İzinli', label: 'İzinli', icon: 'fa-umbrella-beach', classes: 'bg-green-50 text-green-800 border-green-200 hover:bg-green-100' },
+            { value: 'Raporlu', label: 'Raporlu', icon: 'fa-notes-medical', classes: 'bg-teal-50 text-teal-800 border-teal-200 hover:bg-teal-100' },
+            { value: 'Ücretsiz İzin', label: 'Ücretsiz İzin', icon: 'fa-hand-holding-heart', classes: 'bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100' },
+            { value: 'Yıllık İzin', label: 'Yıllık İzin', icon: 'fa-calendar-check', classes: 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100' },
+            { value: 'Günü Değil', label: 'Günü Değil', icon: 'fa-calendar-xmark', classes: 'bg-pink-50 text-pink-800 border-pink-200 hover:bg-pink-100' },
+            { value: 'Seçilmedi', label: 'Temizle', icon: 'fa-rotate-left', classes: 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100' }
+        ];
+
+        function renderShiftStatusButtons(personId, currentShift) {
+            const selectedShift = currentShift || 'Seçilmedi';
+            return `
+                <div data-shift-group="${personId}" class="flex flex-wrap gap-1.5 min-w-[360px]">
+                    ${scheduleShiftOptions.map(option => {
+                        const isSelected = option.value === selectedShift;
+                        return `
+                            <button
+                                type="button"
+                                data-shift-status="${option.value}"
+                                aria-pressed="${isSelected}"
+                                title="${option.label} olarak ayarla"
+                                onclick="updateShiftLocal('${personId}', '${option.value}')"
+                                class="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold transition ${option.classes} ${isSelected ? 'ring-2 ring-slate-700 ring-offset-1 shadow-sm' : ''}">
+                                <i class="fa-solid ${option.icon}"></i>${option.label}
+                            </button>`;
+                    }).join('')}
+                </div>`;
+        }
+
         async function renderScheduleTable() {
             const tbody = document.getElementById('schedule-table-body');
             const date = document.getElementById('schedule-date-filter').value;
@@ -2777,17 +2809,7 @@
                         </div>
                     </td>
                     <td class="p-3">
-                        <select onchange="updateShiftLocal(${p.id}, this.value)" class="p-1 border rounded text-xs w-full">
-                            <option value="Seçilmedi" ${currentShift === 'Seçilmedi' ? 'selected' : ''}>- Seçiniz -</option>
-                            <option value="Sabahçı" ${currentShift === 'Sabahçı' ? 'selected' : ''}>Sabahçı</option>
-                            <option value="Akşamcı" ${currentShift === 'Akşamcı' ? 'selected' : ''}>Akşamcı</option>
-                            <option value="Full" ${currentShift === 'Full' ? 'selected' : ''}>Full</option>
-                            <option value="İzinli" ${currentShift === 'İzinli' ? 'selected' : ''}>İzinli</option>
-                            <option value="Raporlu" ${currentShift === 'Raporlu' ? 'selected' : ''}>Raporlu</option>
-                            <option value="Ücretsiz İzin" ${currentShift === 'Ücretsiz İzin' ? 'selected' : ''}>Ücretsiz İzin</option>
-                            <option value="Yıllık İzin" ${currentShift === 'Yıllık İzin' ? 'selected' : ''}>Yıllık İzin</option>
-                            <option value="Günü Değil" ${currentShift === 'Günü Değil' ? 'selected' : ''}>Günü Değil</option>
-                        </select>
+                        ${renderShiftStatusButtons(p.id, currentShift)}
                     </td>
                 </tr>
             `}).join('');
@@ -2812,6 +2834,20 @@
 
         function updateShiftLocal(id, newShift) {
             dailyShifts[id] = newShift;
+            const person = personeller.find(item => String(item.id) === String(id));
+            if (person) person.shift = newShift;
+
+            const buttonGroup = document.querySelector(`[data-shift-group="${id}"]`);
+            if (!buttonGroup) return;
+
+            buttonGroup.querySelectorAll('button[data-shift-status]').forEach(button => {
+                const isSelected = button.dataset.shiftStatus === newShift;
+                button.setAttribute('aria-pressed', String(isSelected));
+                button.classList.toggle('ring-2', isSelected);
+                button.classList.toggle('ring-slate-700', isSelected);
+                button.classList.toggle('ring-offset-1', isSelected);
+                button.classList.toggle('shadow-sm', isSelected);
+            });
         }
 
         async function saveScheduleAndRegisterTask(goToDashboard = false) {

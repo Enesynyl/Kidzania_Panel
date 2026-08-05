@@ -3171,7 +3171,9 @@
         async function saveDistributionReport() {
             const id = Date.now();
             const now = new Date();
-            const date = now.toLocaleString();
+            // Filtre alaninin bekledigi YYYY-MM-DD formatini sakla.
+            const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            const createdAt = now.toLocaleString('tr-TR');
             const today = `${String(now.getDate()).padStart(2,'0')}.${String(now.getMonth()+1).padStart(2,'0')}.${now.getFullYear()}`;
             
             let regionName = '';
@@ -3200,7 +3202,16 @@
                 });
             }
 
-            const newReport = { id, date, type: reportType, title: reportTitle, data: dataArr, reportDate: today };
+            const newReport = {
+                id,
+                date,
+                type: reportType,
+                title: reportTitle,
+                data: dataArr,
+                reportDate: today,
+                region: regionName || 'Tümü',
+                createdAt
+            };
             savedReports.unshift(newReport);
             
             await window.colDocs.setDoc(window.colDocs.doc(window.db, "savedReports", String(id)), newReport);
@@ -3264,6 +3275,13 @@
             
             let distReps = savedReports.filter(r => r.type === 'Dağıtım Raporu' || !r.type);
             
+            // Eski bölge bazlı rapor tipleri ("2. Bölge Dağıtım Raporu") da
+            // standart dağıtım raporları gibi listelenir.
+            distReps = savedReports.filter(report => {
+                const reportType = String(report.type || '');
+                return !reportType || reportType.includes('Dağıtım Raporu');
+            });
+
             if (currentUser.role === 'Manager' && currentUser.assignedRegions?.length > 0) {
                 const region = currentUser.assignedRegions[0];
                 distReps = distReps.filter(r => r.region === region || (r.title && r.title.includes(region)));

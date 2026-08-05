@@ -4190,12 +4190,23 @@
                             }).join('')}</tbody>
                         </table>`;
                 } else {
-                    const fontSize = reportRows.length > 30 ? '7px' : '9px';
+                    const cardFontSize = reportRows.length > 30 ? '6px' : '8px';
                     body = `
-                        <table style="width:100%; border-collapse:collapse; font-size:${fontSize};">
-                            <thead><tr style="background:#E31E24; color:#fff;"><th style="padding:7px; text-align:left; border:1px solid #981B1E;">Aktivite</th><th style="padding:7px; text-align:left; border:1px solid #981B1E;">Atanan Personeller</th></tr></thead>
-                            <tbody>${reportRows.map((item, index) => `<tr style="background:${index % 2 ? '#F9FAFB' : '#FFFFFF'};"><td style="width:28%; padding:7px; font-weight:700; border:1px solid #D0D5DD;">${escapeReportHtml(item.activityName)}</td><td style="padding:7px; border:1px solid #D0D5DD;">${escapeReportHtml(item.assigned)}</td></tr>`).join('')}</tbody>
-                        </table>`;
+                        <div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; font-size:${cardFontSize};">
+                            ${reportRows.map((item, index) => {
+                                const fallbackName = activities[index]?.name || `Aktivite ${index + 1}`;
+                                const activityName = item.activityName || item.name || item.activity || item.title || fallbackName;
+                                const assignedPeople = Array.isArray(item.assigned) ? item.assigned.join(', ') : (item.assigned || 'Atama Yok');
+                                return `
+                                    <div style="border:1px solid #D0D5DD; border-radius:7px; overflow:hidden; background:#FFFFFF; min-height:58px;">
+                                        <div style="background:#E31E24; color:#FFFFFF; padding:6px 8px; font-weight:700; line-height:1.25;">${escapeReportHtml(activityName)}</div>
+                                        <div style="padding:7px 8px; color:#344054; line-height:1.35;">
+                                            <div style="font-size:85%; color:#98A2B3; font-weight:700; text-transform:uppercase; margin-bottom:3px;">Atanan Personeller</div>
+                                            <div style="font-weight:600;">${escapeReportHtml(assignedPeople)}</div>
+                                        </div>
+                                    </div>`;
+                            }).join('')}
+                        </div>`;
                 }
 
                 const surface = createCorporatePdfSurface({
